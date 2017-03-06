@@ -21,9 +21,10 @@
 	<param name="mocap/use_pose" value="false"/>
 </node>
 
-<node name="control_node" pkg="selfie_drone" type="control_node" output="screen">
-	<param name="mode" value="-1" />
-	<param name="offset" value="0.0" />
+<node name="test_node" pkg="test" type="test_node" output="screen">
+	<param name="com_x" value="0.0" />
+	<param name="com_y" value="0.0" />
+	<param name="com_z" value="0.0" />
 </node>
 
 

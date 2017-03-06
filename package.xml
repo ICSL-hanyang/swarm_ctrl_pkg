@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>selfie_drone</name>
+  <name>test</name>
   <version>0.0.1</version>
-  <description>Selfie_drone package</description>
+  <description>test package</description>
   <maintainer email="gosupia@naver.com">sewoong</maintainer>
   <license>TODO</license>
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(selfie_drone)
+project(test)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
@@ -7,8 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_extras
   roscpp
   std_msgs
+  message_generation
 )
-
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -31,8 +31,8 @@ include_directories(
 )
 
 
-add_executable(control_node src/selfie.cpp)
-add_dependencies(control_node Selfie_drone_selfie_cpp)
-target_link_libraries(control_node ${catkin_LIBRARIES})
+add_executable(test_node src/selfie.cpp)
+add_dependencies(test_node Selfie_drone_selfie_cpp)
+target_link_libraries(test_node ${catkin_LIBRARIES})
 
 
