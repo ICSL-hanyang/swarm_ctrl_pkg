@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h> //set position 용
 #include <mavros_msgs/CommandBool.h> //arm용
-#include <mavros_msgs/SetMode.h> //offboard 모드 설정용
+#include <mavros_msgs/SetMode.h> //GUIDED_NOGPS 모드 설정용
 #include <mavros_msgs/State.h> //mavros 메세지 활용용
 
 //Parameter
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     ros::ServiceClient selfie_set_mode_client = nh.serviceClient<mavros_msgs::SetMode> ("mavros/set_mode");
 
     //the setpoint publishing rate MUST be faster than 2Hz
-    ros::Rate rate(5.0); //period 0.05 s
+    ros::Rate rate(10.0); //period 0.05 s
     
     // wait for FCU connection
     while(ros::ok() && selfie_current_state.connected){
@@ -57,9 +57,9 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-    //switch mode to OFFBOARD
+    //switch mode to GUIDED_NOGPS
     mavros_msgs::SetMode set_mode;
-    set_mode.request.custom_mode = "OFFBOARD";
+    set_mode.request.custom_mode = "GUIDED";
 
     //selfie_arming_client
     mavros_msgs::CommandBool arm_cmd;
@@ -69,17 +69,17 @@ int main(int argc, char **argv)
 
     while(ros::ok()){
 
-		if( selfie_current_state.mode != "OFFBOARD" && (ros::Time::now() - last_request > ros::Duration(5.0)) ){
+		if( selfie_current_state.mode != "GUIDED" && (ros::Time::now() - last_request > ros::Duration(3.0)) ){
 	        if( selfie_set_mode_client.call(set_mode) && set_mode.response.success){
-	            ROS_INFO("Selfie_drone Offboard enabled");
+	            ROS_INFO("Selfie_drone GUIDED enabled");
 	        }
 	        else{
-	        	ROS_INFO("Selfie_drone Offboard disabled");	
+	        	ROS_INFO("Selfie_drone GUIDED disabled");	
 	        }
 	        last_request = ros::Time::now();
 	    } 
 		else{
-	        if( !selfie_current_state.armed && (ros::Time::now() - last_request > ros::Duration(5.0)) ){
+	        if( !selfie_current_state.armed && (ros::Time::now() - last_request > ros::Duration(3.0)) ){
 	            if( selfie_arming_client.call(arm_cmd) && arm_cmd.response.success){
 	                ROS_INFO("Selfie_drone armed");
 	            }
