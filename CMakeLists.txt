@@ -7,13 +7,15 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_extras
   roscpp
   std_msgs
+  sensor_msgs
   message_generation
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
-   geometry_msgs   
+   mavros_msgs
+   geometry_msgs  
    std_msgs
 )
 
@@ -31,8 +33,8 @@ include_directories(
 )
 
 
-add_executable(test_node src/selfie.cpp)
-add_dependencies(test_node Selfie_drone_selfie_cpp)
-target_link_libraries(test_node ${catkin_LIBRARIES})
+add_executable(multi_control_node src/test.cpp)
+add_dependencies(multi_control_node Drone_test_cpp)
+target_link_libraries(multi_control_node ${catkin_LIBRARIES})
 
 
