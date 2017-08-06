@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package>
   <name>test</name>
-  <version>0.0.1</version>
+  <version>0.0.4</version>
   <description>test package</description>
   <maintainer email="gosupia@naver.com">sewoong</maintainer>
   <license>TODO</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>l
   <build_depend>geometry_msgs</build_depend>
   <build_depend>mavros</build_depend>
   <build_depend>mavros_extras</build_depend>

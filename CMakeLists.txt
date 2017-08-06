@@ -33,8 +33,8 @@ include_directories(
 )
 
 
-add_executable(multi_control_node src/test.cpp)
-add_dependencies(multi_control_node Drone_test_cpp)
+add_executable(multi_control_node src/control.cpp)
+add_dependencies(multi_control_node Drone_control_cpp)
 target_link_libraries(multi_control_node ${catkin_LIBRARIES})
 
 
