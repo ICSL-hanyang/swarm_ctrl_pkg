@@ -1,10 +1,5 @@
 <launch>
 
-<!--arg name="fcu_url" default= "udp://:14540@127.0.0.1:14557"-->
-<arg name="fcu_url" default="/dev/ttyACM0:57600"/>
-<arg name="gcs_url" default="" />
-<arg name="tgt_system" default="1" />
-<arg name="tgt_component" default="1" />
 
 <group ns="d1">
 	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
@@ -12,15 +7,8 @@
 		<param name="gcs_url" value="$(arg gcs_url)" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
-		<!--rosparam command="load" file="$(find mavros)/launch/px4_blacklist.yaml"-->
-		<!-- enable heartbeat send and reduce timeout -->
-		<param name="conn_heartbeat" value="5.0" />
-		<param name="conn_timeout" value="5.0" />
-		<!-- automatically start mavlink on USB -->
-		<param name="startup_px4_usb_quirk" value="true" />
-		<param name="mocap/use_tf" value="true"/>
-		<param name="mocap/use_pose" value="false"/>
 	</node>
+
 </group>
 <group ns="d2">
 	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
@@ -28,18 +16,11 @@
 		<param name="gcs_url" value="$(arg gcs_url)" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
-		<!--rosparam command="load" file="$(find mavros)/launch/px4_blacklist.yaml"-->
-		<!-- enable heartbeat send and reduce timeout -->
-		<param name="conn_heartbeat" value="5.0" />
-		<param name="conn_timeout" value="5.0" />
-		<!-- automatically start mavlink on USB -->
-		<param name="startup_px4_usb_quirk" value="true" />
-		<param name="mocap/use_tf" value="true"/>
-		<param name="mocap/use_pose" value="false"/>
 	</node>
+
 </group>
 
-<node name="control_node" pkg="control" type="control_node" output="screen">
+<node name="control_node" pkg="test" type="control_node" output="screen">
 	<param name="com_x" value="0.0" />
 	<param name="com_y" value="0.0" />
 	<param name="com_z" value="2.0" />
@@ -47,4 +28,3 @@
 
 
 </launch>
-

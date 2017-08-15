@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>test</name>
+  <name>swarm_ctrl_pkg</name>
   <version>0.0.4</version>
-  <description>test package</description>
+  <description>swarm control package</description>
   <maintainer email="gosupia@naver.com">sewoong</maintainer>
   <license>TODO</license>
 

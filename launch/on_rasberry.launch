@@ -1,3 +1,12 @@
 <launch>
 
+<group ns="$(arg drone_ns)">
+
+<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
+      <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
+</node>
+
+</group>
+
+
 </launch>

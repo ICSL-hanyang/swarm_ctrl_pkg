@@ -1,0 +1,32 @@
+<launch>
+
+<group>
+  <machine name = "camila1" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+  <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
+  <arg name="drone_ns" value="d1" />
+  </include>
+</group>
+
+<group>
+  <machine name = "camila1" address="192.168.0.21" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+  <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
+  <arg name="drone_ns" value="d2" />
+  </include>
+</group>
+
+<group>
+  <machine name = "camila3" address="192.168.0.31" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+  <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
+  <arg name="drone_ns" value="d3" />
+  </include>
+</group>
+
+
+
+<node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen">
+        <param name="com_x" value="0.0" />
+        <param name="com_y" value="0.0" />
+        <param name="com_z" value="2.0" />
+</node>
+
+</launch>

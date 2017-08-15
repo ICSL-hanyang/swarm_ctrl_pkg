@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(test)
+project(swarm_ctrl_pkg)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
@@ -22,7 +22,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES control_node
+  LIBRARIES swarm_ctrl_pkg
   CATKIN_DEPENDS geometry_msgs mavros mavros_extras roscpp std_msgs
   DEPENDS system_lib
 )
@@ -33,8 +33,8 @@ include_directories(
 )
 
 
-add_executable(multi_control_node src/control.cpp)
-add_dependencies(multi_control_node Drone_control_cpp)
-target_link_libraries(multi_control_node ${catkin_LIBRARIES})
+add_executable(control_node src/control_node.cpp)
+add_dependencies(control_node swarm_ctrl_node_generate_messages_cpp)
+target_link_libraries(control_node ${catkin_LIBRARIES})
 
 
