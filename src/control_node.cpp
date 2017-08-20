@@ -21,6 +21,10 @@ double com_z = 2;
 
 double offset = 2.0;
 
+bool b_arm[NUM_DRONE] = {false, };
+bool b_offboard_mode[NUM_DRONE] = {false, };
+string group_name = "camila";
+
 void set_positon(double x, double y, double z);
 
 mavros_msgs::State current_state[NUM_DRONE];
@@ -28,24 +32,24 @@ sensor_msgs::TimeReference current_time[NUM_DRONE];
 sensor_msgs::NavSatFix g_pos[NUM_DRONE];
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 
-void state_cb1(const mavros_msgs::State::ConstPtr& msg)
+void state_cb(const mavros_msgs::State::ConstPtr& msg)
 {
-  current_state[0] = *msg;
+	for(int i = 0; i < NUM_DRONE; i++){
+		if(msg->header.frame_id == group_name + string(i))
+			current_state[i] = *msg;
+		if(current_state[i].mode == "OFFBOARD")
+			b_offboard_mode[i] = true;
+		else
+			b_offboard_mode[i] = false;
+	}
 }
 
-void state_cb2(const mavros_msgs::State::ConstPtr& msg)
+void global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
-  current_state[1] = *msg;
-}
-
-void global_pos_cb1(const sensor_msgs::NavSatFix::ConstPtr& msg)
-{
-  g_pos[0] = *msg;
-}
-
-void global_pos_cb2(const sensor_msgs::NavSatFix::ConstPtr& msg)
-{
-  g_pos[1] = *msg;
+	for(int i = 0; i < NUM_DRONE; i++){
+		if(msg->header.frame_id == group_name + string(i))
+			g_pos[0] = *msg;
+	}
 }
 
 void time_ref_cb(const sensor_msgs::TimeReference::ConstPtr& msg)
@@ -75,6 +79,30 @@ int main(int argc, char** argv)
   ros::Subscriber time_ref_sub = nh.subscribe<sensor_msgs::TimeReference>(
       "d1/mavros/time_reference", 1, time_ref_cb);
 
+  string d_mavros_state = "/mavros/state";
+  string d_mavros_l_pos = "/mavros/setpoint_position/local";
+  string d_mavros_g_pos	= "/mavros/global_position/global";
+  string d_mavros_arm = "/mavros/cmd/arming";
+  string d_mavros_mode = "/mavros/set_mode";
+  string d_mavros_home = "/mavros/set_home";
+
+  for(int i=0 ; i < NUM_DRONE ; i++){
+  	state_sub[i] = nh.subscribe<mavros_msgs::State>(
+  		group_name + string(i) + d_mavros_state, 10,state_cb);
+  	local_pos_pub[i] = nh.advertise<geometry_msgs::PoseStamped>(
+  		group_name + string(i) + d_mavros_l_pos, 10);
+  	global_pos_sub[i] = nh.subscribe<sensor_msgs::NavSatFix>(
+  		group_name + string(i) + d_mavros_g_pos, 10, global_pos_cb);	
+  	global_pos_pub[i] = nh.advertise<sensor_msgs::NavSatFix>(
+  		group_name + string(i) + d_mavros_g_pos, 10);
+  	arming_client[i] = nh.serviceClient<mavros_msgs::CommandBool>(
+  		group_name + string(i) + d_mavros_arm);	
+  	set_mode_client[i] = nh.serviceClient<mavros_msgs::SetMode>(
+  		group_name + string(i) + d_mavros_mode); 
+    set_home_client[i] = nh.serviceClient<mavros_msgs::CommandHome>(
+    	group_name + string(i) + d_mavros_home);
+  }
+  /*
   state_sub[0] =
       nh.subscribe<mavros_msgs::State>("d1/mavros/state", 10, state_cb1);
   state_sub[1] =
@@ -103,7 +131,7 @@ int main(int argc, char** argv)
       nh.serviceClient<mavros_msgs::CommandHome>("d1/mavros/set_home");
   set_home_client[1] =
       nh.serviceClient<mavros_msgs::CommandHome>("d2/mavros/set_home");
-
+*/
   // the setpoint publishing rate MUST be faster than 2Hz
   ros::Rate rate(10.0); // period 0.01 s
 
