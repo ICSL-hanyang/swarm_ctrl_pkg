@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <string.h>
 #include <geometry_msgs/PoseStamped.h> //set position 용
 #include <mavros_msgs/CommandBool.h>   //arm용
 #include <mavros_msgs/SetMode.h>       //OFFBOARD 모드 설정용
@@ -7,6 +8,7 @@
 #include <sensor_msgs/NavSatFix.h>     //set_home
 #include <sensor_msgs/TimeReference.h> //tf_old data
 #define NUM_DRONE 2
+#define OFFSET 2.0
 
 // Parameter
 int mode = 0;
@@ -19,7 +21,12 @@ double com_x = 0.0;
 double com_y = 0.0;
 double com_z = 2;
 
-double offset = 2.0;
+double offset = OFFSET;
+
+bool b_connected = false;
+bool b_mode = false;
+bool b_armed= false;
+std::string group_name = "camila";
 
 void set_positon(double x, double y, double z);
 
@@ -28,24 +35,51 @@ sensor_msgs::TimeReference current_time[NUM_DRONE];
 sensor_msgs::NavSatFix g_pos[NUM_DRONE];
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 
-void state_cb1(const mavros_msgs::State::ConstPtr& msg)
+void state_cb(const mavros_msgs::State::ConstPtr& msg)
 {
-  current_state[0] = *msg;
+	std::stringstream stream;
+	int cnt_connected = 0;
+	int cnt_mode = 0;
+	int cnt_armed = 0;
+	for(int i = 0; i < NUM_DRONE; i++){
+		stream << i;
+		if(msg->header.frame_id == group_name + stream.str())
+			current_state[i] = *msg;
+		if(current_state[i].connected == true)
+			cnt_connected++;
+		else
+			break;
+		if(current_state[i].mode == "OFFBOARD")
+			cnt_mode++;
+		else
+			break;
+		if(current_state[i].armed == true)
+			cnt_armed++;
+		else
+			break;
+	}
+	if(cnt_connected == NUM_DRONE)
+		b_connected = true;
+	else
+		b_connected = false;
+	if(cnt_mode == NUM_DRONE)
+		b_mode = true;
+	else
+		b_mode = false;
+	if(cnt_armed == NUM_DRONE)
+		b_armed = true;
+	else
+		b_armed = false;
 }
 
-void state_cb2(const mavros_msgs::State::ConstPtr& msg)
+void global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
-  current_state[1] = *msg;
-}
-
-void global_pos_cb1(const sensor_msgs::NavSatFix::ConstPtr& msg)
-{
-  g_pos[0] = *msg;
-}
-
-void global_pos_cb2(const sensor_msgs::NavSatFix::ConstPtr& msg)
-{
-  g_pos[1] = *msg;
+	std::stringstream stream;
+	for(int i = 0; i < NUM_DRONE; i++){
+		stream << i;
+		if(msg->header.frame_id == group_name + stream.str())
+			g_pos[0] = *msg;
+	}
 }
 
 void time_ref_cb(const sensor_msgs::TimeReference::ConstPtr& msg)
@@ -63,7 +97,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "control_node");
 
   ROS_INFO("Control node executed");
-
+ 
   ros::NodeHandle nh;
   ros::Subscriber state_sub[NUM_DRONE];
   ros::Publisher local_pos_pub[NUM_DRONE];
@@ -75,40 +109,37 @@ int main(int argc, char** argv)
   ros::Subscriber time_ref_sub = nh.subscribe<sensor_msgs::TimeReference>(
       "d1/mavros/time_reference", 1, time_ref_cb);
 
-  state_sub[0] =
-      nh.subscribe<mavros_msgs::State>("d1/mavros/state", 10, state_cb1);
-  state_sub[1] =
-      nh.subscribe<mavros_msgs::State>("d2/mavros/state", 10, state_cb2);
-  local_pos_pub[0] = nh.advertise<geometry_msgs::PoseStamped>(
-      "d1/mavros/setpoint_position/local", 10);
-  local_pos_pub[1] = nh.advertise<geometry_msgs::PoseStamped>(
-      "d2/mavros/setpoint_position/local", 10);
-  global_pos_sub[0] = nh.subscribe<sensor_msgs::NavSatFix>(
-      "d1/mavros/global_position/global", 10, global_pos_cb1);
-  global_pos_sub[1] = nh.subscribe<sensor_msgs::NavSatFix>(
-      "d2/mavros/global_position/global", 10, global_pos_cb2);
-  global_pos_pub[0] = nh.advertise<sensor_msgs::NavSatFix>(
-      "d1/mavros/global_position/global", 10);
-  global_pos_pub[1] = nh.advertise<sensor_msgs::NavSatFix>(
-      "d2/mavros/global_position/global", 10);
-  arming_client[0] =
-      nh.serviceClient<mavros_msgs::CommandBool>("d1/mavros/cmd/arming");
-  arming_client[1] =
-      nh.serviceClient<mavros_msgs::CommandBool>("d2/mavros/cmd/arming");
-  set_mode_client[0] =
-      nh.serviceClient<mavros_msgs::SetMode>("d1/mavros/set_mode");
-  set_mode_client[1] =
-      nh.serviceClient<mavros_msgs::SetMode>("d2/mavros/set_mode");
-  set_home_client[0] =
-      nh.serviceClient<mavros_msgs::CommandHome>("d1/mavros/set_home");
-  set_home_client[1] =
-      nh.serviceClient<mavros_msgs::CommandHome>("d2/mavros/set_home");
+  std::stringstream stream;  
+  std::string d_mavros_state = "/mavros/state";
+  std::string d_mavros_l_pos = "/mavros/setpoint_position/local";
+  std::string d_mavros_g_pos	= "/mavros/global_position/global";
+  std::string d_mavros_arm = "/mavros/cmd/arming";
+  std::string d_mavros_mode = "/mavros/set_mode";
+  std::string d_mavros_home = "/mavros/set_home";
+
+  for(int i=0 ; i < NUM_DRONE ; i++){
+  	stream << i;
+  	state_sub[i] = nh.subscribe<mavros_msgs::State>(
+  		group_name + stream.str() + d_mavros_state, 10,state_cb);
+  	local_pos_pub[i] = nh.advertise<geometry_msgs::PoseStamped>(
+  		group_name + stream.str() + d_mavros_l_pos, 10);
+  	global_pos_sub[i] = nh.subscribe<sensor_msgs::NavSatFix>(
+  		group_name + stream.str() + d_mavros_g_pos, 10, global_pos_cb);	
+  	global_pos_pub[i] = nh.advertise<sensor_msgs::NavSatFix>(
+  		group_name + stream.str() + d_mavros_g_pos, 10);
+  	arming_client[i] = nh.serviceClient<mavros_msgs::CommandBool>(
+  		group_name + stream.str() + d_mavros_arm);	
+  	set_mode_client[i] = nh.serviceClient<mavros_msgs::SetMode>(
+  		group_name + stream.str() + d_mavros_mode); 
+    set_home_client[i] = nh.serviceClient<mavros_msgs::CommandHome>(
+    	group_name + stream.str() + d_mavros_home);
+  }
 
   // the setpoint publishing rate MUST be faster than 2Hz
   ros::Rate rate(10.0); // period 0.01 s
 
   // wait for FCU connection
-  while (ros::ok() && current_state[0].connected && current_state[1].connected)
+  while (ros::ok() && b_connected)
   {
     ROS_INFO("All Drone connected");
     ros::spinOnce();
@@ -147,9 +178,16 @@ int main(int argc, char** argv)
   l_pos[0].pose.position.x = 0;
   l_pos[0].pose.position.y = 0;
   l_pos[0].pose.position.z = 2;
-
-  for (int i = 1; i < NUM_DRONE; i++)
-    l_pos[i] = l_pos[0];
+  offset = OFFSET;
+  for (int i = 1; i < NUM_DRONE; i++){
+  	l_pos[i] = l_pos[0];
+	if(i < 3)
+  		l_pos[i].pose.position.x += offset;
+  	else if(i < 5){
+  		l_pos[i].pose.position.y += offset;
+  	}
+  	offset *= -1;
+  }
 
   l_pos[1].pose.position.x += offset;
 
@@ -175,9 +213,7 @@ int main(int argc, char** argv)
   while (ros::ok())
   {
 
-    if ((current_state[0].mode != "OFFBOARD" ||
-         current_state[1].mode != "OFFBOARD") &&
-        (ros::Time::now() - last_request > ros::Duration(3.0)))
+    if ( !b_mode && (ros::Time::now() - last_request > ros::Duration(3.0)))
     {
       for (int i = 0; i < NUM_DRONE; i++)
       {
@@ -190,8 +226,7 @@ int main(int argc, char** argv)
     }
     else
     {
-      if ((!current_state[0].armed || !current_state[1].armed) &&
-          (ros::Time::now() - last_request > ros::Duration(3.0)))
+      if ( !b_armed && (ros::Time::now() - last_request > ros::Duration(3.0)))
       {
         for (int i = 0; i < NUM_DRONE; i++)
         {
@@ -224,17 +259,23 @@ int main(int argc, char** argv)
 
 void set_positon(double x, double y, double z)
 {
+	offset = OFFSET;
   if (x != coor[0] | y != coor[1] | z != coor[2])
   {
-    ROS_INFO("(%lf, %lf, %lf)", com_x, com_y, com_z);
+    ROS_INFO("(%lf, %lf, %lf)", x, y, z);
     l_pos[0].pose.position.x = x;
     l_pos[0].pose.position.y = y;
     l_pos[0].pose.position.z = z;
 
-    for (int i = 1; i < NUM_DRONE; i++)
-      l_pos[i] = l_pos[0];
-
-    l_pos[1].pose.position.x += offset;
+    for (int i = 1; i < NUM_DRONE; i++){
+    	l_pos[i] = l_pos[0];
+    	if(i < 3)
+      		l_pos[i].pose.position.x += offset;
+      	else if(i < 5){
+      		l_pos[i].pose.position.y += offset;
+      	}
+      	offset *= -1;
+    }
   }
   coor[0] = x;
   coor[1] = y;
