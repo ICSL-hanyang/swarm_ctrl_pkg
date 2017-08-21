@@ -1,31 +1,31 @@
 <launch>
 <arg name="fcu_url" default="/dev/ttyUSB0:57600"/>
-<arg name="gcs_url" default="$(arg gcs_url)" />
+
 <arg name="tgt_system" default="1" />
 <arg name="tgt_component" default="1" />
 
 
-<machine name = "camila1" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+<machine name = "icslpi-desktop" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
 
-<machine name = "camila2" address="192.168.0.21" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+<machine name = "camila2" address="192.168.0.12" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
 
-<machine name = "camila3" address="192.168.0.31" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+<machine name = "camila3" address="192.168.0.13" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
 
-<group ns="d1">
-  <node machine="camila1" name="mavros" pkg="mavros" type="mavros_node" output="screen">
+<group ns="camila1">
+  <node machine="icslpi-desktop" name="mavros" pkg="mavros" type="mavros_node" output="screen">
         <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
   </node>
 </group>
 
 
-<group ns="d2">
+<group ns="camila2">
   <node machine="camila2" name="mavros" pkg="mavros" type="mavros_node" output="screen">
         <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
   </node>
 </group>
 
 
-<group ns="d3">
+<group ns="camila3">
   <node machine="camila3" name="mavros" pkg="mavros" type="mavros_node" output="screen">
         <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
   </node>
