@@ -7,12 +7,12 @@
 #include <mavros_msgs/CommandHome.h>   //set_home
 #include <sensor_msgs/NavSatFix.h>     //set_home
 #include <sensor_msgs/TimeReference.h> //tf_old data
-#define NUM_DRONE 2
+
+#define NUM_DRONE 4
 #define OFFSET 2.0
 
 // Parameter
 int mode = 0;
-int pre_mode = 0;
 
 double coor[3] = {
     0.0,
@@ -41,6 +41,8 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg)
 	int cnt_connected = 0;
 	int cnt_mode = 0;
 	int cnt_armed = 0;
+
+
 	for(int i = 0; i < NUM_DRONE; i++){
 		stream << i;
 		if(msg->header.frame_id == group_name + stream.str())
@@ -107,7 +109,7 @@ int main(int argc, char** argv)
   ros::ServiceClient set_mode_client[NUM_DRONE];
   ros::ServiceClient set_home_client[NUM_DRONE];
   ros::Subscriber time_ref_sub = nh.subscribe<sensor_msgs::TimeReference>(
-      "d1/mavros/time_reference", 1, time_ref_cb);
+      "camila0/mavros/time_reference", 1, time_ref_cb);
 
   std::stringstream stream;  
   std::string d_mavros_state = "/mavros/state";
@@ -141,7 +143,7 @@ int main(int argc, char** argv)
   // wait for FCU connection
   while (ros::ok() && b_connected)
   {
-    ROS_INFO("All Drone connected");
+    ROS_INFO("All Drones connected");
     ros::spinOnce();
     rate.sleep();
   }
@@ -149,10 +151,11 @@ int main(int argc, char** argv)
   // reset home position
   mavros_msgs::CommandHome set_home;
   set_home.request.current_gps = true;
+
   while (ros::ok() && set_home_client[0].call(set_home) &&
          set_home.response.success)
   {
-    ROS_INFO("Camila1 reset home positon");
+    ROS_INFO("Camila0 reset home positon");
     set_home.request.current_gps = false;
     set_home.request.latitude = g_pos[0].latitude;
     set_home.request.longitude = g_pos[0].longitude;
@@ -162,7 +165,7 @@ int main(int argc, char** argv)
       if (ros::ok() && set_home_client[i].call(set_home) &&
           set_home.response.success)
       {
-        ROS_INFO("Camila%d reset home position", i + 1);
+        ROS_INFO("Camila%d reset home position", i);
       }
     }
     set_home.request.current_gps = true;
@@ -173,12 +176,14 @@ int main(int argc, char** argv)
   nh.setParam("control_node/x", 0.0);
   nh.setParam("control_node/y", 0.0);
   nh.setParam("control_node/z", 2.0);
+  nh.setParam("control_node/offset", 2.0);
 
   // initial position
   l_pos[0].pose.position.x = 0;
   l_pos[0].pose.position.y = 0;
   l_pos[0].pose.position.z = 2;
   offset = OFFSET;
+
   for (int i = 1; i < NUM_DRONE; i++){
   	l_pos[i] = l_pos[0];
 	if(i < 3)
@@ -219,7 +224,7 @@ int main(int argc, char** argv)
       {
         if (set_mode_client[i].call(set_mode) && set_mode.response.success)
         {
-          ROS_INFO("Camila%d OFFBOARD enabled", i + 1);
+          ROS_INFO("Camila%d OFFBOARD enabled", i);
         }
       }
       last_request = ros::Time::now();
@@ -232,7 +237,7 @@ int main(int argc, char** argv)
         {
           if (arming_client[i].call(arm_cmd) && arm_cmd.response.success)
           {
-            ROS_INFO("Camila%d armed", i + 1);
+            ROS_INFO("Camila%d armed", i);
           }
         }
         last_request = ros::Time::now();
@@ -242,6 +247,7 @@ int main(int argc, char** argv)
     nh.getParam("control_node/x", com_x);
     nh.getParam("control_node/y", com_y);
     nh.getParam("control_node/z", com_z);
+    nh.getParam("control_node/offset", offset);
 
     set_positon(com_x, com_y, com_z);
 

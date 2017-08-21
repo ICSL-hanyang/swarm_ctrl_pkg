@@ -1,0 +1,55 @@
+<launch>
+
+<arg name="gcs_url" value=""/>
+
+<group ns="camila0">
+	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
+		
+		<param name="fcu_url" value="udp://:14540@localhost:14557"/>
+		<param name="gcs_url" value="$(arg gcs_url)" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+	</node>
+
+</group>
+<group ns="camila1">
+	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
+		
+		<param name="fcu_url" value="udp://:14541@127.0.0.1:14558"/>
+		<param name="gcs_url" value="$(arg gcs_url)" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+	</node>
+
+</group>
+
+<group ns="camila2">
+	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
+		
+		<param name="fcu_url" value="udp://:14542@127.0.0.1:14559"/>
+		<param name="gcs_url" value="$(arg gcs_url)" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+	</node>
+
+</group>
+
+<group ns="camila3">
+	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
+		
+		<param name="fcu_url" value="udp://:14539@127.0.0.1:14543"/>
+		<param name="gcs_url" value="$(arg gcs_url)" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+	</node>
+
+</group>
+
+<node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen">
+	<param name="com_x" value="0.0" />
+	<param name="com_y" value="0.0" />
+	<param name="com_z" value="2.0" />
+</node>
+
+
+</launch>

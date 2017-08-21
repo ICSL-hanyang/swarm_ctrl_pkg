@@ -1,23 +1,26 @@
 <launch>
 
 <group>
-  <machine name = "camila1" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+  <machine name = "camila0" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
   <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
-  <arg name="drone_ns" value="d1" />
+  <arg name="drone_ns" value="camila0" />
+  <arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
   </include>
 </group>
 
 <group>
   <machine name = "camila1" address="192.168.0.21" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
   <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
-  <arg name="drone_ns" value="d2" />
+  <arg name="drone_ns" value="camila1" />
+  <arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
   </include>
 </group>
 
 <group>
-  <machine name = "camila3" address="192.168.0.31" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
+  <machine name = "camila2" address="192.168.0.31" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh"/>
   <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
-  <arg name="drone_ns" value="d3" />
+  <arg name="drone_ns" value="camila2" />
+  <arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
   </include>
 </group>
 

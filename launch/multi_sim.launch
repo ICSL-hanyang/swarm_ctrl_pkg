@@ -1,5 +1,8 @@
 <launch>
 
+<arg name="gcs_url" default="" />
+<arg name="tgt_system" default="1" />
+<arg name="tgt_component" default="1" />
 
 <group ns="d1">
 	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
@@ -20,7 +23,7 @@
 
 </group>
 
-<node name="control_node" pkg="test" type="control_node" output="screen">
+<node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen">
 	<param name="com_x" value="0.0" />
 	<param name="com_y" value="0.0" />
 	<param name="com_z" value="2.0" />
