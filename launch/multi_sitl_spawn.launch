@@ -1,0 +1,112 @@
+<launch>
+	<arg name="headless" value="false"/>
+        <arg name="gui" value="true"/>
+        <arg name="world_name" value="$(find mavlink_sitl_gazebo)/worlds/empty.world" />     
+        <arg name="debug" value="false" />
+        <arg name="verbose" value="false" />
+        <arg name="paused" value="false" />
+
+	<arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
+        <arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
+	<arg name="est" default="ekf2"/>
+        <arg name="vehicle" default="iris"/>
+
+    <!-- Start Gazebo world -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="headless" value="false"/>
+        <arg name="gui" value="true"/>
+        <arg name="world_name" value="$(find mavlink_sitl_gazebo)/worlds/empty.world" />     
+        <arg name="debug" value="false" />
+        <arg name="verbose" value="false" />
+        <arg name="paused" value="false" />
+    </include>
+
+    <!-- Start instance 0 of px4 and gazebo model-->
+    <group>
+	<arg name="ID" value="0"/>
+        <arg name="x" value="0"/>
+        <arg name="y" value="0"/>
+	<arg name="z" value="0"/>
+	
+	<arg name="rcS" default="$(find swarm_ctrl_pkg)/px4-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+ 	<arg name="sdf" default="$(find swarm_ctrl_pkg)/px4-configs/models/$(arg vehicle)/$(arg vehicle)_$(arg ID).sdf"/>
+   	
+        <include file="$(find swarm_ctrl_pkg)/launch/single_sitl_spawn.launch">
+           	 <arg name="x" value="$(arg x)"/>
+   		 <arg name="y" value="$(arg y)"/>
+   		 <arg name="z" value="$(arg z)"/>
+   		 <arg name="est" value="$(arg est)"/>
+   		 <arg name="vehicle" value="$(arg vehicle)"/>
+		 <arg name="sdf" value="$(arg sdf)"/>
+     		 <arg name="ID" value="$(arg ID)"/>
+    		 <arg name="rcS" value="$(arg rcS)"/>
+ 
+        </include>
+    </group>
+	<!-- Start instance 1 of px4 and gazebo model-->
+<group>
+	<arg name="ID" value="1"/>
+        <arg name="x" value="1"/>
+        <arg name="y" value="0"/>
+	<arg name="z" value="0"/>
+	
+	<arg name="rcS" default="$(find swarm_ctrl_pkg)/px4-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+ 	<arg name="sdf" default="$(find swarm_ctrl_pkg)/px4-configs/models/$(arg vehicle)/$(arg vehicle)_$(arg ID).sdf"/>
+   	
+        <include file="$(find swarm_ctrl_pkg)/launch/single_sitl_spawn.launch">
+           	 <arg name="x" value="$(arg x)"/>
+   		 <arg name="y" value="$(arg y)"/>
+   		 <arg name="z" value="$(arg z)"/>
+   		 <arg name="est" value="$(arg est)"/>
+   		 <arg name="vehicle" value="$(arg vehicle)"/>
+		 <arg name="sdf" value="$(arg sdf)"/>
+     		 <arg name="ID" value="$(arg ID)"/>
+    		 <arg name="rcS" value="$(arg rcS)"/>
+ 
+        </include>
+    </group>
+	<!-- Start instance 2 of px4 and gazebo model-->
+<group>
+	<arg name="ID" value="2"/>
+        <arg name="x" value="2"/>
+        <arg name="y" value="0"/>
+	<arg name="z" value="0"/>
+	
+	<arg name="rcS" default="$(find swarm_ctrl_pkg)/px4-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+ 	<arg name="sdf" default="$(find swarm_ctrl_pkg)/px4-configs/models/$(arg vehicle)/$(arg vehicle)_$(arg ID).sdf"/>
+   	
+        <include file="$(find swarm_ctrl_pkg)/launch/single_sitl_spawn.launch">
+           	 <arg name="x" value="$(arg x)"/>
+   		 <arg name="y" value="$(arg y)"/>
+   		 <arg name="z" value="$(arg z)"/>
+   		 <arg name="est" value="$(arg est)"/>
+   		 <arg name="vehicle" value="$(arg vehicle)"/>
+		 <arg name="sdf" value="$(arg sdf)"/>
+     		 <arg name="ID" value="$(arg ID)"/>
+    		 <arg name="rcS" value="$(arg rcS)"/>
+ 
+        </include>
+    </group>
+	<!-- Start instance 3 of px4 and gazebo model-->
+<group>
+	<arg name="ID" value="3"/>
+        <arg name="x" value="3"/>
+        <arg name="y" value="0"/>
+	<arg name="z" value="0"/>
+	
+	<arg name="rcS" default="$(find swarm_ctrl_pkg)/px4-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+ 	<arg name="sdf" default="$(find swarm_ctrl_pkg)/px4-configs/models/$(arg vehicle)/$(arg vehicle)_$(arg ID).sdf"/>
+   	
+        <include file="$(find swarm_ctrl_pkg)/launch/single_sitl_spawn.launch">
+           	 <arg name="x" value="$(arg x)"/>
+   		 <arg name="y" value="$(arg y)"/>
+   		 <arg name="z" value="$(arg z)"/>
+   		 <arg name="est" value="$(arg est)"/>
+   		 <arg name="vehicle" value="$(arg vehicle)"/>
+		 <arg name="sdf" value="$(arg sdf)"/>
+     		 <arg name="ID" value="$(arg ID)"/>
+    		 <arg name="rcS" value="$(arg rcS)"/>
+ 
+        </include>
+    </group>
+</launch>
