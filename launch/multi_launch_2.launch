@@ -1,7 +1,13 @@
 <launch>
-
+<!--
+<node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen">
+        <param name="com_x" value="0.0" />
+        <param name="com_y" value="0.0" />
+        <param name="com_z" value="2.0" />
+</node>
+-->
 <group>
-  <machine name = "camila1" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
+<machine name = "camila1" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
   <include file="$(find swarm_ctrl_pkg)/launch/on_rasberry.launch">
   <arg name="drone_ns" value="camila1" />
   <arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
@@ -24,12 +30,13 @@
   </include>
 </group>
 
-
-
+<group>
+<machine name = "con_cen" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" />
 <node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen">
         <param name="com_x" value="0.0" />
         <param name="com_y" value="0.0" />
         <param name="com_z" value="2.0" />
 </node>
+</group>
 
 </launch>

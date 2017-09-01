@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+add_service_files(FILES srvMultiArming.srv)
+
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
@@ -18,7 +20,6 @@ generate_messages(
    geometry_msgs  
    std_msgs
 )
-
 
 catkin_package(
   INCLUDE_DIRS include
@@ -37,4 +38,7 @@ add_executable(control_node src/control_node.cpp)
 add_dependencies(control_node swarm_ctrl_node_generate_messages_cpp)
 target_link_libraries(control_node ${catkin_LIBRARIES})
 
+add_executable(arming_node src/arming.cpp)
+add_dependencies(arming_node swarm_ctrl_node_generate_messages_cpp)
+target_link_libraries(arming_node ${catkin_LIBRARIES})
 

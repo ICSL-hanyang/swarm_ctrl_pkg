@@ -1,0 +1,4 @@
+bool arming
+---
+bool success
+int8 result
