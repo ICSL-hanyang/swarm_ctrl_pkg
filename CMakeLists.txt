@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 add_service_files(FILES srvMultiArming.srv)
+add_message_files(FILES msgState.msg)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -42,3 +43,6 @@ add_executable(arming_node src/arming.cpp)
 add_dependencies(arming_node swarm_ctrl_node_generate_messages_cpp)
 target_link_libraries(arming_node ${catkin_LIBRARIES})
 
+add_executable(state_node src/state.cpp)
+add_dependencies(state_node swarm_ctrl_node_generate_messages_cpp)
+target_link_libraries(state_node ${catkin_LIBRARIES})
