@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <mavros_msgs/CommandBool.h>   //arm용
 #include <mavros_msgs/SetMode.h>       //OFFBOARD 모드 설정용
-#include <mavros_msgs/State.h>         //mavros 메세지 활용용
 #include "swarm_ctrl_pkg/srvMultiArming.h" 
 #include "swarm_ctrl_pkg/srvMultiMode.h"
 #include "swarm_ctrl_pkg/msgState.h"   //multi_state msg
@@ -17,9 +16,6 @@ bool multiArming(swarm_ctrl_pkg::srvMultiArming::Request &req, swarm_ctrl_pkg::s
 	arm_cmd.request.value = req.arming;
 	for (int i = 0; i < NUM_DRONE; i++){
 		if (arming_client[i].call(arm_cmd) && arm_cmd.response.success){
-			if(req.arming == true){
-				ROS_INFO("Camila%d armed", i);
-			}
 			res.success = true;
 		}
 		else{
@@ -30,11 +26,9 @@ bool multiArming(swarm_ctrl_pkg::srvMultiArming::Request &req, swarm_ctrl_pkg::s
 }
 
 bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request &req, swarm_ctrl_pkg::srvMultiMode::Response &res){
-	std::string mode = req.mode;
 	set_mode.request.custom_mode = req.mode;
 	for (int i = 0; i < NUM_DRONE; i++){
 		if (set_mode_client[i].call(set_mode) && set_mode.response.success){
-			ROS_INFO("Camila%d %s enabled", i, mode.c_str());
 			res.success = true;
 		}
 		else{

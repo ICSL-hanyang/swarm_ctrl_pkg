@@ -5,21 +5,27 @@
 
 typedef void (*FuncPtr)(const mavros_msgs::State::ConstPtr&);
 mavros_msgs::State current_state[NUM_DRONE];
+std::string mode[NUM_DRONE];
 
 void state_cb0(const mavros_msgs::State::ConstPtr& msg){
 	current_state[0] = *msg;
+	mode[0]=current_state[0].mode;
 }
 void state_cb1(const mavros_msgs::State::ConstPtr& msg){
 	current_state[1] = *msg;
+	mode[1]=current_state[1].mode;
 }
 void state_cb2(const mavros_msgs::State::ConstPtr& msg){
 	current_state[2] = *msg;
+	mode[2]=current_state[2].mode;
 }
 void state_cb3(const mavros_msgs::State::ConstPtr& msg){
 	current_state[3] = *msg;
+	mode[3]=current_state[3].mode;
 }
 void state_cb4(const mavros_msgs::State::ConstPtr& msg){
 	current_state[4] = *msg;
+	mode[4]=current_state[4].mode;
 }
 
 int main(int argc, char** argv){
@@ -34,6 +40,7 @@ int main(int argc, char** argv){
 	std::string d_mavros_state = "/mavros/state";
 
 	FuncPtr stateFP[NUM_DRONE] = {state_cb0, state_cb1, state_cb2, state_cb3, state_cb4};
+	mavros_msgs::State pre_state[NUM_DRONE];
 
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
@@ -42,10 +49,9 @@ int main(int argc, char** argv){
 		stream.str("");
 	}
 
-	ros::Rate rate(20.0); // period 0.01 s
-
+	ros::Rate rate(20.0); // period 0.005
+	
 	ROS_INFO("State check start");
-	ros::Time last_request = ros::Time::now();
 	while(ros::ok()){
 		int cnt_connected = 0;
 		int cnt_mode = 0;
@@ -53,30 +59,38 @@ int main(int argc, char** argv){
 		swarm_ctrl_pkg::msgState msg;
 		for(int i=0 ; i< NUM_DRONE; i++){
 			(current_state[i].connected == true) ? cnt_connected++ : cnt_connected = 0;
-			if(cnt_connected == 0 && (ros::Time::now() - last_request > ros::Duration(3.0))){
-				ROS_WARN("Camila%d is not connected", i);
-				last_request = ros::Time::now();			
+			if(current_state[i].connected != pre_state[i].connected){
+				if(current_state[i].connected == true){
+					ROS_WARN("Camila%d is connected", i);	
+				}
+				else{
+					ROS_WARN("Camila%d is not connected", i);	
+				}	
 			}
 			(current_state[i].mode == "OFFBOARD") ? cnt_mode++ : cnt_mode = 0;
-			if(cnt_mode == 0 && (ros::Time::now() - last_request > ros::Duration(3.0))){
-				ROS_INFO("Camila%d is not OFFBOARD mode", i);	
-				last_request = ros::Time::now();			
+			if(current_state[i].mode != pre_state[i].mode){
+				ROS_INFO("Camila%d is %s mode", i, mode[i].c_str());			
 			}
 			(current_state[i].armed == true) ? cnt_armed++ : cnt_armed = 0;
-			if(cnt_armed == 0 && (ros::Time::now() - last_request > ros::Duration(3.0))){
-				ROS_INFO("Camila%d is disarmed", i);
-				last_request = ros::Time::now();			
+			if(current_state[i].armed != pre_state[i].armed){
+				if(current_state[i].armed == true){
+					ROS_INFO("Camila%d is armed", i);	
+				}
+				else{
+					ROS_INFO("Camila%d is disarmed", i);
+				}
+				
 			}
 		}
 		(cnt_connected == NUM_DRONE) ? msg.connected = true : msg.connected = false;
 		(cnt_mode == NUM_DRONE) ? msg.mode = true : msg.mode = false;
 		(cnt_armed == NUM_DRONE) ? msg.armed = true : msg.armed = false;
+		*pre_state = *current_state;
 		multi_state_pub.publish(msg);
 
 		ros::spinOnce();
 		rate.sleep();
 	}
-
 
 	return 0;
 }

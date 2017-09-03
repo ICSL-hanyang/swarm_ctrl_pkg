@@ -1,5 +1,4 @@
 #include <ros/ros.h>
-#include <string.h>
 #include <geometry_msgs/PoseStamped.h> //set position 용
 #include <mavros_msgs/CommandBool.h>   //arm용
 #include <mavros_msgs/SetMode.h>       //OFFBOARD 모드 설정용
@@ -200,7 +199,7 @@ int main(int argc, char** argv)
   for (int i = 50; ros::ok() && i > 0; --i)
   {
     for (int j = 0; j < NUM_DRONE; j++)
-      local_pos_pub[j].publish(l_pos[j]);
+    //  local_pos_pub[j].publish(l_pos[j]);
     ros::spinOnce();
     rate.sleep();
   }
@@ -253,7 +252,7 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < NUM_DRONE; i++)
     {
-      local_pos_pub[i].publish(l_pos[i]);
+      //local_pos_pub[i].publish(l_pos[i]);
     }
 
     ros::spinOnce();
