@@ -1,7 +1,8 @@
 <launch>
 
 <arg name="gcs_url" value=""/>
-
+<arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
+<arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
 <group ns="camila0">
 	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
 		
@@ -9,6 +10,8 @@
 		<param name="gcs_url" value="$(arg gcs_url)" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
+                <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_0.yaml" />
 	</node>
 
 </group>
@@ -19,6 +22,8 @@
 		<param name="gcs_url" value="$(arg gcs_url)" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
+                <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_1.yaml" />
 	</node>
 
 </group>
@@ -30,6 +35,8 @@
 		<param name="gcs_url" value="$(arg gcs_url)" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
+                <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_2.yaml" />
 	</node>
 
 </group>
@@ -37,10 +44,12 @@
 <group ns="camila3">
 	<node name="mavros" pkg="mavros" type="mavros_node" output="screen">
 		
-		<param name="fcu_url" value="udp://:14539@127.0.0.1:14543"/>
+                <param name="fcu_url" value="udp://:14543@127.0.0.1:14539"/>
 		<param name="gcs_url" value="$(arg gcs_url)" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
+                <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_3.yaml" />
 	</node>
 
 </group>
@@ -49,6 +58,8 @@
 	<param name="com_x" value="0.0" />
 	<param name="com_y" value="0.0" />
 	<param name="com_z" value="2.0" />
+        <param name="mode" value="0" />
+        <param name="offset" value="2" />
 </node>
 
 
