@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(FILES srvMultiArming.srv)
 add_service_files(FILES srvMultiMode.srv)
 add_service_files(FILES srvMultiSetPosLocal.srv)
+add_service_files(FILES srvMultiSetHome.srv)
 add_message_files(FILES msgState.msg)
 
 ## Generate added messages and services with any dependencies listed here
@@ -52,3 +53,7 @@ target_link_libraries(state_node ${catkin_LIBRARIES})
 add_executable(set_pos_local_node src/set_pos_local.cpp)
 add_dependencies(set_pos_local_node swarm_ctrl_node_generate_messages_cpp)
 target_link_libraries(set_pos_local_node ${catkin_LIBRARIES})
+
+add_executable(set_home_node src/set_home.cpp)
+add_dependencies(set_home_node swarm_ctrl_node_generate_messages_cpp)
+target_link_libraries(set_home_node ${catkin_LIBRARIES})
