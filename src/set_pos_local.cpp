@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h> //set position 용
 #include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
-#define NUM_DRONE 5
+#define NUM_DRONE 4
 
 double pre_req[4] = {0.0, 0.0, 0.0, 2.0};
 bool b_sending = false;

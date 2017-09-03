@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <mavros_msgs/State.h>         //state check 메세지 활용용
 #include "swarm_ctrl_pkg/msgState.h"   //multi_state msg
-#define NUM_DRONE 5
+#define NUM_DRONE 4
 
 typedef void (*FuncPtr)(const mavros_msgs::State::ConstPtr&);
 mavros_msgs::State current_state[NUM_DRONE];
@@ -23,11 +23,12 @@ void state_cb3(const mavros_msgs::State::ConstPtr& msg){
 	current_state[3] = *msg;
 	mode[3]=current_state[3].mode;
 }
+/*
 void state_cb4(const mavros_msgs::State::ConstPtr& msg){
 	current_state[4] = *msg;
 	mode[4]=current_state[4].mode;
 }
-
+*/
 int main(int argc, char** argv){
 	ros::init(argc, argv, "state_node");
 
@@ -39,7 +40,7 @@ int main(int argc, char** argv){
 	std::string group_name = "camila";
 	std::string d_mavros_state = "/mavros/state";
 
-	FuncPtr stateFP[NUM_DRONE] = {state_cb0, state_cb1, state_cb2, state_cb3, state_cb4};
+  FuncPtr stateFP[NUM_DRONE] = {state_cb0, state_cb1, state_cb2, state_cb3/*, state_cb4*/};
 	mavros_msgs::State pre_state[NUM_DRONE];
 
 	for(int i=0 ; i < NUM_DRONE ; i++){

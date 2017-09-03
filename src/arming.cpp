@@ -4,7 +4,7 @@
 #include "swarm_ctrl_pkg/srvMultiArming.h" 
 #include "swarm_ctrl_pkg/srvMultiMode.h"
 #include "swarm_ctrl_pkg/msgState.h"   //multi_state msg
-#define NUM_DRONE 5
+#define NUM_DRONE 4
 
 ros::ServiceClient arming_client[NUM_DRONE];
 ros::ServiceClient set_mode_client[NUM_DRONE];
