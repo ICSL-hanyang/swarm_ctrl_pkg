@@ -4,7 +4,7 @@
     <arg name="y" default="0"/>
     <arg name="z" default="0"/>
 
-    <arg name="est" default="lpe"/>
+    <arg name="est" default="ekf2"/>
     <arg name="vehicle" default="iris"/>
 
 	
