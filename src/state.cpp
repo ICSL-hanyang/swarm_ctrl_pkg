@@ -55,22 +55,23 @@ int main(int argc, char** argv){
 			(current_state[i].connected == true) ? cnt_connected++ : cnt_connected = 0;
 			if(cnt_connected == 0 && (ros::Time::now() - last_request > ros::Duration(3.0))){
 				ROS_WARN("Camila%d is not connected", i);
-				ros::Time last_request = ros::Time::now();
+				last_request = ros::Time::now();			
 			}
 			(current_state[i].mode == "OFFBOARD") ? cnt_mode++ : cnt_mode = 0;
 			if(cnt_mode == 0 && (ros::Time::now() - last_request > ros::Duration(3.0))){
 				ROS_INFO("Camila%d is not OFFBOARD mode", i);	
-				ros::Time last_request = ros::Time::now();
+				last_request = ros::Time::now();			
 			}
 			(current_state[i].armed == true) ? cnt_armed++ : cnt_armed = 0;
 			if(cnt_armed == 0 && (ros::Time::now() - last_request > ros::Duration(3.0))){
-				ROS_INFO("Camila%d is not armed", i);
-				ros::Time last_request = ros::Time::now();			
+				ROS_INFO("Camila%d is disarmed", i);
+				last_request = ros::Time::now();			
 			}
 		}
 		(cnt_connected == NUM_DRONE) ? msg.connected = true : msg.connected = false;
 		(cnt_mode == NUM_DRONE) ? msg.mode = true : msg.mode = false;
 		(cnt_armed == NUM_DRONE) ? msg.armed = true : msg.armed = false;
+		multi_state_pub.publish(msg);
 
 		ros::spinOnce();
 		rate.sleep();

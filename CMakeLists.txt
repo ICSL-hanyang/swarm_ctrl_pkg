@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 add_service_files(FILES srvMultiArming.srv)
+add_service_files(FILES srvMultiMode.srv)
 add_message_files(FILES msgState.msg)
 
 ## Generate added messages and services with any dependencies listed here
