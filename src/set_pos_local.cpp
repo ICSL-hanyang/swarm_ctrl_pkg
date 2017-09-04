@@ -161,18 +161,24 @@ int main(int argc, char** argv){
 	ros::NodeHandle nh;
 	ros::Publisher local_pos_pub[NUM_DRONE];
 	ros::Publisher local_vel_pub[NUM_DRONE];
+	//ros::Publisher local_raw_pub[NUM_DRONE];
 	ros::ServiceServer multi_set_pos_local_server = nh.advertiseService("multi_set_pos_local", multiSetPosLocal);
+	ros::ServiceServer multi_set_vel_local_server = nh.advertiseService("multi_set_vel_local", multiSetVelLocal);
+	//ros::ServiceServer multi_set_raw_local_server = nh.advertiseService("multi_set_raw_local", multiSetRawLocal);
 
 	std::stringstream stream;  
 	std::string group_name = "camila";
 	std::string d_mavros_l_pos = "/mavros/setpoint_position/local";
 	std::string d_mavros_l_vel = "/mavros/setpoint_velocity/cmd_vel";
+	//std::string d_mavros_l_raw = "/mavros/setpoint_raw/local";
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
 		local_pos_pub[i] = nh.advertise<geometry_msgs::PoseStamped>(
 			group_name + stream.str() + d_mavros_l_pos, 10);
 		local_vel_pub[i] = nh.advertise<geometry_msgs::TwistStamped>(
 			group_name + stream.str() + d_mavros_l_vel, 10);
+	//	local_raw_pub[i] = nh.advertise<geometry_msgs::TwistStamped>(
+	//		group_name + stream.str() + d_mavros_l_raw, 10);
 		stream.str("");
 	}
 	ros::Rate rate(20.0); // period 0.005 s

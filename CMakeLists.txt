@@ -59,3 +59,7 @@ target_link_libraries(set_pos_local_node ${catkin_LIBRARIES})
 add_executable(set_home_node src/set_home.cpp)
 add_dependencies(set_home_node swarm_ctrl_node_generate_messages_cpp)
 target_link_libraries(set_home_node ${catkin_LIBRARIES})
+
+add_executable(landing_node src/set_home.cpp)
+add_dependencies(landing_node swarm_ctrl_node_generate_messages_cpp)
+target_link_libraries(landing_node ${catkin_LIBRARIES})
