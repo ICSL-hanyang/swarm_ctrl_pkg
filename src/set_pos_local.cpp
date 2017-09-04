@@ -24,9 +24,6 @@ bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req,
 
 			for (int i = 1; i < NUM_DRONE; i++){
 				l_pos[i] = l_pos[0];
-				l_vel[i].twist.linear.x = req.vel_x;
-				l_vel[i].twist.linear.y = req.vel_y;
-				l_vel[i].twist.linear.z = req.vel_z;
 				if(i < 3)
 					l_pos[i].pose.position.x += req.offset;
 				else if(i < 5){
@@ -34,6 +31,12 @@ bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req,
 				}
 				req.offset *= -1;
 			}
+      for (int i = 0; i < NUM_DRONE; i++){
+        l_vel[i].twist.linear.x = req.vel_x;
+        l_vel[i].twist.linear.y = req.vel_y;
+        l_vel[i].twist.linear.z = req.vel_z;
+      }
+
 			ROS_INFO("move(%lf, %lf, %lf), vel(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, req.vel_x, req.vel_y, req.vel_z, req.offset);
 			res.success = true;
 		}
@@ -73,8 +76,11 @@ int main(int argc, char** argv){
 	while (ros::ok()){
 		if(b_sending){
 			for (int i = 0; i < NUM_DRONE; i++){
+        l_pos[i].header.stamp = ros::Time::now();
+
+        l_vel[i].header.stamp = ros::Time::now();
 				local_pos_pub[i].publish(l_pos[i]);
-				local_vel_pub[i].publish(l_vel[i]);
+        local_vel_pub[i].publish(l_vel[i]);
 			}
 		}
 		ros::spinOnce();

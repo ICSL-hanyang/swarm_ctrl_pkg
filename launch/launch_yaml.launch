@@ -35,7 +35,7 @@
       <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_2.yaml" />
 </node>
 
-<node machine="camila1" name="nshm_driver" pkg="ntpd_driver" type="ntpd_driver_node" output="screen">
+<node machine="camila2" name="nshm_driver" pkg="ntpd_driver" type="ntpd_driver_node" output="screen">
     <param name="shm_unit" value="2" />
     <remap from="/time_ref" to="camila2/mavros/time_reference" />
 </node>
