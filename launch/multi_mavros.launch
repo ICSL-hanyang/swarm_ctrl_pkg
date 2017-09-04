@@ -63,5 +63,8 @@
 <node name="set_pos_local_node" pkg="swarm_ctrl_pkg" type="set_pos_local_node" output="screen">
 </node>
 
+<node name="set_home_node" pkg="swarm_ctrl_pkg" type="set_home_node" output="screen">
+</node>
+
 
 </launch>

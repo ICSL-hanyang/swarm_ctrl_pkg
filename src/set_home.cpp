@@ -2,7 +2,7 @@
 #include <mavros_msgs/CommandHome.h>   //set_home
 #include <sensor_msgs/NavSatFix.h>     //set_home
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
-#define NUM_DRONE 5
+#define NUM_DRONE 4
 
 ros::ServiceClient set_home_client[NUM_DRONE];
 sensor_msgs::NavSatFix g_pos[NUM_DRONE];
@@ -45,19 +45,20 @@ int main(int argc, char** argv){
 
 	ros::NodeHandle nh;
 	ros::Subscriber global_pos_sub[NUM_DRONE];
+
 	ros::ServiceServer multi_set_home_server = nh.advertiseService("multi_set_home", multiSetHome);
 
 	std::stringstream stream;  
 	std::string d_mavros_home = "/mavros/cmd/set_home";
 	std::string d_mavros_g_pos	= "/mavros/global_position/global";
 
+
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
 		global_pos_sub[i] = nh.subscribe<sensor_msgs::NavSatFix>(
-			group_name + stream.str() + d_mavros_g_pos, 10, globalPosCB);	
+      group_name + stream.str() + d_mavros_g_pos, 10, globalPosCB);
 		set_home_client[i] = nh.serviceClient<mavros_msgs::CommandHome>(
-			group_name + stream.str() + d_mavros_home);
-		stream.str("");
+			group_name + stream.str() + d_mavros_home);		stream.str("");
 	}
 	ros::Rate rate(10.0); // period 0.005 s
 	ROS_INFO("Ready to set_home");

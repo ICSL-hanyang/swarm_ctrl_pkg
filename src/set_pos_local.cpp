@@ -5,7 +5,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
 //#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
-#define NUM_DRONE 5
+#define NUM_DRONE 4
 
 double pre_req_pos[4] = {0.0, 0.0, 0.0, 2.0}; //x, y, z, offset
 double pre_req_vel[3] = {0.0, 0.0, 0.0}; //vel_x, vel_y, vel_z
@@ -38,6 +38,7 @@ bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req,
 				}
 				req.offset *= -1;
 			}
+
 			req.offset = (req.offset > 0) ? req.offset : (-1)*req.offset;
 			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, req.offset);
 			res.success = true;
@@ -66,6 +67,7 @@ bool multiSetVelLocal(swarm_ctrl_pkg::srvMultiSetVelLocal::Request &req,
 			pre_req_vel[0] = req.vel_x;
 			pre_req_vel[1] = req.vel_y;
 			pre_req_vel[2] = req.vel_z;
+
 			res.success = true;
 		}
 		else{
@@ -187,6 +189,7 @@ int main(int argc, char** argv){
 	while (ros::ok()){
 		if(b_pos_flag){
 			for (int i = 0; i < NUM_DRONE; i++){
+
 				l_pos[i].header.stamp = ros::Time::now();
 				local_pos_pub[i].publish(l_pos[i]);
 			}
@@ -195,6 +198,7 @@ int main(int argc, char** argv){
 			for (int i = 0; i < NUM_DRONE; i++){
 				l_vel[i].header.stamp = ros::Time::now();
 				local_vel_pub[i].publish(l_vel[i]);
+
 			}
 		}
 /*		if(b_pos_flag){
