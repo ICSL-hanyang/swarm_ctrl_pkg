@@ -45,11 +45,10 @@ int main(int argc, char** argv){
 
 	ros::NodeHandle nh;
 	ros::Subscriber global_pos_sub[NUM_DRONE];
-	ros::ServiceClient set_home_client[NUM_DRONE];
 	ros::ServiceServer multi_set_home_server = nh.advertiseService("multi_set_home", multiSetHome);
 
 	std::stringstream stream;  
-	std::string d_mavros_home = "/mavros/set_home";
+	std::string d_mavros_home = "/mavros/cmd/set_home";
 	std::string d_mavros_g_pos	= "/mavros/global_position/global";
 
 	for(int i=0 ; i < NUM_DRONE ; i++){

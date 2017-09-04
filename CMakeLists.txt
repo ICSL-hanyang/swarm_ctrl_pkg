@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(FILES srvMultiArming.srv)
 add_service_files(FILES srvMultiMode.srv)
 add_service_files(FILES srvMultiSetPosLocal.srv)
+add_service_files(FILES srvMultiSetVelLocal.srv)
+add_service_files(FILES srvMultiSetRawLocal.srv)
 add_service_files(FILES srvMultiSetHome.srv)
 add_message_files(FILES msgState.msg)
 
