@@ -5,7 +5,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
 //#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
-#define NUM_DRONE 5
+#define NUM_DRONE 4
 
 double pre_req_pos[4] = {0.0, 0.0, 0.0, 2.0}; //x, y, z, offset
 double pre_req_vel[3] = {0.0, 0.0, 0.0}; //vel_x, vel_y, vel_z
