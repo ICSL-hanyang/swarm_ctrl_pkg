@@ -31,6 +31,7 @@ bool multiArming(swarm_ctrl_pkg::srvMultiArming::Request &req, swarm_ctrl_pkg::s
 		p_msg.request.y = l_pos[0].pose.position.y;
 		p_msg.request.z = 2;
 		v_msg.request.vel_flag = false;
+
 		if(multi_set_pos_local_client.call(p_msg) && p_msg.response.success){
 			if(multi_set_vel_local_client.call(v_msg) && v_msg.response.success){
 				for (int i = 0; i < NUM_DRONE; i++){
@@ -91,9 +92,15 @@ void multiStateCB(const swarm_ctrl_pkg::msgState::ConstPtr& msg){
 bool multiLanding(swarm_ctrl_pkg::srvMultiLanding::Request &req, swarm_ctrl_pkg::srvMultiLanding::Response &res){
 	swarm_ctrl_pkg::srvMultiSetPosLocal p_msg;
 	swarm_ctrl_pkg::srvMultiSetVelLocal v_msg;
-	if(req.where == "here" || req.where == "HERE" | req.where == "Here"){
-		p_msg.request.pos_flag = false;
+  if(req.where == "here" || req.where == "HERE" | req.where == "Here"){
+    p_msg.request.pos_flag = true;
+    p_msg.request.x = l_pos[0].pose.position.x;
+    p_msg.request.y = l_pos[0].pose.position.y;
+    p_msg.request.z = -10;
+
 		v_msg.request.vel_flag = true;
+    v_msg.request.vel_x = 0;
+    v_msg.request.vel_y = 0;
 		v_msg.request.vel_z = -0.7;
 		if(multi_set_pos_local_client.call(p_msg) && p_msg.response.success){
 			if(multi_set_vel_local_client.call(v_msg) && v_msg.response.success){
@@ -107,6 +114,7 @@ bool multiLanding(swarm_ctrl_pkg::srvMultiLanding::Request &req, swarm_ctrl_pkg:
 			res.success = false;	
 		}
 	}
+  /*
 	else if(req.where == "home" || req.where == "HOME" | req.where == "Home"){
 		p_msg.request.pos_flag = true;
 		p_msg.request.x = 0;
@@ -120,6 +128,7 @@ bool multiLanding(swarm_ctrl_pkg::srvMultiLanding::Request &req, swarm_ctrl_pkg:
 			res.success = false;	
 		}
 	}
+  */
 	return true;
 }
 
@@ -166,6 +175,8 @@ int main(int argc, char** argv){
 
 	ROS_INFO("Command node started");
 	ros::Time set_timer;
+
+  /*
 	while(ros::ok()){
 		if(b_home_landing && (l_pos[0].pose.position.x < 0.5 || l_pos[0].pose.position.x > -0.5)){
 			set_timer = ros::Time::now() + ros::Duration(3.0);
@@ -183,6 +194,7 @@ int main(int argc, char** argv){
 		ros::spinOnce();
 		rate.sleep();
 	}
-	
+  */
+  ros::spin();
 	return 0;
 }
