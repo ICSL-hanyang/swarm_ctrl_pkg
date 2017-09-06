@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 	ros::NodeHandle nh;
 	ros::ServiceServer multi_arming_server = nh.advertiseService("multi_arming", multiArming);
 	ros::ServiceServer multi_mode_server = nh.advertiseService("multi_mode", multiMode);
-	ros::Subscriber multi_state_sub = nh.subscribe<swarm_ctrl_pkg::msgState>("multi_state", 50,multiStateCB);
+	ros::Subscriber multi_state_sub = nh.subscribe("multi_state", 50,multiStateCB);
 
 	std::stringstream stream;  
 	std::string group_name = "camila";

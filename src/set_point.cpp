@@ -7,40 +7,34 @@
 //#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
 #define NUM_DRONE 4
 
-double pre_req_pos[4] = {0.0, 0.0, 0.0, 2.0}; //x, y, z, offset
+double offset = 2;
+double pre_offset;
+double pre_req_pos[3] = {0.0, 0.0, 2.0}; //x, y, z
 double pre_req_vel[3] = {0.0, 0.0, 0.0}; //vel_x, vel_y, vel_z
-//double pre_req_raw[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //x, y, z, vel_x, vel_y, vel_z, acc_x, acc_y, acc_z, offset
+//double pre_req_raw[3][3] = {0.0,}; //x, y, z, vel_x, vel_y, vel_z, acc_x, acc_y, acc_z
 bool b_pos_flag = false;
 bool b_vel_flag = false;
 //bool b_acc_flag = false;
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 geometry_msgs::TwistStamped l_vel[NUM_DRONE];
 //mavros_msgs::PositionTarget l_raw[NUM_DRONE];
+void mkFomation(std::string formation, double _offset);
 
 bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req, 
 	swarm_ctrl_pkg::srvMultiSetPosLocal::Response &res){
 	b_pos_flag = req.pos_flag;
+	//nh.getParam("set_point_node/offset", offset);
 	if(req.pos_flag){
-		if (req.x != pre_req_pos[0] | req.y != pre_req_pos[1] | req.z != pre_req_pos[2] | req.offset != pre_req_pos[3]){
+		if (req.x != pre_req_pos[0] | req.y != pre_req_pos[1] | req.z != pre_req_pos[2] | offset != pre_offset){
 			l_pos[0].pose.position.x = req.x;
 			l_pos[0].pose.position.y = req.y;
 			l_pos[0].pose.position.z = req.z;
 			pre_req_pos[0] = req.x;
 			pre_req_pos[1] = req.y;
 			pre_req_pos[2] = req.z;
-			pre_req_pos[3] = req.offset;
-			for (int i = 1; i < NUM_DRONE; i++){
-				l_pos[i] = l_pos[0];
-				if(i < 3)
-					l_pos[i].pose.position.x += req.offset;
-				else if(i < 5){
-					l_pos[i].pose.position.y += req.offset;
-				}
-				req.offset *= -1;
-			}
-
-			req.offset = (req.offset > 0) ? req.offset : (-1)*req.offset;
-			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, req.offset);
+			pre_offset = offset;
+			mkFomation("diamond", offset);
+			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, offset);
 			res.success = true;
 		}
 		else{
@@ -157,8 +151,22 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 	return true;
 }*/
 
+void mkFomation(std::string formation, double _offset){
+	if(formation == "diamond" || formation == "Diamond" || formation == "DIAMOND"){
+		for (int i = 1; i < NUM_DRONE; i++){
+			l_pos[i] = l_pos[0];
+			if(i < 3)
+				l_pos[i].pose.position.x += _offset;
+			else if(i < 5){
+				l_pos[i].pose.position.y += _offset;
+			}
+			_offset *= -1;
+		}
+	}
+}
+
 int main(int argc, char** argv){
-	ros::init(argc, argv, "set_pos_local_node");
+	ros::init(argc, argv, "set_point_node");
 
 	ros::NodeHandle nh;
 	ros::Publisher local_pos_pub[NUM_DRONE];
@@ -183,18 +191,19 @@ int main(int argc, char** argv){
 	//		group_name + stream.str() + d_mavros_l_raw, 10);
 		stream.str("");
 	}
+	nh.setParam("set_point_node/offset", 2.0);
 	ros::Rate rate(20.0); // period 0.005 s
 	ROS_INFO("Local_position publish start");
 
 	while (ros::ok()){
+		nh.getParam("set_point_node/offset", offset);
 		if(b_pos_flag){
 			for (int i = 0; i < NUM_DRONE; i++){
-
 				l_pos[i].header.stamp = ros::Time::now();
 				local_pos_pub[i].publish(l_pos[i]);
 			}
 		}
-		if(b_pos_flag){
+		if(b_vel_flag){
 			for (int i = 0; i < NUM_DRONE; i++){
 				l_vel[i].header.stamp = ros::Time::now();
 				local_vel_pub[i].publish(l_vel[i]);

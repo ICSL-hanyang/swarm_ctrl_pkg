@@ -13,19 +13,19 @@ bool multiSetHome(swarm_ctrl_pkg::srvMultiSetHome::Request &req,
 	int cnt_home = 0;
 	mavros_msgs::CommandHome home_gps;
 	home_gps.request.current_gps = false;
-    home_gps.request.latitude = g_pos[req.drone_num].latitude;
-    home_gps.request.longitude = g_pos[req.drone_num].longitude;
-    home_gps.request.altitude = g_pos[req.drone_num].altitude;
-    for (int i = 0; i < NUM_DRONE; i++){
-      if (set_home_client[i].call(home_gps) && home_gps.response.success){
-        ROS_INFO("Camila%d reset home position", i);
-        cnt_home++;
-      }
-      else{
-      	cnt_home = 0;	
-      }
-    }
- 	(cnt_home == NUM_DRONE) ? res.success = true : res.success = false;    
+	home_gps.request.latitude = g_pos[req.drone_num].latitude;
+	home_gps.request.longitude = g_pos[req.drone_num].longitude;
+	home_gps.request.altitude = g_pos[req.drone_num].altitude;
+	for (int i = 0; i < NUM_DRONE; i++){
+		if (set_home_client[i].call(home_gps) && home_gps.response.success){
+			ROS_INFO("Camila%d reset home position", i);
+			cnt_home++;
+		}
+		else{
+			cnt_home = 0;	
+		}
+	}
+	(cnt_home == NUM_DRONE) ? res.success = true : res.success = false;    
 	return true;
 }
 
@@ -55,10 +55,11 @@ int main(int argc, char** argv){
 
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
-		global_pos_sub[i] = nh.subscribe<sensor_msgs::NavSatFix>(
-      group_name + stream.str() + d_mavros_g_pos, 10, globalPosCB);
+		global_pos_sub[i] = nh.subscribe(
+			group_name + stream.str() + d_mavros_g_pos, 10, globalPosCB);
 		set_home_client[i] = nh.serviceClient<mavros_msgs::CommandHome>(
-			group_name + stream.str() + d_mavros_home);		stream.str("");
+			group_name + stream.str() + d_mavros_home);
+		stream.str("");
 	}
 	ros::Rate rate(10.0); // period 0.005 s
 	ROS_INFO("Ready to set_home");
