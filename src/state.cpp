@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
-		state_sub[i] = nh.subscribe<mavros_msgs::State>(
+		state_sub[i] = nh.subscribe(
 			group_name + stream.str() + d_mavros_state, 10, stateFP[i]);
 		stream.str("");
 	}
