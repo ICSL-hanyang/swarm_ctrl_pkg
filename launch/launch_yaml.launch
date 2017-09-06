@@ -3,6 +3,23 @@
 <arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
 <arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
 
+<group ns = "camila0">
+<machine name = "camila0" address="192.168.0.10" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
+  <node machine="camila0" name="mavros" pkg="mavros" type="mavros_node" output="screen">
+        <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
+        <param name="gcs_url" value="$(arg gcs_url)" />
+        <param name="target_system_id" value="1" />
+        <param name="target_component_id" value="1" />
+        <rosparam command="load" file="$(arg pluginlists_yaml)" />
+        <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_0.yaml" />
+  </node>
+
+  <node machine="camila0" name="nshm_driver" pkg="ntpd_driver" type="ntpd_driver_node" output="screen">
+      <param name="shm_unit" value="2" />
+      <remap from="/time_ref" to="camila0/mavros/time_reference" />
+  </node>
+
+</group>
 
 <group ns = "camila1">
 <machine name = "camila1" address="192.168.0.11" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
