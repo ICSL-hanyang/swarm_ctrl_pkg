@@ -194,7 +194,7 @@ int main(int argc, char** argv){
 				local_pos_pub[i].publish(l_pos[i]);
 			}
 		}
-		if(b_pos_flag){
+    if(b_vel_flag){
 			for (int i = 0; i < NUM_DRONE; i++){
 				l_vel[i].header.stamp = ros::Time::now();
 				local_vel_pub[i].publish(l_vel[i]);
