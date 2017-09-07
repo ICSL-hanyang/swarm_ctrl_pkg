@@ -154,7 +154,7 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 void mkFomation(std::string formation, double _offset){
 	if(formation == "diamond" || formation == "Diamond" || formation == "DIAMOND"){
 		for (int i = 1; i < NUM_DRONE; i++){
-			l_pos[i] = l_pos[0];
+      l_pos[i] = l_pos[0];
 			if(i < 3)
 				l_pos[i].pose.position.x += _offset;
 			else if(i < 5){
@@ -180,6 +180,8 @@ int main(int argc, char** argv){
 	std::string group_name = "camila";
 	std::string d_mavros_l_pos = "/mavros/setpoint_position/local";
 	std::string d_mavros_l_vel = "/mavros/setpoint_velocity/cmd_vel";
+  ros::Rate rate(10.0); // period 0.1 s
+
 	//std::string d_mavros_l_raw = "/mavros/setpoint_raw/local";
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
@@ -192,7 +194,7 @@ int main(int argc, char** argv){
 		stream.str("");
 	}
 	nh.setParam("set_point_node/offset", 2.0);
-	ros::Rate rate(20.0); // period 0.005 s
+
 	ROS_INFO("Local_position publish start");
 
 	while (ros::ok()){

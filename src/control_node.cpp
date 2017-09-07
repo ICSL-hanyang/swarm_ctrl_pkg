@@ -21,7 +21,6 @@ int main(int argc, char** argv)
   ros::Subscriber multi_state_sub = nh.subscribe("multi_state", 50, multiStateCB);
   ros::ServiceClient arming_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiArming>("multi_arming");
   ros::ServiceClient set_mode_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiMode>("multi_mode");
-  ros::ServiceClient set_home_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiSetHome>("multi_set_home");
   ros::ServiceClient set_pos_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiSetPosLocal>("multi_set_pos_local");
   ros::ServiceClient set_vel_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiSetVelLocal>("multi_set_vel_local");
 
@@ -33,24 +32,29 @@ int main(int argc, char** argv)
   }
   swarm_ctrl_pkg::srvMultiSetPosLocal p_msg;
   swarm_ctrl_pkg::srvMultiMode mode;
-  swarm_ctrl_pkg::srvMultiSetHome home;
   p_msg.request.pos_flag = true;
   p_msg.request.x = 0;
   p_msg.request.y = 0;
   p_msg.request.z = -1;
-  home.request.drone_num = 0;
   mode.request.mode = "OFFBOARD";
-  if(set_pos_client.call(p_msg) && p_msg.response.success){
-    if(set_mode_client.call(mode) && mode.response.success){
-      if(set_home_client.call(home) && home.response.success){
-      }
-    }
-  }
+
 
   // wait for FCU connection
   ROS_INFO("Control node executed");
+  if(set_pos_client.call(p_msg) && p_msg.response.success){
+    ;
+  }
+  ros::Time last_req = ros::Time::now();
+  while(ros::ok()){
+    if(m_state.mode != true && (ros::Time::now() - last_req > ros::Duration(3.0))){
+      if(set_mode_client.call(mode) && mode.response.success){
+      }
 
-  ros::spin();
+      last_req = ros::Time::now();
+    }
+
+
+  }
 
   return 0;
 }
