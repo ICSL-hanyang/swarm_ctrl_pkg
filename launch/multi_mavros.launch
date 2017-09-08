@@ -59,15 +59,14 @@
 </node>
 
 <node name="state_node" pkg="swarm_ctrl_pkg" type="state_node" output="screen">
-</node>
+</node>cm
 
 <node name="set_point_node" pkg="swarm_ctrl_pkg" type="set_point_node" output="screen">
-   <param name="offset" value="2"/>
    <param name="formation" value="diamond"/>
 </node>
-<!--
+
 <node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen">
+  <param name="land" value="2"/>
 </node>
--->
 
 </launch>

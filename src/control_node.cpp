@@ -8,6 +8,7 @@
 #include "swarm_ctrl_pkg/srvMultiLanding.h" 
 #define NUM_DRONE 4
 
+//int land = 0;
 swarm_ctrl_pkg::msgState m_state;
 void multiStateCB(const swarm_ctrl_pkg::msgState::ConstPtr& msg){
   m_state = *msg;
@@ -27,6 +28,7 @@ int main(int argc, char** argv)
 
   // the setpoint publishing rate MUST be faster than 2Hz
   ros::Rate rate(10.0); // period 0.01 s
+  //nh.setParam("control_node/mode", 0);
   while(ros::ok() && m_state.connected){
     ros::spinOnce();
     rate.sleep();    
@@ -38,7 +40,30 @@ int main(int argc, char** argv)
 
   // wait for FCU connection
   ROS_INFO("Control node executed");
+ /* swarm_ctrl_pkg::srvMultiSetPosLocal p_msg;
+  swarm_ctrl_pkg::srvMultiSetVelLocal v_msg;
+  while(ros::ok()){
+    nh.getParam("control_node/land", land);
+    if(land == 1){
+      p_msg.request.pos_flag = true;
+      p_msg.request.x = 0;
+      p_msg.request.y = 0;
+      p_msg.request.z = -10;
+      v_msg.request.vel_flag = true;
+      v_msg.request.vel_x = 0;
+      v_msg.request.vel_y = 0;
+      v_msg.request.vel_z = -10;
+        set_pos_client.call(p_msg);
+        set_vel_client.call(v_msg);
 
+    }
+    else{
+      v_msg.request.vel_flag = false;
+      set_vel_client.call(v_msg);
+    }
+    ros::spinOnce();
+    rate.sleep();
+  }*/
   ros::spin();
 
   return 0;
