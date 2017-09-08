@@ -23,9 +23,8 @@ int main(int argc, char** argv)
   ros::ServiceClient set_mode_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiMode>("multi_mode");
   ros::ServiceClient set_pos_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiSetPosLocal>("multi_set_pos_local");
   ros::ServiceClient set_vel_client = nh.serviceClient<swarm_ctrl_pkg::srvMultiSetVelLocal>("multi_set_vel_local");
+  ros::Rate rate(10.0);
 
-  // the setpoint publishing rate MUST be faster than 2Hz
-  ros::Rate rate(10.0); // period 0.01 s
   while(ros::ok() && m_state.connected){
     ros::spinOnce();
     rate.sleep();    
