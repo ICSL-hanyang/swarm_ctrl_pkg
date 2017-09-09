@@ -11,7 +11,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
 #include "swarm_ctrl_pkg/srvMultiLanding.h"
-//#include <mavros_msgs/CommandTOL.h>
+
 
 #define NUM_DRONE 4
 
@@ -20,7 +20,7 @@ ros::ServiceClient set_mode_client[NUM_DRONE];
 ros::ServiceClient multi_set_pos_local_client;
 ros::ServiceClient multi_set_vel_local_client;
 ros::ServiceClient multi_set_home_client;
-//ros::ServiceClient landing_client[NUM_DRONE];
+
 ros::ServiceClient set_home_client[NUM_DRONE];
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 sensor_msgs::NavSatFix g_pos[NUM_DRONE];
@@ -106,6 +106,8 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
   }
   return true;
 }
+
+
 
 bool multiLanding(swarm_ctrl_pkg::srvMultiLanding::Request& req,
                   swarm_ctrl_pkg::srvMultiLanding::Response& res)

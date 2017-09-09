@@ -2,12 +2,9 @@ Drone Setpoint Test code
 
 plz insert the code below into .bashrc 
 
-alias take='rosparam set /test_node/mode 0'
-
-alias land='rosparam set /test_node/mode 4'
-
-alias x='rosparam set /test_node/x'
-
-alias y='rosparam set /test_node/y'
-
-alias z='rosparam set /test_node/z'
+alias offboard="rosservice call /multi_mode 'OFFBOARD'"
+alias arm='rosservice call /multi_arming 1'
+alias takeoff='rosservice call /multi_set_pos_local 1 0 0 3'
+alias goto='rosservice call /multi_set_pos_local 1 '
+alias land="rosservice call /multi_landing 'here'"
+alias reset="rosservice call /multi_set_vel_local 0 0 0 0"
