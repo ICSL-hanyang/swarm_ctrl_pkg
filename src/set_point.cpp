@@ -33,7 +33,7 @@ bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req,
 			pre_req_pos[1] = req.y;
 			pre_req_pos[2] = req.z;
 			pre_offset = offset;
-			mkFomation("diamond", offset);
+      mkFomation("diamond", offset);
 			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, offset);
 			res.success = true;
 		}

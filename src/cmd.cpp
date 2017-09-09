@@ -21,13 +21,14 @@ ros::ServiceClient multi_set_pos_local_client;
 ros::ServiceClient multi_set_vel_local_client;
 ros::ServiceClient multi_set_home_client;
 
+
 ros::ServiceClient set_home_client[NUM_DRONE];
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 sensor_msgs::NavSatFix g_pos[NUM_DRONE];
 swarm_ctrl_pkg::msgState multi_state;
 std::string group_name = "camila";
 bool b_home_landing = false;
-double takeoff_al = 2.0;
+double takeoff_alt = 2.5;
 
 bool multiArming(swarm_ctrl_pkg::srvMultiArming::Request& req,
                  swarm_ctrl_pkg::srvMultiArming::Response& res)
@@ -81,7 +82,7 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
   p_msg.request.pos_flag = true;
   p_msg.request.x = 0;
   p_msg.request.y = 0;
-  p_msg.request.z = -10.0;
+  p_msg.request.z = takeoff_alt;
   multi_set_pos_local_client.call(p_msg);
 
   set_mode.request.custom_mode = req.mode;
@@ -219,8 +220,8 @@ void multiStateCB(const swarm_ctrl_pkg::msgState::ConstPtr& msg)
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "cmd_node");
-
   ros::NodeHandle nh;
+
   ros::Subscriber local_pos_sub[NUM_DRONE];
   ros::Subscriber global_pos_sub[NUM_DRONE];
   ros::ServiceServer multi_arming_server =
@@ -264,8 +265,18 @@ int main(int argc, char** argv)
         group_name + stream.str() + d_mavros_home);
     stream.str("");
   }
+
   ros::Rate rate(10.0); // period 0.01 s
   ROS_INFO("Command node started");
+  while (ros::ok()){
+
+
+
+    ros::spinOnce();
+    rate.sleep();
+  }
+
+
   /*
   nh.setParam("cmd_node/takeoff_altitude", 2.0);
   ros::Time set_timer;
