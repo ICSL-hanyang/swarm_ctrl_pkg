@@ -1,5 +1,5 @@
 <launch>
-
+<param name ="/use_sim_time" value="true"/>
 <arg name="gcs_url" value=""/>
 <arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
 <arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
@@ -12,6 +12,11 @@
 		<param name="target_component_id" value="1" />
                 <rosparam command="load" file="$(arg pluginlists_yaml)" />
                 <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_0.yaml" />
+
+                <param name="local_position/tf/send" value="true" />
+                <param name="local_position/tf/child_frame_id" value="camila0" />
+                <param name="global_position/tf/send" value="false" />
+                <param name="global_position/tf/child_frame_id" value="camila0" />
 	</node>
 
 </group>
@@ -24,6 +29,11 @@
 		<param name="target_component_id" value="1" />
                 <rosparam command="load" file="$(arg pluginlists_yaml)" />
                 <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_1.yaml" />
+                <param name="local_position/tf/send" value="true" />
+                <param name="local_position/tf/child_frame_id" value="camila1" />
+                <param name="global_position/tf/send" value="false" />
+                <param name="global_position/tf/child_frame_id" value="camila1" />
+
 	</node>
 
 </group>
@@ -37,6 +47,10 @@
 		<param name="target_component_id" value="1" />
                 <rosparam command="load" file="$(arg pluginlists_yaml)" />
                 <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_2.yaml" />
+                <param name="local_position/tf/send" value="true" />
+                <param name="local_position/tf/child_frame_id" value="camila2" />
+                <param name="global_position/tf/send" value="false" />
+                <param name="global_position/tf/child_frame_id" value="camila2" />
 	</node>
 
 </group>
@@ -50,12 +64,16 @@
 		<param name="target_component_id" value="1" />
                 <rosparam command="load" file="$(arg pluginlists_yaml)" />
                 <rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_3.yaml" />
+                <param name="local_position/tf/send" value="true" />
+                <param name="local_position/tf/child_frame_id" value="camila3" />
+                <param name="global_position/tf/send" value="false" />
+                <param name="global_position/tf/child_frame_id" value="camila3" />
 	</node>
 
 </group>
 
 <node name="cmd_node" pkg="swarm_ctrl_pkg" type="cmd_node" output="screen">
-  <param name="takeoff_altitude" value="2"/>
+  <param name="takeoff_alt" value="4"/>
 </node>
 
 <node name="state_node" pkg="swarm_ctrl_pkg" type="state_node" output="screen">
