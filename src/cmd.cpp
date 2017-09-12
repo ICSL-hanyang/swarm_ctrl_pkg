@@ -13,7 +13,7 @@
 #include "swarm_ctrl_pkg/srvMultiLanding.h"
 
 
-#define NUM_DRONE 4
+#define NUM_DRONE 3
 
 ros::ServiceClient arming_client[NUM_DRONE];
 ros::ServiceClient set_mode_client[NUM_DRONE];

@@ -6,7 +6,7 @@
 #include "swarm_ctrl_pkg/srvMultiMode.h"
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
 #include "swarm_ctrl_pkg/srvMultiLanding.h" 
-#define NUM_DRONE 4
+#define NUM_DRONE 3
 
 //int land = 0;
 swarm_ctrl_pkg::msgState m_state;

@@ -11,7 +11,7 @@
 
 
 
-<group ns="$(arg drone_ns)">
+<group ns="camila0">
 
 	<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="$(arg log_output)">
 		<param name="fcu_url" value="$(arg fcu_url)" />
@@ -22,13 +22,13 @@
 		<rosparam command="load" file="$(arg pluginlists_yaml)" />
 		<rosparam command="load" file="$(arg config_yaml)" />
 		<param name="local_position/tf/send" value="true" />
-        <param name="local_position/tf/child_frame_id" value="$(arg drone_ns)" />
+        <param name="local_position/tf/child_frame_id" value="camila0" />
         <param name="global_position/tf/send" value="false" />
-        <param name="global_position/tf/child_frame_id" value="$(arg drone_ns)" />
+        <param name="global_position/tf/child_frame_id" value="camila0" />
 	</node>
 	<node name="ntpd_shm" pkg="ntpd_driver" type="shm_driver" output="screen">
         <param name="shm_unit" value="2" />
-        <remap from="/time_ref" to="$(arg drone_ns)/mavros/time_reference" />
+        <remap from="/time_ref" to="camila0/mavros/time_reference" />
       </node>
 
 </group>
