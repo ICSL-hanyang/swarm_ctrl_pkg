@@ -72,7 +72,6 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
   int mode_cnt = 0;
   swarm_ctrl_pkg::srvMultiSetPosLocal p_msg;
   mavros_msgs::SetMode set_mode;
-
   p_msg.request.pos_flag = true;
   p_msg.request.x = 0;
   p_msg.request.y = 0;
@@ -175,8 +174,6 @@ int main(int argc, char** argv)
 
   ros::Rate rate(10.0); // period 0.01 s
   ROS_INFO("Command node started");
-
-  nh.setParam("cmd_node/takeoff_alt", 2.5);
 
   while (ros::ok()){
 

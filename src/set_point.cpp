@@ -194,8 +194,6 @@ int main(int argc, char** argv){
 		stream.str("");
 	}
 
-	nh.setParam("set_point_node/offset", 2.0);
-  nh.setParam("set_point_node/formation", "diamond");
   ros::Rate rate(20.0); // period 0.05 s
 	ROS_INFO("Local_position publish start");
 
