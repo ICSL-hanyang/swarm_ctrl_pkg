@@ -5,7 +5,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
 //#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
-#define NUM_DRONE 3
+#define NUM_DRONE 5
 
 double offset = 2;
 double pre_offset;
@@ -15,6 +15,8 @@ double pre_req_vel[3] = {0.0, 0.0, 0.0}; //vel_x, vel_y, vel_z
 bool b_pos_flag = false;
 bool b_vel_flag = false;
 //bool b_acc_flag = false;
+
+std::string formation = "diamond";
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 geometry_msgs::TwistStamped l_vel[NUM_DRONE];
 //mavros_msgs::PositionTarget l_raw[NUM_DRONE];
@@ -33,7 +35,7 @@ bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req,
 			pre_req_pos[1] = req.y;
 			pre_req_pos[2] = req.z;
 			pre_offset = offset;
-      mkFomation("diamond", offset);
+      mkFomation(formation, offset);
 			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, offset);
 			res.success = true;
 		}
@@ -191,12 +193,16 @@ int main(int argc, char** argv){
 	//		group_name + stream.str() + d_mavros_l_raw, 10);
 		stream.str("");
 	}
+
 	nh.setParam("set_point_node/offset", 2.0);
-	ros::Rate rate(20.0); // period 0.005 s
+  nh.setParam("set_point_node/formation", "diamond");
+  ros::Rate rate(20.0); // period 0.05 s
 	ROS_INFO("Local_position publish start");
 
 	while (ros::ok()){
 		nh.getParam("set_point_node/offset", offset);
+    nh.getParam("set_point_node/formation", formation);
+
 		if(b_pos_flag){
 			for (int i = 0; i < NUM_DRONE; i++){
 				l_pos[i].header.stamp = ros::Time::now();
@@ -205,21 +211,12 @@ int main(int argc, char** argv){
 		}
 
 		if(b_vel_flag){
-
 			for (int i = 0; i < NUM_DRONE; i++){
 				l_vel[i].header.stamp = ros::Time::now();
 				local_vel_pub[i].publish(l_vel[i]);
 
 			}
 		}
-/*		if(b_pos_flag){
-			for (int i = 0; i < NUM_DRONE; i++){
-				l_pos[i].header.stamp = ros::Time::now();
-				l_vel[i].header.stamp = ros::Time::now();
-				local_pos_pub[i].publish(l_pos[i]);
-				local_vel_pub[i].publish(l_vel[i]);
-			}
-		}*/
 
 		ros::spinOnce();
 		rate.sleep();

@@ -109,4 +109,26 @@
  
         </include>
     </group>
+
+<group>
+        <arg name="ID" value="4"/>
+        <arg name="x" value="0"/>
+        <arg name="y" value="-2"/>
+        <arg name="z" value="0"/>
+
+        <arg name="rcS" default="$(find swarm_ctrl_pkg)/px4-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+        <arg name="sdf" default="$(find swarm_ctrl_pkg)/px4-configs/models/$(arg vehicle)/$(arg vehicle)_$(arg ID).sdf"/>
+
+        <include file="$(find swarm_ctrl_pkg)/launch/single_sitl_spawn.launch">
+                 <arg name="x" value="$(arg x)"/>
+                 <arg name="y" value="$(arg y)"/>
+                 <arg name="z" value="$(arg z)"/>
+                 <arg name="est" value="$(arg est)"/>
+                 <arg name="vehicle" value="$(arg vehicle)"/>
+                 <arg name="sdf" value="$(arg sdf)"/>
+                 <arg name="ID" value="$(arg ID)"/>
+                 <arg name="rcS" value="$(arg rcS)"/>
+
+        </include>
+    </group>
 </launch>
