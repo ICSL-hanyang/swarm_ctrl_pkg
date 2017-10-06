@@ -12,7 +12,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
 #include "swarm_ctrl_pkg/srvMultiLanding.h"
 
-#define NUM_DRONE 5
+#define NUM_DRONE 1
 
 ros::ServiceClient arming_client[NUM_DRONE];
 ros::ServiceClient set_mode_client[NUM_DRONE];
@@ -76,7 +76,6 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
   p_msg.request.x = 0;
   p_msg.request.y = 0;
   p_msg.request.z = takeoff_alt;
-  multi_set_pos_local_client.call(p_msg);
 
   set_mode.request.custom_mode = req.mode;
   for (int i = 0; i < NUM_DRONE; i++)
@@ -90,6 +89,7 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
       mode_cnt = 0;
     }
   }
+  multi_set_pos_local_client.call(p_msg);
   if (mode_cnt == NUM_DRONE)
   {
     res.success = true;

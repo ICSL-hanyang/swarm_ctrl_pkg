@@ -7,7 +7,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
 #include "swarm_ctrl_pkg/srvMultiLanding.h"
 
-#define NUM_DRONE 5
+#define NUM_DRONE 1
 
 swarm_ctrl_pkg::msgState m_state;
 void multiStateCB(const swarm_ctrl_pkg::msgState::ConstPtr& msg)
