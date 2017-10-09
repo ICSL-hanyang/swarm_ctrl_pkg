@@ -4,8 +4,9 @@
 #include <mavros_msgs/PositionTarget.h> //set raw 용
 #include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
+#include "include/multi_header.h"
 //#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
-#define NUM_DRONE 1
+//#define NUM_DRONE 1
 
 double offset = 2;
 double pre_offset;
