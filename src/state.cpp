@@ -48,7 +48,7 @@ int main(int argc, char** argv)
   std::string group_name = "camila";
   std::string d_mavros_state = "/mavros/state";
 
-  FuncPtr stateFP[NUM_DRONE] = {stateCB0, /*stateCB1,
+  FuncPtr stateFP[NUM_DRONE] = {stateCB0/*, stateCB1,
                                 stateCB2, stateCB3, stateCB4*/};
 
   mavros_msgs::State pre_state[NUM_DRONE];
