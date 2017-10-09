@@ -2,7 +2,7 @@
 #include <mavros_msgs/State.h>       //state check 메세지 활용용
 #include "swarm_ctrl_pkg/msgState.h" //multi_state msg
 
-#define NUM_DRONE 2
+#define NUM_DRONE 1
 
 typedef void (*FuncPtr)(const mavros_msgs::State::ConstPtr&);
 mavros_msgs::State current_state[5];
