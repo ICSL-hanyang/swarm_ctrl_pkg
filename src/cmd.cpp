@@ -12,18 +12,17 @@
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
 #include "swarm_ctrl_pkg/srvMultiLanding.h"
 
-#define NUM_DRONE 1
+#define NUM_DRONE 2
 
-ros::ServiceClient arming_client[NUM_DRONE];
-ros::ServiceClient set_mode_client[NUM_DRONE];
+ros::ServiceClient arming_client[5];
+ros::ServiceClient set_mode_client[5];
 ros::ServiceClient multi_set_pos_local_client;
 ros::ServiceClient multi_set_vel_local_client;
 ros::ServiceClient multi_set_home_client;
 
-
-ros::ServiceClient set_home_client[NUM_DRONE];
-geometry_msgs::PoseStamped l_pos[NUM_DRONE];
-sensor_msgs::NavSatFix g_pos[NUM_DRONE];
+ros::ServiceClient set_home_client[5];
+geometry_msgs::PoseStamped l_pos[5];
+sensor_msgs::NavSatFix g_pos[5];
 swarm_ctrl_pkg::msgState multi_state;
 std::string group_name = "camila";
 double takeoff_alt = 2.5;
@@ -32,7 +31,6 @@ double takeoff_alt = 2.5;
 bool multiArming(swarm_ctrl_pkg::srvMultiArming::Request& req,
 	swarm_ctrl_pkg::srvMultiArming::Response& res)
 {
-	int arming_cnt = 0;
 	mavros_msgs::CommandBool arm_cmd;
 	arm_cmd.request.value = req.arming;
 
@@ -50,7 +48,6 @@ bool multiArming(swarm_ctrl_pkg::srvMultiArming::Request& req,
 bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
 	swarm_ctrl_pkg::srvMultiMode::Response& res)
 {
-	int mode_cnt = 0;
 	swarm_ctrl_pkg::srvMultiSetPosLocal p_msg;
 	mavros_msgs::SetMode set_mode;
 	p_msg.request.pos_flag = true;
@@ -91,8 +88,8 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "cmd_node");
 	ros::NodeHandle nh;
 
-	ros::Subscriber local_pos_sub[NUM_DRONE];
-	ros::Subscriber global_pos_sub[NUM_DRONE];
+	ros::Subscriber local_pos_sub[5];
+	ros::Subscriber global_pos_sub[5];
 	ros::ServiceServer multi_arming_server =
 	nh.advertiseService("multi_arming", multiArming);
 	ros::ServiceServer multi_mode_server =
@@ -114,19 +111,16 @@ int main(int argc, char** argv)
 	std::string d_mavros_l_pos = "/mavros/local_position/pose";
 	std::string d_mavros_g_pos = "/mavros/global_position/global";
 
-	for (int i = 0; i < NUM_DRONE; i++)
-	{
-		stream << i;
-		arming_client[i] = nh.serviceClient<mavros_msgs::CommandBool>(
-			group_name + stream.str() + d_mavros_arm);
-		set_mode_client[i] = nh.serviceClient<mavros_msgs::SetMode>(
-			group_name + stream.str() + d_mavros_mode);
-		local_pos_sub[i] = nh.subscribe(group_name + stream.str() + d_mavros_l_pos,
-			10, LocalPosCB);
-		global_pos_sub[i] = nh.subscribe(group_name + stream.str() + d_mavros_g_pos,
-			10, globalPosCB);
-		stream.str("");
-	}
+	stream << NUM_DRONE;
+	arming_client[NUM_DRONE] = nh.serviceClient<mavros_msgs::CommandBool>(
+		group_name + stream.str() + d_mavros_arm);
+	set_mode_client[NUM_DRONE] = nh.serviceClient<mavros_msgs::SetMode>(
+		group_name + stream.str() + d_mavros_mode);
+	local_pos_sub[NUM_DRONE] = nh.subscribe(group_name + stream.str() + d_mavros_l_pos,
+		10, LocalPosCB);
+	global_pos_sub[NUM_DRONE] = nh.subscribe(group_name + stream.str() + d_mavros_g_pos,
+		10, globalPosCB);
+	stream.str("");
 
   ros::Rate rate(10.0); // period 0.01 s
   ROS_INFO("Command node started");
