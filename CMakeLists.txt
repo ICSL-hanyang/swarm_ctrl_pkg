@@ -60,3 +60,9 @@ target_link_libraries(state_node ${catkin_LIBRARIES})
 add_executable(set_point_node src/set_point.cpp)
 add_dependencies(set_point_node ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(set_point_node ${catkin_LIBRARIES})
+
+## Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)

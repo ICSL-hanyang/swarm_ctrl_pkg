@@ -4,29 +4,29 @@
 #include <mavros_msgs/PositionTarget.h> //set raw 용
 #include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
-#include "include/multi_header.h"
-//#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
-//#define NUM_DRONE 1
+#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
+//#include "swarm_ctrl_pkg/multi_header.h"
+
+#define NUM_DRONE 5
 
 double offset = 2;
 double pre_offset;
 double pre_req_pos[3] = {0.0, 0.0, 2.0}; //x, y, z
 double pre_req_vel[3] = {0.0, 0.0, 0.0}; //vel_x, vel_y, vel_z
-//double pre_req_raw[3][3] = {0.0,}; //x, y, z, vel_x, vel_y, vel_z, acc_x, acc_y, acc_z
+double pre_req_raw[3][3] = {0.0,}; //x, y, z, vel_x, vel_y, vel_z, acc_x, acc_y, acc_z
 bool b_pos_flag = false;
 bool b_vel_flag = false;
-//bool b_acc_flag = false;
+bool b_raw_flag = false;
 
 std::string formation = "diamond";
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 geometry_msgs::TwistStamped l_vel[NUM_DRONE];
-//mavros_msgs::PositionTarget l_raw[NUM_DRONE];
+mavros_msgs::PositionTarget l_raw[NUM_DRONE];
 void mkFomation(std::string formation, double _offset);
 
 bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req, 
 	swarm_ctrl_pkg::srvMultiSetPosLocal::Response &res){
 	b_pos_flag = req.pos_flag;
-	//nh.getParam("set_point_node/offset", offset);
 	if(req.pos_flag){
 		if (req.x != pre_req_pos[0] | req.y != pre_req_pos[1] | req.z != pre_req_pos[2] | offset != pre_offset){
 			l_pos[0].pose.position.x = req.x;
@@ -36,7 +36,7 @@ bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req,
 			pre_req_pos[1] = req.y;
 			pre_req_pos[2] = req.z;
 			pre_offset = offset;
-      mkFomation(formation, offset);
+			mkFomation(formation, offset);
 			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, offset);
 			res.success = true;
 		}
@@ -196,29 +196,29 @@ int main(int argc, char** argv){
 	}
 
   ros::Rate rate(20.0); // period 0.05 s
-	ROS_INFO("Local_position publish start");
+  ROS_INFO("Local_position publish start");
 
-	while (ros::ok()){
-		nh.getParam("set_point_node/offset", offset);
-    nh.getParam("set_point_node/formation", formation);
+  while (ros::ok()){
+  	nh.getParam("set_point_node/offset", offset);
+  	nh.getParam("set_point_node/formation", formation);
 
-		if(b_pos_flag){
-			for (int i = 0; i < NUM_DRONE; i++){
-				l_pos[i].header.stamp = ros::Time::now();
-				local_pos_pub[i].publish(l_pos[i]);
-			}
-		}
+  	if(b_pos_flag){
+  		for (int i = 0; i < NUM_DRONE; i++){
+  			l_pos[i].header.stamp = ros::Time::now();
+  			local_pos_pub[i].publish(l_pos[i]);
+  		}
+  	}
 
-		if(b_vel_flag){
-			for (int i = 0; i < NUM_DRONE; i++){
-				l_vel[i].header.stamp = ros::Time::now();
-				local_vel_pub[i].publish(l_vel[i]);
+  	if(b_vel_flag){
+  		for (int i = 0; i < NUM_DRONE; i++){
+  			l_vel[i].header.stamp = ros::Time::now();
+  			local_vel_pub[i].publish(l_vel[i]);
 
-			}
-		}
+  		}
+  	}
 
-		ros::spinOnce();
-		rate.sleep();
-	}
-	return 0; 
+  	ros::spinOnce();
+  	rate.sleep();
+  }
+  return 0; 
 }
