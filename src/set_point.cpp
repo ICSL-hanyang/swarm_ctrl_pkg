@@ -79,21 +79,30 @@ bool multiSetVelLocal(swarm_ctrl_pkg::srvMultiSetVelLocal::Request &req,
 
 bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req, 
 	swarm_ctrl_pkg::srvMultiSetRawLocal::Response &res){
-	if((req.flag_mask&RAW_ON) == RAW_ON){
+	if((req.flag_mask&0x01) == 0x01){
 		b_raw_flag = true;
 		b_pos_flag = false;
 		b_vel_flag = false; 
 		for(int i = 0; i < NUM_DRONE; i++){
 			l_raw[i].coordinate_frame = req.coordinate_frame;
-			l_raw[i].type_mask = 0;
-			l_raw[i].type_mask |= (IGNORE_PX + IGNORE_PY + IGNORE_PZ + IGNORE_VX + IGNORE_VY + IGNORE_VZ + IGNORE_AFX + IGNORE_AFY + IGNORE_AFZ + IGNORE_YAW + IGNORE_YAW_RATE);
+			l_raw[i].type_mask = mavros_msgs::PositionTarget::IGNORE_PX | 
+			mavros_msgs::PositionTarget::IGNORE_PY | 
+			mavros_msgs::PositionTarget::IGNORE_PZ | 
+			mavros_msgs::PositionTarget::IGNORE_VX | 
+			mavros_msgs::PositionTarget::IGNORE_VY | 
+			mavros_msgs::PositionTarget::IGNORE_VZ | 
+			mavros_msgs::PositionTarget::IGNORE_AFX | 
+			mavros_msgs::PositionTarget::IGNORE_AFY | 
+			mavros_msgs::PositionTarget::IGNORE_AFZ | 
+			mavros_msgs::PositionTarget::IGNORE_YAW | 
+			mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
 		}
 	}
 	else{
 		b_raw_flag = false;	
 	}
 
-	if((req.flag_mask&POS_ON) == POS_ON){
+	if((req.flag_mask&0x02) == 0x02){
 		if (req.x != pre_req_raw[0][0] | req.y != pre_req_raw[0][1] | req.z != pre_req_raw[0][2] | offset != pre_offset){
 			l_raw[0].position.x = req.x;
 			l_raw[0].position.y = req.y;
@@ -104,7 +113,9 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 			pre_offset = offset;
 			mkFomation(formation, offset);
 			for (int i = 0; i < NUM_DRONE; i++){
-				l_raw[i].type_mask |= !(IGNORE_PX + IGNORE_PY + IGNORE_PZ);
+				l_raw[i].type_mask |= !(mavros_msgs::PositionTarget::IGNORE_PX | 
+					mavros_msgs::PositionTarget::IGNORE_PY | 
+					mavros_msgs::PositionTarget::IGNORE_PZ);
 			}
 			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, offset);
 			res.success = true;
@@ -116,13 +127,15 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 	else{
 		res.success = false;
 	}
-	if((req.flag_mask&VEL_ON) == VEL_ON){
+	if((req.flag_mask& 0x04) == 0x04){
 		if (req.vel_x != pre_req_raw[1][0] | req.vel_y != pre_req_raw[1][1] | req.vel_z != pre_req_raw[1][2]){
 			for (int i = 0; i < NUM_DRONE; i++){
 				l_raw[i].velocity.x = req.vel_x;
 				l_raw[i].velocity.y = req.vel_y;
 				l_raw[i].velocity.z = req.vel_z;
-				l_raw[i].type_mask |= !(IGNORE_VX + IGNORE_VY + IGNORE_VZ);
+				l_raw[i].type_mask |= !(mavros_msgs::PositionTarget::IGNORE_VX | 
+					mavros_msgs::PositionTarget::IGNORE_VY | 
+					mavros_msgs::PositionTarget::IGNORE_VZ);
 			}
 			ROS_INFO("vel(%lf, %lf, %lf)", req.vel_x, req.vel_y, req.vel_z);
 			pre_req_raw[1][0] = req.vel_x;
@@ -137,13 +150,15 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 	else{
 		res.success = false;
 	}
-	if((req.flag_mask&ACC_ON) == ACC_ON){
+	if((req.flag_mask&0x08) == 0x08){
 		if (req.acc_x != pre_req_raw[2][0] | req.acc_y != pre_req_raw[2][1] | req.acc_z != pre_req_raw[2][2]){
 			for (int i = 1; i < NUM_DRONE; i++){
 				l_raw[i].acceleration_or_force.x = req.acc_x;
 				l_raw[i].acceleration_or_force.y = req.acc_y;
 				l_raw[i].acceleration_or_force.z = req.acc_z;
-				l_raw[i].type_mask |= !(IGNORE_AFX + IGNORE_AFY + IGNORE_AFZ);
+				l_raw[i].type_mask |= !(mavros_msgs::PositionTarget::IGNORE_AFX | 
+					mavros_msgs::PositionTarget::IGNORE_AFY | 
+					mavros_msgs::PositionTarget::IGNORE_AFZ);
 			}
 			ROS_INFO("acc(%lf, %lf, %lf)", req.acc_x, req.acc_y, req.acc_z);
 			pre_req_raw[2][0] = req.acc_x;

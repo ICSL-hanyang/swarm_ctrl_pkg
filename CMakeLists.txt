@@ -19,6 +19,7 @@ add_service_files(
    srvMultiMode.srv
    srvMultiSetPosLocal.srv
    srvMultiSetVelLocal.srv
+   srvMultiSetRawLocal.srv
    srvMultiSetHome.srv
    srvMultiLanding.srv
 
