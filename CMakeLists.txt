@@ -17,8 +17,6 @@ add_service_files(
    FILES
    srvMultiArming.srv
    srvMultiMode.srv
-   srvMultiSetPosLocal.srv
-   srvMultiSetVelLocal.srv
    srvMultiSetRawLocal.srv
    srvMultiSetHome.srv
    srvMultiLanding.srv

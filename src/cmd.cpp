@@ -11,8 +11,8 @@
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetHome.h"
 #include "swarm_ctrl_pkg/srvMultiLanding.h"
-//#include "swarm_ctrl_pkg/multi_header.h"
-#define NUM_DRONE 3
+
+#define NUM_DRONE 5
 
 ros::ServiceClient arming_client[NUM_DRONE];
 ros::ServiceClient set_mode_client[NUM_DRONE];
