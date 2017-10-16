@@ -1,6 +1,9 @@
-bool pos_flag
-bool vel_flag
-bool acc_flag
+uint8 RAW_ON=1
+uint8 POS_ON=2
+uint8 VEL_ON=4
+uint8 ACC_ON=8
+uint8 coordinate_frame
+uint8 flag_mask
 float64 x
 float64 y
 float64 z
@@ -10,6 +13,5 @@ float64 vel_z
 float64 acc_x
 float64 acc_y
 float64 acc_z
-float64 offset
 ---
 bool success

@@ -7,7 +7,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
 //#include "swarm_ctrl_pkg/multi_header.h"
 
-#define NUM_DRONE 5
+#define NUM_DRONE 3
 
 double offset = 2;
 double pre_offset;
@@ -76,52 +76,37 @@ bool multiSetVelLocal(swarm_ctrl_pkg::srvMultiSetVelLocal::Request &req,
 	}
 	return true;
 }
-/*
+
 bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req, 
 	swarm_ctrl_pkg::srvMultiSetRawLocal::Response &res){
-	b_pos_flag = req.pos_flag;
-	b_vel_flag = req.vel_flag;
-	b_acc_flag = req.acc_flag;
-	if(req.pos_flag){
-		if (req.x != pre_req_raw[0] | req.y != pre_req_raw[1] | req.z != pre_req_raw[2] | req.offset != pre_req_raw[9]){
+	if((req.flag_mask&RAW_ON) == RAW_ON){
+		b_raw_flag = true;
+		b_pos_flag = false;
+		b_vel_flag = false; 
+		for(int i = 0; i < NUM_DRONE; i++){
+			l_raw[i].coordinate_frame = req.coordinate_frame;
+			l_raw[i].type_mask = 0;
+			l_raw[i].type_mask |= (IGNORE_PX + IGNORE_PY + IGNORE_PZ + IGNORE_VX + IGNORE_VY + IGNORE_VZ + IGNORE_AFX + IGNORE_AFY + IGNORE_AFZ + IGNORE_YAW + IGNORE_YAW_RATE);
+		}
+	}
+	else{
+		b_raw_flag = false;	
+	}
+
+	if((req.flag_mask&POS_ON) == POS_ON){
+		if (req.x != pre_req_raw[0][0] | req.y != pre_req_raw[0][1] | req.z != pre_req_raw[0][2] | offset != pre_offset){
 			l_raw[0].position.x = req.x;
 			l_raw[0].position.y = req.y;
 			l_raw[0].position.z = req.z;
-			pre_req_raw[0] = req.x;
-			pre_req_raw[1] = req.y;
-			pre_req_raw[2] = req.z;
-			pre_req_raw[9] = req.offset;
-			for (int i = 1; i < NUM_DRONE; i++){
-				l_raw[i] = l_raw[0];
-				if(i < 3)
-					l_raw[i].position.x += req.offset;
-				else if(i < 5){
-					l_raw[i].position.y += req.offset;
-				}
-				req.offset *= -1;
-			}
-			req.offset = (req.offset > 0) ? req.offset : (-1)*req.offset;
-			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, req.offset);
-			res.success = true;
-			else{
-				res.success = false;
-			}
-		}	
-	}
-	else{
-		res.success = false;
-	}
-	if(req.vel_flag){
-		if (req.vel_x != pre_req_raw[3] | req.vel_y != pre_req_raw[4] | req.vel_z != pre_req_raw[5]){
+			pre_req_raw[0][0] = req.x;
+			pre_req_raw[0][1] = req.y;
+			pre_req_raw[0][2] = req.z;
+			pre_offset = offset;
+			mkFomation(formation, offset);
 			for (int i = 0; i < NUM_DRONE; i++){
-				l_raw[i].velocity.x = req.vel_x;
-				l_raw[i].velocity.y = req.vel_y;
-				l_raw[i].velocity.z = req.vel_z;
+				l_raw[i].type_mask |= !(IGNORE_PX + IGNORE_PY + IGNORE_PZ);
 			}
-			ROS_INFO("vel(%lf, %lf, %lf)", req.vel_x, req.vel_y, req.vel_z);
-			pre_req_raw[3] = req.vel_x;
-			pre_req_raw[4] = req.vel_y;
-			pre_req_raw[5] = req.vel_z;
+			ROS_INFO("move(%lf, %lf, %lf) offset : %lf", req.x, req.y, req.z, offset);
 			res.success = true;
 		}
 		else{
@@ -131,17 +116,39 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 	else{
 		res.success = false;
 	}
-	if(req.acc_flag){
-		if (req.acc_x != pre_req_raw[6] | req.acc_y != pre_req_raw[7] | req.acc_z != pre_req_raw[8]){
+	if((req.flag_mask&VEL_ON) == VEL_ON){
+		if (req.vel_x != pre_req_raw[1][0] | req.vel_y != pre_req_raw[1][1] | req.vel_z != pre_req_raw[1][2]){
+			for (int i = 0; i < NUM_DRONE; i++){
+				l_raw[i].velocity.x = req.vel_x;
+				l_raw[i].velocity.y = req.vel_y;
+				l_raw[i].velocity.z = req.vel_z;
+				l_raw[i].type_mask |= !(IGNORE_VX + IGNORE_VY + IGNORE_VZ);
+			}
+			ROS_INFO("vel(%lf, %lf, %lf)", req.vel_x, req.vel_y, req.vel_z);
+			pre_req_raw[1][0] = req.vel_x;
+			pre_req_raw[1][1] = req.vel_y;
+			pre_req_raw[1][2] = req.vel_z;
+			res.success = true;
+		}
+		else{
+			res.success = false;
+		}
+	}
+	else{
+		res.success = false;
+	}
+	if((req.flag_mask&ACC_ON) == ACC_ON){
+		if (req.acc_x != pre_req_raw[2][0] | req.acc_y != pre_req_raw[2][1] | req.acc_z != pre_req_raw[2][2]){
 			for (int i = 1; i < NUM_DRONE; i++){
 				l_raw[i].acceleration_or_force.x = req.acc_x;
 				l_raw[i].acceleration_or_force.y = req.acc_y;
 				l_raw[i].acceleration_or_force.z = req.acc_z;
+				l_raw[i].type_mask |= !(IGNORE_AFX + IGNORE_AFY + IGNORE_AFZ);
 			}
 			ROS_INFO("acc(%lf, %lf, %lf)", req.acc_x, req.acc_y, req.acc_z);
-			pre_req_raw[6] = req.acc_x;
-			pre_req_raw[7] = req.acc_y;
-			pre_req_raw[8] = req.acc_z;
+			pre_req_raw[2][0] = req.acc_x;
+			pre_req_raw[2][1] = req.acc_y;
+			pre_req_raw[2][2] = req.acc_z;
 			res.success = true;
 		}
 		else{
@@ -152,7 +159,7 @@ bool multiSetRawLocal(swarm_ctrl_pkg::srvMultiSetRawLocal::Request &req,
 		res.success = false;
 	}
 	return true;
-}*/
+}
 
 void mkFomation(std::string formation, double _offset){
 	if(formation == "diamond" || formation == "Diamond" || formation == "DIAMOND"){
@@ -174,24 +181,24 @@ int main(int argc, char** argv){
 	ros::NodeHandle nh;
 	ros::Publisher local_pos_pub[NUM_DRONE];
 	ros::Publisher local_vel_pub[NUM_DRONE];
-	//ros::Publisher local_raw_pub[NUM_DRONE];
+	ros::Publisher local_raw_pub[NUM_DRONE];
 	ros::ServiceServer multi_set_pos_local_server = nh.advertiseService("multi_set_pos_local", multiSetPosLocal);
 	ros::ServiceServer multi_set_vel_local_server = nh.advertiseService("multi_set_vel_local", multiSetVelLocal);
-	//ros::ServiceServer multi_set_raw_local_server = nh.advertiseService("multi_set_raw_local", multiSetRawLocal);
+	ros::ServiceServer multi_set_raw_local_server = nh.advertiseService("multi_set_raw_local", multiSetRawLocal);
 
 	std::stringstream stream;  
 	std::string group_name = "camila";
 	std::string d_mavros_l_pos = "/mavros/setpoint_position/local";
 	std::string d_mavros_l_vel = "/mavros/setpoint_velocity/cmd_vel";
-	//std::string d_mavros_l_raw = "/mavros/setpoint_raw/local";
+	std::string d_mavros_l_raw = "/mavros/setpoint_raw/local";
 	for(int i=0 ; i < NUM_DRONE ; i++){
 		stream << i;
 		local_pos_pub[i] = nh.advertise<geometry_msgs::PoseStamped>(
 			group_name + stream.str() + d_mavros_l_pos, 10);
 		local_vel_pub[i] = nh.advertise<geometry_msgs::TwistStamped>(
 			group_name + stream.str() + d_mavros_l_vel, 10);
-	//	local_raw_pub[i] = nh.advertise<geometry_msgs::TwistStamped>(
-	//		group_name + stream.str() + d_mavros_l_raw, 10);
+		local_raw_pub[i] = nh.advertise<mavros_msgs::PositionTarget>(
+			group_name + stream.str() + d_mavros_l_raw, 10);
 		stream.str("");
 	}
 
@@ -213,6 +220,14 @@ int main(int argc, char** argv){
   		for (int i = 0; i < NUM_DRONE; i++){
   			l_vel[i].header.stamp = ros::Time::now();
   			local_vel_pub[i].publish(l_vel[i]);
+
+  		}
+  	}
+
+  	if(b_raw_flag){
+  		for (int i = 0; i < NUM_DRONE; i++){
+  			l_raw[i].header.stamp = ros::Time::now();
+  			local_raw_pub[i].publish(l_raw[i]);
 
   		}
   	}

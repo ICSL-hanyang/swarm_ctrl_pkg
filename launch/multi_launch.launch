@@ -68,7 +68,7 @@
       <remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
     </node>
   </group>
-
+<!--
   <group ns = "camila3">
     <arg name="ID" value="3"/>
     <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
@@ -113,7 +113,7 @@
     </node>
   </group>
 
-
+-->
   <group>
     <machine name = "con_cen" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" />
     <node name="cmd_node" pkg="swarm_ctrl_pkg" type="cmd_node" output="screen">
