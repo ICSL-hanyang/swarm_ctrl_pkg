@@ -27,7 +27,8 @@ add_service_files(
 generate_messages(
    DEPENDENCIES
    mavros_msgs
-   geometry_msgs  
+   geometry_msgs
+   sensor_msgs
    std_msgs
 )
 
@@ -41,6 +42,7 @@ catkin_package(
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${mavros_INCLUDE_DIRS}
 )
 
 

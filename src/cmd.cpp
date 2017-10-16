@@ -7,21 +7,14 @@
 #include "swarm_ctrl_pkg/srvMultiArming.h"
 #include "swarm_ctrl_pkg/srvMultiMode.h"
 #include "swarm_ctrl_pkg/msgState.h" //multi_state msg
-#include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
-#include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
-#include "swarm_ctrl_pkg/srvMultiSetHome.h"
-#include "swarm_ctrl_pkg/srvMultiLanding.h"
+#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
 
 #define NUM_DRONE 5
 
 ros::ServiceClient arming_client[NUM_DRONE];
 ros::ServiceClient set_mode_client[NUM_DRONE];
-ros::ServiceClient multi_set_pos_local_client;
-ros::ServiceClient multi_set_vel_local_client;
-ros::ServiceClient multi_set_home_client;
+ros::ServiceClient multi_set_raw_local_client;
 
-
-ros::ServiceClient set_home_client[NUM_DRONE];
 geometry_msgs::PoseStamped l_pos[NUM_DRONE];
 sensor_msgs::NavSatFix g_pos[NUM_DRONE];
 swarm_ctrl_pkg::msgState multi_state;
@@ -70,12 +63,13 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
                swarm_ctrl_pkg::srvMultiMode::Response& res)
 {
   int mode_cnt = 0;
-  swarm_ctrl_pkg::srvMultiSetPosLocal p_msg;
+  swarm_ctrl_pkg::srvMultiSetRawLocal l_msg;
   mavros_msgs::SetMode set_mode;
-  p_msg.request.pos_flag = true;
-  p_msg.request.x = 0;
-  p_msg.request.y = 0;
-  p_msg.request.z = takeoff_alt;
+  l_msg.request.coordinate_frame = 9;
+  l_msg.request.flag_mask = 1;
+  l_msg.request.x = 0;
+  l_msg.request.y = 0;
+  l_msg.request.z = takeoff_alt;
 
   set_mode.request.custom_mode = req.mode;
   for (int i = 0; i < NUM_DRONE; i++)
@@ -89,7 +83,7 @@ bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
       mode_cnt = 0;
     }
   }
-  multi_set_pos_local_client.call(p_msg);
+  multi_set_raw_local_client.call(l_msg);
   if (mode_cnt == NUM_DRONE)
   {
     res.success = true;
@@ -144,12 +138,9 @@ int main(int argc, char** argv)
   ros::Subscriber multi_state_sub =
       nh.subscribe("multi_state", 50, multiStateCB);
 
-  multi_set_pos_local_client =
-      nh.serviceClient<swarm_ctrl_pkg::srvMultiSetPosLocal>(
-          "multi_set_pos_local");
-  multi_set_vel_local_client =
-      nh.serviceClient<swarm_ctrl_pkg::srvMultiSetVelLocal>(
-          "multi_set_vel_local");
+  multi_set_raw_local_client =
+      nh.serviceClient<swarm_ctrl_pkg::srvMultiSetRawLocal>(
+          "multi_set_raw_local");
 
   std::stringstream stream;
   std::string d_mavros_arm = "/mavros/cmd/arming";
