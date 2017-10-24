@@ -7,7 +7,7 @@
     <arg name="ID" value="0"/>
     <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
     <node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
-      <param name="fcu_url" value="/dev/ttyUSB0:921600"/>
+      <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
       <param name="gcs_url" value="$(arg gcs_url)" />
       <param name="target_system_id" value="1" />
       <param name="target_component_id" value="1" />
@@ -29,7 +29,7 @@
     <arg name="ID" value="1"/>
     <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
     <node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
-      <param name="fcu_url" value="/dev/ttyUSB0:921600"/>
+      <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
       <param name="gcs_url" value="$(arg gcs_url)" />
       <param name="target_system_id" value="1" />
       <param name="target_component_id" value="1" />
@@ -51,7 +51,7 @@
     <arg name="ID" value="2"/>
     <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
     <node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
-      <param name="fcu_url" value="/dev/ttyUSB0:921600"/>
+      <param name="fcu_url" value="/dev/ttyUSB0:57600"/>
       <param name="gcs_url" value="$(arg gcs_url)" />
       <param name="target_system_id" value="1" />
       <param name="target_component_id" value="1" />

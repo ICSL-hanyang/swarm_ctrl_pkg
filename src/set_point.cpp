@@ -7,7 +7,7 @@
 #include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
 //#include "swarm_ctrl_pkg/multi_header.h"
 
-#define NUM_DRONE 3
+#define NUM_DRONE 4
 
 double offset = 2;
 double pre_offset;
@@ -180,12 +180,8 @@ void mkFomation(std::string formation, double _offset){
 	if(formation == "diamond" || formation == "Diamond" || formation == "DIAMOND"){
 		for (int i = 1; i < NUM_DRONE; i++){
 			l_pos[i] = l_pos[0];
-			if(i < 3)
-				l_pos[i].pose.position.x += _offset;
-			else if(i < 5){
-				l_pos[i].pose.position.y += _offset;
-			}
-			_offset *= -1;
+			if(i > 1)
+				l_pos[i].pose.position.z += 1.5;
 		}
 	}
 }
