@@ -68,7 +68,7 @@
       <remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
     </node>
   </group>
-
+<!--
   <group ns = "camila3">
     <arg name="ID" value="3"/>
     <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
@@ -90,7 +90,7 @@
       <remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
     </node>
   </group>
-<!--
+
   <group ns = "camila4">
     <arg name="ID" value="4"/>
     <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
