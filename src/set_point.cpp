@@ -181,7 +181,7 @@ void mkFomation(std::string formation, double _offset){
 		for (int i = 1; i < NUM_DRONE; i++){
 			l_pos[i] = l_pos[0];
 			if(i > 1)
-				l_pos[i].pose.position.z += 1.5;
+				l_pos[i].pose.position.z += 2;
 		}
 	}
 }
