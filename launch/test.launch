@@ -3,8 +3,8 @@
 	<arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
 	<arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
 
-	<group ns = "camila0">
-		<arg name="ID" value="0"/>
+	<group ns = "camila2">
+		<arg name="ID" value="2"/>
 		<machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true"/>
 		<node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
 			<param name="fcu_url" value="/dev/ttyUSB0:921600"/>
@@ -24,80 +24,6 @@
 			<remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
 		</node>
 	</group>
-<!--
-	<group ns = "camila1">
-		<arg name="ID" value="1"/>
-		<machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true">
-		</machine>
-		<node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
-			<param name="fcu_url" value="/dev/ttyUSB0:921600"/>
-			<param name="gcs_url" value="$(arg gcs_url)" />
-			<param name="target_system_id" value="1" />
-			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(arg pluginlists_yaml)" />
-			<rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_$(arg ID).yaml" />
-			<param name="local_position/tf/send" value="true" />
-			<param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
-			<param name="global_position/tf/send" value="false" />
-			<param name="global_position/tf/child_frame_id" value="camila$(arg ID)" />
-		</node>
-
-		<node machine="camila$(arg ID)" name="ntpd_shm" pkg="ntpd_driver" type="shm_driver" output="log" respawn="true">
-			<param name="shm_unit" value="2" />
-			<remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
-		</node>
-
-	</group>
-
-	<group ns = "camila2">
-		<arg name="ID" value="2"/>
-		<machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true">
-		</machine>
-		<node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
-			<param name="fcu_url" value="/dev/ttyUSB0:921600"/>
-			<param name="gcs_url" value="$(arg gcs_url)" />
-			<param name="target_system_id" value="1" />
-			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(arg pluginlists_yaml)" />
-			<rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_$(arg ID).yaml" />
-			<param name="local_position/tf/send" value="true" />
-			<param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
-			<param name="global_position/tf/send" value="false" />
-			<param name="global_position/tf/child_frame_id" value="camila$(arg ID)" />
-		</node>
-
-		<node machine="camila$(arg ID)" name="ntpd_shm" pkg="ntpd_driver" type="shm_driver" output="log" respawn="true">
-			<param name="shm_unit" value="2" />
-			<remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
-		</node>
-
-	</group>
-
-
-	<group ns = "camila3">
-		<arg name="ID" value="3"/>
-		<machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true">
-		</machine>
-		<node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
-			<param name="fcu_url" value="/dev/ttyUSB0:921600"/>
-			<param name="gcs_url" value="$(arg gcs_url)" />
-			<param name="target_system_id" value="1" />
-			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(arg pluginlists_yaml)" />
-			<rosparam command="load" file="$(find swarm_ctrl_pkg)/px4-configs/fcu_config/px4_config_$(arg ID).yaml" />
-			<param name="local_position/tf/send" value="true" />
-			<param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
-			<param name="global_position/tf/send" value="false" />
-			<param name="global_position/tf/child_frame_id" value="camila$(arg ID)" />
-		</node>
-
-		<node machine="camila$(arg ID)" name="ntpd_shm" pkg="ntpd_driver" type="shm_driver" output="log" respawn="true">
-			<param name="shm_unit" value="2" />
-			<remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
-		</node>
-
-	</group>
--->
 	<group>
 		<machine name = "con_cen" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true">
 		</machine>
