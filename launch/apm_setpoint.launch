@@ -1,0 +1,39 @@
+<launch>
+  <arg name="fcu_url" default="/dev/ttyUSB0:57600"/>
+  <!--arg name="fcu_url" default="udp://:9750@192.168.0.100:9750"/-->
+  <arg name="gcs_url" default=""/>
+  <arg name="fcu_protocol" default="v2.0" />
+  <arg name="pluginlists_yaml" default="$(find mavros)/launch/apm_pluginlists.yaml" />
+  <arg name="config_yaml" default="$(find mavros)/launch/apm_config.yaml" />
+
+  <group ns = "camila0">
+    <arg name="ID" value="0"/>
+    <node name="mavros" pkg="mavros" type="mavros_node" output="screen" respawn="true">
+      <param name="fcu_url" value="$(arg fcu_url)"/>
+      <param name="gcs_url" value="$(arg gcs_url)" />
+      <param name="target_system_id" value="1" />
+      <param name="target_component_id" value="1" />
+      <param name="fcu_protocol" value="$(arg fcu_protocol)" />
+      <rosparam command="load" file="$(arg pluginlists_yaml)" />
+      <rosparam command="load" file="$(arg config_yaml)" />
+    </node>
+    <node name="ntpd_shm" pkg="ntpd_driver" type="shm_driver" output="log" respawn="true">
+      <param name="shm_unit" value="2" />
+      <remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
+    </node>
+  </group>
+
+  <node name="cmd_node" pkg="swarm_ctrl_pkg" type="cmd_node" output="screen" respawn="true">
+    <param name="takeoff_alt" value="2.5"/>
+  </node>
+
+  <node name="state_node" pkg="swarm_ctrl_pkg" type="state_node" output="screen" respawn="true" />
+
+  <node name="set_point_node" pkg="swarm_ctrl_pkg" type="set_point_node" output="screen" respawn="true">
+    <param name="formation" value="diamond"/>
+    <param name="offset" value="2.0"/>
+  </node>
+  
+  <node name="control_node" pkg="swarm_ctrl_pkg" type="control_node" output="screen" respawn="true" />
+
+</launch>
