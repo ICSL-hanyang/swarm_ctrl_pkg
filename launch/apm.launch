@@ -2,7 +2,7 @@
 	<!-- vim: set ft=xml noet : -->
 	<!-- example launch script for ArduPilotMega based FCU's -->
 
-	<arg name="fcu_url" default="udp://192.168.0.3:14650@192.168.0.166" />
+	<arg name="fcu_url" default="udp://192.168.0.3:14650@192.168.0.116:14650" />
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
