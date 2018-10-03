@@ -2,7 +2,7 @@
 #include <geometry_msgs/PoseStamped.h> //set position 용
 #include <geometry_msgs/TwistStamped.h> //set velocity 용
 #include <mavros_msgs/PositionTarget.h> //set raw 용
-#include "swarm_ctrl_pkg/srvMultiSetpointLocal.h"
+#include "swarm_ctrl_pkg/srvMultiSetPosLocal.h"
 #include "swarm_ctrl_pkg/srvMultiSetVelLocal.h"
 //#include "swarm_ctrl_pkg/srvMultiSetRawLocal.h"
 #define NUM_DRONE 0
@@ -22,8 +22,8 @@ geometry_msgs::TwistStamped l_vel[5];
 //mavros_msgs::PositionTarget l_raw[NUM_DRONE];
 void mkFomation(std::string formation, double _offset);
 
-bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req, 
-	swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res){
+bool multiSetPosLocal(swarm_ctrl_pkg::srvMultiSetPosLocal::Request &req, 
+	swarm_ctrl_pkg::srvMultiSetPosLocal::Response &res){
 	b_pos_flag = req.pos_flag;
 	//nh.getParam("set_point_node/offset", offset);
 	if(req.pos_flag){

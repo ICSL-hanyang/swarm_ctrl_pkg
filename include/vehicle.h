@@ -13,8 +13,8 @@
 #include <swarm_ctrl_pkg/srvMultiArming.h>
 #include <swarm_ctrl_pkg/srvMultiMode.h>
 #include <swarm_ctrl_pkg/srvMultiSetHome.h>
-#include "swarm_ctrl_pkg/srvMultiSetpointLocal.h"
-#include "swarm_ctrl_pkg/srvMultiSetpointGlobal.h"
+#include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
+#include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
 
 typedef struct str_info{
 	int system_id;
