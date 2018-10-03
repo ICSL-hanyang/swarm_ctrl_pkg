@@ -2,8 +2,9 @@
 #define VEHICLE_H
 
 #include <ros/ros.h>
-#include <stdio.h>
+#include <iostream>
 #include <string>
+#include <vector>
 #include <std_msgs/String.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/NavSatFix.h>
@@ -16,7 +17,7 @@
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
 
-typedef struct str_info{
+typedef struct vehicle_info{
 	int system_id;
 	std::string vehicle_name;
 }VehicleInfo;
@@ -69,6 +70,8 @@ class Vehicle{
 	public:
 		Vehicle();
 		Vehicle(VehicleInfo _vehicle_info);
+		Vehicle(const Vehicle &rhs);
+		const Vehicle& operator=(const Vehicle &rhs);
 
 		/*main drone function*/
 		bool arming(bool _arm_state);
@@ -112,7 +115,8 @@ class SwarmVehicle{
 		ros::ServiceServer multi_setpoint_global_server;
 
 		//swarm_info
-		Vehicle *camila;
+		std::vector<Vehicle> camila;
+		std::vector<Vehicle>::iterator iter;
 		std::string swarm_name;
 		int num_of_vehicle;
 		
@@ -124,9 +128,16 @@ class SwarmVehicle{
 		sensor_msgs::NavSatFix swarm_position_global;
 	public:
 		SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
-
+		SwarmVehicle(const SwarmVehicle &rhs);
+		~SwarmVehicle();
+		const SwarmVehicle& operator=(const SwarmVehicle &rhs);
+		
 		void setSwarmInfo(std::string _swarm_name, int _num_of_vehicle);
 		std::string getSwarmInfo();
+
+		void addVehicle(VehicleInfo _vehicle_info);
+		void deleteVehicle(VehicleInfo _vehicle_info);
+		void showVehicleList();
 
 		bool multiArming(mavros_msgs::CommandBool::Request& req,
 			mavros_msgs::CommandBool::Response& res);

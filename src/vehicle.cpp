@@ -6,18 +6,33 @@
 #include <mavros_msgs/GlobalPositionTarget.h>
 
 
-Vehicle::Vehicle(){
-	vehicle_info.system_id = 1;
-	vehicle_info.vehicle_name = "mavros";
-
+Vehicle::Vehicle() : vehicle_info({1,"mavros"}), 
+	setpoint_publish_flag(false)
+{
 	vehicleInit();
 }
 
-Vehicle::Vehicle(VehicleInfo _vehicle_info){
-	vehicle_info.system_id = _vehicle_info.system_id;
-	vehicle_info.vehicle_name = _vehicle_info.vehicle_name;
-
+Vehicle::Vehicle(VehicleInfo _vehicle_info) : vehicle_info(_vehicle_info),
+	setpoint_publish_flag(false)
+{
 	vehicleInit();
+}
+
+Vehicle::Vehicle(const Vehicle &rhs) : vehicle_info(rhs.vehicle_info),
+	setpoint_publish_flag(rhs.setpoint_publish_flag)
+{
+	vehicleInit();
+	*this = rhs;
+}
+
+const Vehicle& Vehicle::operator=(const Vehicle &rhs){
+	if(this == &rhs){
+		return *this;
+	}
+	vehicle_info = rhs.vehicle_info;
+	setpoint_publish_flag = rhs.setpoint_publish_flag;
+	vehicleInit();
+	return *this;
 }
 
 void Vehicle::vehicleInit(){
@@ -221,20 +236,20 @@ bool Vehicle::isPublish(){
 
 
 //default value : default name = camila, _num_of_vehicle = 1;
-SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle){  
-	swarm_name = _swarm_name;
-	num_of_vehicle = _num_of_vehicle;
-	multi_setpoint_publish_flag = false;
-
+SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm_name(_swarm_name),
+ 	num_of_vehicle(_num_of_vehicle),
+	multi_setpoint_publish_flag(false), 
+	min_length(3.0)
+{  	
 	VehicleInfo vehicle_info[num_of_vehicle];
-	camila = new Vehicle[num_of_vehicle];
+	camila.reserve(num_of_vehicle);
 
-	for(int i=0 ; i < num_of_vehicle ; i++){
+	for(int i = 0 ; i < num_of_vehicle ; i++){
 		std::stringstream stream;
-		stream << i;
+		stream << (i+1);
 		vehicle_info[i].system_id = i+1;
 		vehicle_info[i].vehicle_name = swarm_name + stream.str();
-		camila[i].setVehicleInfo(vehicle_info[i]);
+		camila.push_back(Vehicle(vehicle_info[i]));
 	}
 
 	nh = ros::NodeHandle(swarm_name);
@@ -245,21 +260,74 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle){
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 }
 
-void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
-	delete[] camila;
+SwarmVehicle::SwarmVehicle(const SwarmVehicle& rhs): swarm_name(rhs.swarm_name),
+	num_of_vehicle(rhs.num_of_vehicle), 
+	multi_setpoint_publish_flag(rhs.multi_setpoint_publish_flag),
+	min_length(3.0)
+{
+	VehicleInfo vehicle_info[num_of_vehicle];
+	camila.reserve(num_of_vehicle);
 
+	std::vector<Vehicle>::const_iterator it;
+	for(it = rhs.camila.begin() ; it != rhs.camila.end() ; it++){
+		camila.push_back(*it);
+	}
+
+	nh = ros::NodeHandle(swarm_name);
+	multi_arming_server = nh.advertiseService("multi_arming", &SwarmVehicle::multiArming, this);
+	multi_mode_server = nh.advertiseService("multi_mode", &SwarmVehicle::multiMode, this);
+	multi_sethome_server = nh.advertiseService("multi_sethome", &SwarmVehicle::multiSetHome, this);
+	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
+	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
+
+	*this = rhs;
+}
+
+const SwarmVehicle& SwarmVehicle::operator=(const SwarmVehicle &rhs){
+	if(this == &rhs){
+		return *this;
+	}
+
+	swarm_name = rhs.swarm_name;
+	num_of_vehicle = rhs.num_of_vehicle;
+	
+	std::vector<Vehicle>().swap(camila);
+	camila.reserve(num_of_vehicle);
+	VehicleInfo vehicle_info[num_of_vehicle];
+
+	std::vector<Vehicle>::const_iterator it;
+	for(it = rhs.camila.begin() ; it != rhs.camila.end() ; it++){
+		camila.push_back(*it);
+	}
+
+	nh = ros::NodeHandle(swarm_name);
+	multi_arming_server = nh.advertiseService("multi_arming", &SwarmVehicle::multiArming, this);
+	multi_mode_server = nh.advertiseService("multi_mode", &SwarmVehicle::multiMode, this);
+	multi_sethome_server = nh.advertiseService("multi_sethome", &SwarmVehicle::multiSetHome, this);
+	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
+	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
+	
+	return *this;
+}
+
+SwarmVehicle::~SwarmVehicle(){
+	std::vector<Vehicle>().swap(camila);
+}
+
+void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
 	swarm_name = _swarm_name;
 	num_of_vehicle = _num_of_vehicle;
 
+	std::vector<Vehicle>().swap(camila);
+	camila.reserve(num_of_vehicle);
 	VehicleInfo vehicle_info[num_of_vehicle];
-	camila = new Vehicle[num_of_vehicle];
 
 	for(int i=0 ; i < num_of_vehicle ; i++){
 		std::stringstream stream;
-		stream << i;
+		stream << i+1;
 		vehicle_info[i].system_id = i+1;
 		vehicle_info[i].vehicle_name = swarm_name + stream.str();
-		camila[i].setVehicleInfo(vehicle_info[i]);
+		camila.push_back(Vehicle(vehicle_info[i]));
 	}
 
 	nh = ros::NodeHandle(swarm_name);
@@ -272,6 +340,28 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
 }
 std::string SwarmVehicle::getSwarmInfo(){
 	return swarm_name;
+}
+
+void SwarmVehicle::addVehicle(VehicleInfo _vehicle_info){
+	camila.push_back(Vehicle(_vehicle_info));	
+}
+
+void SwarmVehicle::deleteVehicle(VehicleInfo _vehicle_info){
+	for(iter = camila.begin(); iter != camila.end() ; iter++){
+		VehicleInfo temp = iter->getInfo();
+		if((temp.system_id == _vehicle_info.system_id) && (temp.vehicle_name == _vehicle_info.vehicle_name)){
+			camila.erase(iter);
+			ROS_INFO_STREAM("Delete vehicle : sys_id : " << temp.system_id<< ", name : "<<temp.vehicle_name);
+			break;
+		}
+	}
+}
+
+void SwarmVehicle::showVehicleList(){
+	for(iter = camila.begin(); iter != camila.end(); iter++){
+		VehicleInfo temp = iter->getInfo();
+		ROS_INFO_STREAM(temp.system_id <<" "<< temp.vehicle_name);
+	}
 }
 
 bool SwarmVehicle::multiArming(mavros_msgs::CommandBool::Request& req,
