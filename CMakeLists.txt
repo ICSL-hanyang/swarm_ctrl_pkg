@@ -11,16 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-add_message_files(FILES msgState.msg)
+##add_message_files(FILES)
 
 add_service_files(
    FILES
-   srvMultiArming.srv
-   srvMultiMode.srv
    srvMultiSetpointLocal.srv
    srvMultiSetpointGlobal.srv
    srvMultiSetVelLocal.srv
-   srvMultiSetHome.srv
    srvGoToVehicle.srv
  )
 

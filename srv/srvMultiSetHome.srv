@@ -1,5 +1,0 @@
-bool GLOBAL_LOCAL_HOME_SET=0
-bool GLOBAL_HOME_SET=1
-bool global_only
----
-bool success

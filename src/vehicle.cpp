@@ -1,10 +1,6 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <vehicle.h>
-#include <mavros_msgs/CommandHome.h>
-#include <mavros_msgs/SetMode.h>  
-#include <mavros_msgs/GlobalPositionTarget.h>
-
 
 Vehicle::Vehicle() : vehicle_info({1,"mavros"}),
 	nh(ros::NodeHandle(vehicle_info.vehicle_name)),
@@ -304,9 +300,6 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 		camila.push_back(Vehicle(vehicle_info[i]));
 	}
 
-	multi_arming_server = nh.advertiseService("multi_arming", &SwarmVehicle::multiArming, this);
-	multi_mode_server = nh.advertiseService("multi_mode", &SwarmVehicle::multiMode, this);
-	multi_sethome_server = nh.advertiseService("multi_sethome", &SwarmVehicle::multiSetHome, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -326,9 +319,6 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle& rhs): swarm_name(rhs.swarm_name),
 		camila.push_back(*it);
 	}
 
-	multi_arming_server = nh.advertiseService("multi_arming", &SwarmVehicle::multiArming, this);
-	multi_mode_server = nh.advertiseService("multi_mode", &SwarmVehicle::multiMode, this);
-	multi_sethome_server = nh.advertiseService("multi_sethome", &SwarmVehicle::multiSetHome, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -354,9 +344,6 @@ const SwarmVehicle& SwarmVehicle::operator=(const SwarmVehicle &rhs){
 	}
 
 	nh = ros::NodeHandle(swarm_name);
-	multi_arming_server = nh.advertiseService("multi_arming", &SwarmVehicle::multiArming, this);
-	multi_mode_server = nh.advertiseService("multi_mode", &SwarmVehicle::multiMode, this);
-	multi_sethome_server = nh.advertiseService("multi_sethome", &SwarmVehicle::multiSetHome, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -385,9 +372,6 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
 	}
 
 	nh = ros::NodeHandle(swarm_name);
-	multi_arming_server = nh.advertiseService("multi_arming", &SwarmVehicle::multiArming, this);
-	multi_mode_server = nh.advertiseService("multi_mode", &SwarmVehicle::multiMode, this);
-	multi_sethome_server = nh.advertiseService("multi_sethome", &SwarmVehicle::multiSetHome, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -419,67 +403,6 @@ void SwarmVehicle::showVehicleList(){
 		VehicleInfo temp = iter->getInfo();
 		ROS_INFO_STREAM(temp.system_id <<" "<< temp.vehicle_name);
 	}
-}
-
-bool SwarmVehicle::multiArming(mavros_msgs::CommandBool::Request& req,
-	mavros_msgs::CommandBool::Response& res)
-{
-	int arm_fail = -1;
-	VehicleInfo fail_vehicle_info;
-
-	for(int i=0 ; i < num_of_vehicle ; i++){
-		if((!camila[i].arming(req.value)) && (req.value == true)){ //arm fail 
-			arm_fail = i;
-			fail_vehicle_info = camila[i].getInfo();
-			ROS_WARN("Multi arm fail. please check %s", fail_vehicle_info.vehicle_name.c_str());
-			break;
-		}	
-	}
-
-	if(arm_fail == -1){
-		res.success = true;
-		return true;
-	}
-	else{
-		req.value = false;
-		for(int i=0; i < arm_fail ; i++)
-			camila[i].arming(req.value);
-
-		res.success = false;
-		res.result = arm_fail;
-		return false;
-	}
-}
-
-bool SwarmVehicle::multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
-	swarm_ctrl_pkg::srvMultiMode::Response& res)
-{
-	int mode_fail = 0; 
-	for(int i=0 ; i < num_of_vehicle ; i++){
-		if(camila[i].setMode(req.mode));
-		else
-			mode_fail++;
-	}
-
-	(mode_fail == 0) ? res.success = true : res.success = false;
-	return res.success;	
-}
-
-bool SwarmVehicle::multiSetHome(swarm_ctrl_pkg::srvMultiSetHome::Request& req,
-	swarm_ctrl_pkg::srvMultiSetHome::Response& res)
-{
-	int sethome_fail = 0;
-	for(int i=0; i < num_of_vehicle ; i++){
-		if(camila[i].setHomeGlobal()){
-			if(!req.global_only)
-				camila[i].setHomeLocal();
-		}
-		else
-			sethome_fail++;
-	}
-
-	(sethome_fail == 0) ? res.success = true : res.success = false;
-	return res.success;
 }
 
 bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,

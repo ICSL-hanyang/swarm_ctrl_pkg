@@ -15,12 +15,12 @@
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/NavSatFix.h>
-#include <mavros_msgs/State.h>
-#include <mavros_msgs/CommandBool.h>  
 #include <sensor_msgs/BatteryState.h>
-#include <swarm_ctrl_pkg/srvMultiMode.h>
-#include <swarm_ctrl_pkg/srvMultiArming.h>
-#include <swarm_ctrl_pkg/srvMultiSetHome.h>
+#include <mavros_msgs/State.h>
+#include <mavros_msgs/SetMode.h>  
+#include <mavros_msgs/CommandBool.h>  
+#include <mavros_msgs/CommandHome.h>
+#include <mavros_msgs/GlobalPositionTarget.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
@@ -137,9 +137,6 @@ class SwarmVehicle{
 		std::vector<Vehicle>::iterator iter;
 
 		ros::NodeHandle nh;
-		ros::ServiceServer multi_arming_server;
-		ros::ServiceServer multi_mode_server;
-		ros::ServiceServer multi_sethome_server;
 		ros::ServiceServer multi_setpoint_local_server;
 		ros::ServiceServer multi_setpoint_global_server;
 		ros::ServiceServer goto_vehicle_server;
@@ -163,12 +160,6 @@ class SwarmVehicle{
 		void deleteVehicle(VehicleInfo _vehicle_info);
 		void showVehicleList();
 
-		bool multiArming(mavros_msgs::CommandBool::Request& req,
-			mavros_msgs::CommandBool::Response& res);
-		bool multiMode(swarm_ctrl_pkg::srvMultiMode::Request& req,
-			swarm_ctrl_pkg::srvMultiMode::Response& res);
-		bool multiSetHome(swarm_ctrl_pkg::srvMultiSetHome::Request& req,
-			swarm_ctrl_pkg::srvMultiSetHome::Response& res);
 		bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,
 			swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res);
 		bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request& req,
