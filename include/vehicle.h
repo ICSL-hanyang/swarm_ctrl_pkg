@@ -1,21 +1,33 @@
 #ifndef VEHICLE_H
 #define VEHICLE_H
 
-#include <ros/ros.h>
 #include <iostream>
+#include <cstdlib>
+#include <cmath>
+#include <limits>
 #include <string>
 #include <vector>
+
+#include <ros/ros.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
+#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/CommandBool.h>  
 #include <sensor_msgs/BatteryState.h>
-#include <swarm_ctrl_pkg/srvMultiArming.h>
 #include <swarm_ctrl_pkg/srvMultiMode.h>
+#include <swarm_ctrl_pkg/srvMultiArming.h>
 #include <swarm_ctrl_pkg/srvMultiSetHome.h>
+#include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
+
+#define CONSTANTS_RADIUS_OF_EARTH			6371000			/* meters (m)		*/
+#define M_DEG_TO_RAD (M_PI / 180.0)
+#define SPACING 5
 
 typedef struct vehicle_info{
 	int system_id;
@@ -29,7 +41,14 @@ typedef struct vehicle_info{
 
 class Vehicle{
 	private:
+		VehicleInfo vehicle_info;
+		
 		ros::NodeHandle nh;
+		ros::NodeHandle nh_mul;
+
+		/*drone state*/
+		mavros_msgs::State cur_state;
+		sensor_msgs::BatteryState cur_battery;
 
 		/* ros subscriber*/
 		ros::Subscriber state_sub;
@@ -45,21 +64,21 @@ class Vehicle{
 		ros::ServiceClient arming_client;
 		ros::ServiceClient set_mode_client;
 		ros::ServiceClient set_home_client;
+		
+		/* ros multi sub client */
+		ros::Subscriber multi_arming_sub;
+		ros::Subscriber multi_set_mode_sub;
+		ros::Subscriber multi_set_home_sub;
 
-		/*drone state*/
-		VehicleInfo vehicle_info;
-		mavros_msgs::State cur_state;
-		sensor_msgs::BatteryState cur_battery;
+		/* local coordinate*/
+		geometry_msgs::PoseStamped home_local;
+		geometry_msgs::PoseStamped cur_local;
+		geometry_msgs::PoseStamped tar_local;
 		
 		/* global coordinate*/
 		sensor_msgs::NavSatFix home_global;
 		sensor_msgs::NavSatFix cur_global;
 		sensor_msgs::NavSatFix tar_global;
-		
-		/* local coordinate*/
-		geometry_msgs::PoseStamped home_local;
-		geometry_msgs::PoseStamped cur_local;
-		geometry_msgs::PoseStamped tar_local;
 
 		bool setpoint_publish_flag;
 
@@ -73,20 +92,24 @@ class Vehicle{
 		Vehicle(const Vehicle &rhs);
 		const Vehicle& operator=(const Vehicle &rhs);
 
-		/*main drone function*/
-		bool arming(bool _arm_state);
-		bool setMode(std::string _mode);
-		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
-
-		void gotoLocal(geometry_msgs::PoseStamped _tar_local);
-		
 		void setVehicleInfo(VehicleInfo new_vehicle_info);
 		VehicleInfo getInfo();
 		void stateCB(const mavros_msgs::State::ConstPtr& msg);
 		mavros_msgs::State getState();
 		void batteryCB(const sensor_msgs::BatteryState::ConstPtr& msg);
 		sensor_msgs::BatteryState getBattery();
+		
+		/*main drone function*/
+		bool arming(bool _arm_state);
+		bool setMode(std::string _mode);
+		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
+		void gotoLocal(geometry_msgs::PoseStamped _tar_local);
 
+		/* multi callback functions */
+		void multiArming(const std_msgs::Bool::ConstPtr& msg);
+		void multiSetMode(const std_msgs::String::ConstPtr& msg);
+		void multiSetHome(const std_msgs::Empty::ConstPtr& trigger);
+		
 		//global position
 		bool setHomeGlobal();
 		sensor_msgs::NavSatFix getHomeGlobal();
@@ -106,26 +129,27 @@ class Vehicle{
 
 class SwarmVehicle{
 	private:
-		ros::NodeHandle nh;
+		/* swarm_info */
+		std::string swarm_name;
+		int num_of_vehicle;
 
+		std::vector<Vehicle> camila;
+		std::vector<Vehicle>::iterator iter;
+
+		ros::NodeHandle nh;
 		ros::ServiceServer multi_arming_server;
 		ros::ServiceServer multi_mode_server;
 		ros::ServiceServer multi_sethome_server;
 		ros::ServiceServer multi_setpoint_local_server;
 		ros::ServiceServer multi_setpoint_global_server;
+		ros::ServiceServer goto_vehicle_server;
 
-		//swarm_info
-		std::vector<Vehicle> camila;
-		std::vector<Vehicle>::iterator iter;
-		std::string swarm_name;
-		int num_of_vehicle;
+		geometry_msgs::PoseStamped swarm_position_local;
+		sensor_msgs::NavSatFix swarm_position_global;
 		
 		std::string formation;
 		double min_length;
 		bool multi_setpoint_publish_flag;
-
-		geometry_msgs::PoseStamped swarm_position_local;
-		sensor_msgs::NavSatFix swarm_position_global;
 	public:
 		SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
 		SwarmVehicle(const SwarmVehicle &rhs);
@@ -149,11 +173,15 @@ class SwarmVehicle{
 			swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res);
 		bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request& req,
 			swarm_ctrl_pkg::srvMultiSetpointGlobal::Response& res);
+		bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
+			swarm_ctrl_pkg::srvGoToVehicle::Response& res);	
 
-		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
-		void gotoLocal(geometry_msgs::PoseStamped _tar_local);
+		geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long, 
+			double coord_alt, double home_lat, double home_long, double home_alt);
 
 		bool isPublish();
+
+		void run();
 };
 
 #endif
