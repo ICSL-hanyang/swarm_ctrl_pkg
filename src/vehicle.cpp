@@ -44,6 +44,7 @@ void Vehicle::vehicleInit(){
 
 	setpoint_global_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("setpoint_position/global", 10);
 	setpoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>("setpoint_position/local", 10);
+	setpoint_vel_pub = nh.advertise<geometry_msgs::Twist>("setpoint_velocity/cmd_vel_unstamped", 10);
 
 	state_sub = nh.subscribe("state", 10, &Vehicle::stateCB, this);
 	battery_sub = nh.subscribe("battery", 10, &Vehicle::batteryCB, this);
@@ -137,6 +138,26 @@ void Vehicle::gotoLocal(geometry_msgs::PoseStamped _tar_local){
 	tar_local.header.stamp = ros::Time::now();
 	tar_local.header.frame_id = vehicle_info.vehicle_name;
 	setpoint_local_pub.publish(tar_local);	
+}
+
+void Vehicle::gotoVel(geometry_msgs::PoseStamped _tar_local){
+	geometry_msgs::Twist vel;
+	setpoint_publish_flag = true;
+
+	if((tar_local.pose.position.x != _tar_local.pose.position.x) || 
+		(tar_local.pose.position.y != _tar_local.pose.position.y) || 
+		(tar_local.pose.position.z != _tar_local.pose.position.z) )
+	{
+		tar_local = _tar_local;
+		ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info.vehicle_name.c_str(), 
+			tar_local.pose.position.x, tar_local.pose.position.y, tar_local.pose.position.z);
+		
+	}
+	kp = 0.25;
+	vel.linear.x = (tar_local.pose.position.x-cur_local.pose.position.x)*kp;
+	vel.linear.y = (tar_local.pose.position.y-cur_local.pose.position.y)*kp;
+	vel.linear.z = (tar_local.pose.position.z-cur_local.pose.position.z)*kp;
+	setpoint_vel_pub.publish(vel);
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr& msg){
@@ -300,6 +321,7 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 		camila.push_back(Vehicle(vehicle_info[i]));
 	}
 
+	setpoint_vel_server = nh.advertiseService("setpoint_vel", &SwarmVehicle::gotoVel, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -319,6 +341,7 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle& rhs): swarm_name(rhs.swarm_name),
 		camila.push_back(*it);
 	}
 
+	setpoint_vel_server = nh.advertiseService("setpoint_vel", &SwarmVehicle::gotoVel, this);	
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -344,6 +367,7 @@ const SwarmVehicle& SwarmVehicle::operator=(const SwarmVehicle &rhs){
 	}
 
 	nh = ros::NodeHandle(swarm_name);
+	setpoint_vel_server = nh.advertiseService("setpoint_vel", &SwarmVehicle::gotoVel, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -372,6 +396,7 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
 	}
 
 	nh = ros::NodeHandle(swarm_name);
+	setpoint_vel_server = nh.advertiseService("setpoint_vel", &SwarmVehicle::gotoVel, this);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -434,6 +459,20 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 		else
 			iter->gotoLocal(msg);
 	}
+	res.success = true;
+
+	return res.success;
+}
+
+bool SwarmVehicle::gotoVel(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,
+	swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res)
+{
+	geometry_msgs::PoseStamped msg;
+	msg.pose.position.x = req.x;	
+	msg.pose.position.y = req.y;	
+	msg.pose.position.z = req.z;
+
+	camila.front().gotoVel(msg);
 	res.success = true;
 
 	return res.success;
@@ -516,7 +555,8 @@ void SwarmVehicle::run(){
 	if(isPublish()){
 		for(iter = camila.begin() ; iter != camila.end() ; iter++){
 			geometry_msgs::PoseStamped msg = iter->getTargetLocal();
-			iter->gotoLocal(msg);
+			// iter->gotoLocal(msg);
+			iter->gotoVel(msg);
 		}
 	}
 }

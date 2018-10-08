@@ -12,6 +12,7 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/NavSatFix.h>
@@ -57,6 +58,7 @@ class Vehicle{
 		ros::Subscriber global_pos_sub;
 
 		/* ros publisher*/
+		ros::Publisher setpoint_vel_pub;
 		ros::Publisher setpoint_local_pub;
 		ros::Publisher setpoint_global_pub;
 
@@ -81,6 +83,7 @@ class Vehicle{
 		sensor_msgs::NavSatFix tar_global;
 
 		bool setpoint_publish_flag;
+		double kp;
 
 		/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -104,6 +107,7 @@ class Vehicle{
 		bool setMode(std::string _mode);
 		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
 		void gotoLocal(geometry_msgs::PoseStamped _tar_local);
+		void gotoVel(geometry_msgs::PoseStamped _tar_local);
 
 		/* multi callback functions */
 		void multiArming(const std_msgs::Bool::ConstPtr& msg);
@@ -137,6 +141,7 @@ class SwarmVehicle{
 		std::vector<Vehicle>::iterator iter;
 
 		ros::NodeHandle nh;
+		ros::ServiceServer setpoint_vel_server;
 		ros::ServiceServer multi_setpoint_local_server;
 		ros::ServiceServer multi_setpoint_global_server;
 		ros::ServiceServer goto_vehicle_server;
@@ -161,6 +166,8 @@ class SwarmVehicle{
 		void showVehicleList();
 
 		bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,
+			swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res);
+		bool gotoVel(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,
 			swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res);
 		bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request& req,
 			swarm_ctrl_pkg::srvMultiSetpointGlobal::Response& res);
