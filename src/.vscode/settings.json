@@ -18,5 +18,9 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeindex": "cpp"
-    }
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/sewoong/catkin_ws/devel/lib/python2.7/dist-packages",
+        "/opt/ros/kinetic/lib/python2.7/dist-packages"
+    ]
 }

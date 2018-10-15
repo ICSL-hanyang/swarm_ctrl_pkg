@@ -28,6 +28,7 @@
 
 #define CONSTANTS_RADIUS_OF_EARTH			6371000			/* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
+#define M_RAD_TO_DEG (180.0 / M_PI)
 #define SPACING 5
 
 typedef struct vehicle_info{
@@ -106,8 +107,9 @@ class Vehicle{
 		bool arming(bool _arm_state);
 		bool setMode(std::string _mode);
 		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
-		void gotoLocal(geometry_msgs::PoseStamped _tar_local);
-		void gotoVel(geometry_msgs::PoseStamped _tar_local);
+		void setLocalTarget(geometry_msgs::PoseStamped _tar_local);
+		void gotoLocal();
+		void gotoVel();
 
 		/* multi callback functions */
 		void multiArming(const std_msgs::Bool::ConstPtr& msg);
@@ -128,6 +130,9 @@ class Vehicle{
 		geometry_msgs::PoseStamped getLocalPosition();
 		geometry_msgs::PoseStamped getTargetLocal();
 
+		geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long, 
+			double coord_alt, double home_lat, double home_long, double home_alt);
+
 		bool isPublish();
 };
 
@@ -141,7 +146,6 @@ class SwarmVehicle{
 		std::vector<Vehicle>::iterator iter;
 
 		ros::NodeHandle nh;
-		ros::ServiceServer setpoint_vel_server;
 		ros::ServiceServer multi_setpoint_local_server;
 		ros::ServiceServer multi_setpoint_global_server;
 		ros::ServiceServer goto_vehicle_server;
@@ -151,6 +155,7 @@ class SwarmVehicle{
 		
 		std::string formation;
 		double min_length;
+		bool control_method;
 		bool multi_setpoint_publish_flag;
 	public:
 		SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
@@ -167,8 +172,6 @@ class SwarmVehicle{
 
 		bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,
 			swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res);
-		bool gotoVel(swarm_ctrl_pkg::srvMultiSetpointLocal::Request& req,
-			swarm_ctrl_pkg::srvMultiSetpointLocal::Response& res);
 		bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request& req,
 			swarm_ctrl_pkg::srvMultiSetpointGlobal::Response& res);
 		bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
@@ -176,6 +179,8 @@ class SwarmVehicle{
 
 		geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long, 
 			double coord_alt, double home_lat, double home_long, double home_alt);
+		geometry_msgs::Vector3 convertENUToGeo(double x, double y, double z, 
+			double home_lat, double home_long, double home_alt);
 
 		bool isPublish();
 
