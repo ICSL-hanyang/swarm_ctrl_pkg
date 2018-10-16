@@ -12,6 +12,7 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
+#include <geographic_msgs/GeoPoint.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -47,6 +48,7 @@ class Vehicle{
 		
 		ros::NodeHandle nh;
 		ros::NodeHandle nh_mul;
+		ros::NodeHandle nh_global;
 
 		/*drone state*/
 		mavros_msgs::State cur_state;
@@ -146,6 +148,7 @@ class SwarmVehicle{
 		std::vector<Vehicle>::iterator iter;
 
 		ros::NodeHandle nh;
+		ros::NodeHandle nh_global;
 		ros::ServiceServer multi_setpoint_local_server;
 		ros::ServiceServer multi_setpoint_global_server;
 		ros::ServiceServer goto_vehicle_server;
@@ -177,10 +180,10 @@ class SwarmVehicle{
 		bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
 			swarm_ctrl_pkg::srvGoToVehicle::Response& res);	
 
-		geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long, 
-			double coord_alt, double home_lat, double home_long, double home_alt);
-		geometry_msgs::Vector3 convertENUToGeo(double x, double y, double z, 
-			double home_lat, double home_long, double home_alt);
+		geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord, 
+			sensor_msgs::NavSatFix _home);
+		geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local, 
+			sensor_msgs::NavSatFix _home_global);
 
 		bool isPublish();
 

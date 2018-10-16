@@ -1,5 +1,5 @@
 # set velocity control
-use_vel: false
+use_vel: true
 
 # set velocity control PID gain
 pid:

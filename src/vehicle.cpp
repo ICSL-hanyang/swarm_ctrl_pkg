@@ -4,6 +4,7 @@
 Vehicle::Vehicle() : vehicle_info({1,"mavros"}),
 	nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 	nh_mul(ros::NodeHandle("multi")),
+	nh_global(ros::NodeHandle("~")),
 	setpoint_publish_flag(false)
 {
 	vehicleInit();
@@ -12,6 +13,7 @@ Vehicle::Vehicle() : vehicle_info({1,"mavros"}),
 Vehicle::Vehicle(VehicleInfo _vehicle_info) : vehicle_info(_vehicle_info),
 	nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 	nh_mul(ros::NodeHandle("multi")),
+	nh_global(ros::NodeHandle("~")),
 	setpoint_publish_flag(false)
 {
 	vehicleInit();
@@ -20,6 +22,7 @@ Vehicle::Vehicle(VehicleInfo _vehicle_info) : vehicle_info(_vehicle_info),
 Vehicle::Vehicle(const Vehicle &rhs) : vehicle_info(rhs.vehicle_info),
 	nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 	nh_mul(ros::NodeHandle("multi")),
+	nh_global(ros::NodeHandle("~")),
 	setpoint_publish_flag(rhs.setpoint_publish_flag)
 {
 	vehicleInit();
@@ -34,13 +37,12 @@ const Vehicle& Vehicle::operator=(const Vehicle &rhs){
 	setpoint_publish_flag = rhs.setpoint_publish_flag;
 	nh = ros::NodeHandle(vehicle_info.vehicle_name);
 	nh_mul = ros::NodeHandle("multi");
+	nh_global = ros::NodeHandle("~");
 	vehicleInit();
 	return *this;
 }
 
 void Vehicle::vehicleInit(){
-	// nh.setParam("kp", 1.0);
-	
 	/* home_global.latitude = 47.397742;
 	home_global.longitude = 8.5455937;
 	home_global.altitude = 535.323; */
@@ -147,7 +149,7 @@ void Vehicle::gotoLocal(){
 }
 
 void Vehicle::gotoVel(){
-	nh.getParam("kp", kp);
+	nh_global.getParam("pid/kp", kp);
 	geometry_msgs::Twist vel;
 	
 	vel.linear.x = (tar_local.pose.position.x-cur_local.pose.position.x) * kp;
@@ -278,7 +280,6 @@ sensor_msgs::NavSatFix Vehicle::getTargetGlobal(){
 	return tar_global;
 }
 
-
 void Vehicle::setHomeLocal(){
 	home_local = cur_local;
 
@@ -342,6 +343,7 @@ bool Vehicle::isPublish(){
 SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm_name(_swarm_name),
  	num_of_vehicle(_num_of_vehicle),
 	nh(ros::NodeHandle()),
+	nh_global(ros::NodeHandle("~")),	
 	min_length(3.0),
 	multi_setpoint_publish_flag(false)
 {  	
@@ -353,8 +355,6 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i+1);
 		camila.push_back(Vehicle(vehicle_info[i]));
 	}
-
-	// nh.setParam("setVel", true);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -363,6 +363,7 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 SwarmVehicle::SwarmVehicle(const SwarmVehicle& rhs): swarm_name(rhs.swarm_name),
 	num_of_vehicle(rhs.num_of_vehicle), 
 	nh(ros::NodeHandle()),
+	nh_global(ros::NodeHandle("~")),
 	min_length(3.0),
 	multi_setpoint_publish_flag(rhs.multi_setpoint_publish_flag)
 {
@@ -373,7 +374,6 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle& rhs): swarm_name(rhs.swarm_name),
 	for(it = rhs.camila.begin() ; it != rhs.camila.end() ; it++){
 		camila.push_back(*it);
 	}
-	// nh.setParam("setVel", true);
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -399,7 +399,8 @@ const SwarmVehicle& SwarmVehicle::operator=(const SwarmVehicle &rhs){
 	}
 
 	nh = ros::NodeHandle();
-	// nh.setParam("setVel", true);
+	nh_global = ros::NodeHandle("~");
+
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
@@ -426,12 +427,14 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
 	}
 
 	nh = ros::NodeHandle();
-	// nh.setParam("setVel", true);
+	nh_global = ros::NodeHandle("~");
+
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server = nh.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server = nh.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
 
 }
+
 std::string SwarmVehicle::getSwarmInfo(){
 	return swarm_name;
 }
@@ -477,8 +480,7 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 		if(iter != camila.begin()){
 			sensor_msgs::NavSatFix follower = iter->getGlobalPosition();
 			geometry_msgs::Vector3 offset;
-			offset = convertGeoToENU(leader.latitude, leader.longitude, leader.altitude,
-				follower.latitude, follower.longitude, follower.altitude);
+			offset = convertGeoToENU(leader, follower);
 			msg_f.pose.position.x = msg.pose.position.x + offset.x + SPACING * cos(angle);
 			msg_f.pose.position.y = msg.pose.position.y + offset.y + SPACING * sin(angle);
 			msg_f.pose.position.z = msg.pose.position.z + offset.z;
@@ -500,6 +502,7 @@ bool SwarmVehicle::multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::R
 {
 	return true;
 }
+
 bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
 	swarm_ctrl_pkg::srvGoToVehicle::Response& res)
 {
@@ -510,8 +513,7 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
 	if(num_of_vehicle != 1){
 		sensor_msgs::NavSatFix follower = iter->getGlobalPosition();
 		geometry_msgs::Vector3 offset;
-		offset = convertGeoToENU(leader.latitude, leader.longitude, leader.altitude,
-			follower.latitude, follower.longitude, follower.altitude);
+		offset = convertGeoToENU(leader, follower);
 		msg.pose.position.x = req.x + offset.x;
 		msg.pose.position.y = req.y + offset.y;
 		msg.pose.position.z = req.z + offset.z;		
@@ -527,16 +529,16 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
 	return true;
 }
 
-geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(double coord_lat, double coord_long, 
-	double coord_alt, double home_lat, double home_long, double home_alt) 
+geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(sensor_msgs::NavSatFix _coord, 
+	sensor_msgs::NavSatFix _home)
 {
 	static const float epsilon = std::numeric_limits<double>::epsilon();
 
-    double lat_rad = coord_lat * M_DEG_TO_RAD;
-    double lon_rad = coord_long* M_DEG_TO_RAD;
+    double lat_rad = _coord.latitude * M_DEG_TO_RAD;
+    double lon_rad = _coord.longitude * M_DEG_TO_RAD;
 
-    double ref_lon_rad = home_long * M_DEG_TO_RAD;
-    double ref_lat_rad = home_lat * M_DEG_TO_RAD;
+    double ref_lon_rad = _home.longitude * M_DEG_TO_RAD;
+    double ref_lat_rad = _home.latitude * M_DEG_TO_RAD;
 
     double sin_lat = sin(lat_rad);
     double cos_lat = cos(lat_rad);
@@ -552,24 +554,24 @@ geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(double coord_lat, double co
 
     offset.x = k * cos_lat * sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH;
     offset.y = k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH;
-    offset.z = coord_alt - home_alt;
+    offset.z = _coord.altitude - _home.altitude;
 
     return offset;
 }
 
-geometry_msgs::Vector3 SwarmVehicle::convertENUToGeo(double x, double y, double z,
-	double home_lat, double home_long, double home_altitude) 
+geographic_msgs::GeoPoint SwarmVehicle::convertENUToGeo(geometry_msgs::PoseStamped _local, 
+	sensor_msgs::NavSatFix _home_global)
 {
     static const float epsilon = std::numeric_limits<double>::epsilon();
 
-	double x_rad = x / CONSTANTS_RADIUS_OF_EARTH;
-    double y_rad = y / CONSTANTS_RADIUS_OF_EARTH;
+	double x_rad = _local.pose.position.x / CONSTANTS_RADIUS_OF_EARTH;
+    double y_rad = _local.pose.position.y / CONSTANTS_RADIUS_OF_EARTH;
     double c = sqrtf(x_rad * x_rad + y_rad * y_rad);
     double sin_c = sin(c);
     double cos_c = cos(c);
 
-    double ref_lon_rad = home_long * M_DEG_TO_RAD;
-    double ref_lat_rad = home_lat * M_DEG_TO_RAD;
+    double ref_lon_rad = _home_global.longitude * M_DEG_TO_RAD;
+    double ref_lat_rad = _home_global.latitude * M_DEG_TO_RAD;
 
     double ref_sin_lat = sin(ref_lat_rad);
     double ref_cos_lat = cos(ref_lat_rad);
@@ -586,17 +588,13 @@ geometry_msgs::Vector3 SwarmVehicle::convertENUToGeo(double x, double y, double 
         lon_rad = ref_lon_rad;
     }
 
-    geometry_msgs::Vector3 geoPoint;
+    geographic_msgs::GeoPoint geo_point;
 
-    double latitude = lat_rad * M_RAD_TO_DEG;
-    double longitude = lon_rad * M_RAD_TO_DEG;
-    double altitude = z + home_altitude;
+    geo_point.latitude = lat_rad * M_RAD_TO_DEG;
+    geo_point.longitude = lon_rad * M_RAD_TO_DEG;
+    geo_point.altitude = _local.pose.position.z + _home_global.altitude;
 
-    geoPoint.x  = latitude;
-    geoPoint.y = longitude;
-    geoPoint.z = altitude;
-
-    return geoPoint;
+    return geo_point;
 }
 
 bool SwarmVehicle::isPublish(){
@@ -612,7 +610,7 @@ bool SwarmVehicle::isPublish(){
 
 void SwarmVehicle::run(){
 	if(isPublish()){
-		nh.getParam("use_vel", control_method);
+		nh_global.getParam("use_vel", control_method);
 		for(iter = camila.begin() ; iter != camila.end() ; iter++){
 			if(control_method)
 				iter->gotoVel();
