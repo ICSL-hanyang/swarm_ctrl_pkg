@@ -1,7 +1,7 @@
 # ICSL Drone - Swarm Control
 
 
-This repository is for ROS package that holds the swarm control fo Drones 
+This repository is for ROS package that holds the swarm control for Drones 
 
 * Farther information for ICSL - http://icsl.hanyang.ac.kr/ 
 
