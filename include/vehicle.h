@@ -12,6 +12,8 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
+#include <geographic_msgs/GeoPoint.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/NavSatFix.h>
@@ -27,6 +29,7 @@
 
 #define CONSTANTS_RADIUS_OF_EARTH			6371000			/* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
+#define M_RAD_TO_DEG (180.0 / M_PI)
 #define SPACING 5
 
 typedef struct vehicle_info{
@@ -45,6 +48,7 @@ class Vehicle{
 		
 		ros::NodeHandle nh;
 		ros::NodeHandle nh_mul;
+		ros::NodeHandle nh_global;
 
 		/*drone state*/
 		mavros_msgs::State cur_state;
@@ -57,6 +61,7 @@ class Vehicle{
 		ros::Subscriber global_pos_sub;
 
 		/* ros publisher*/
+		ros::Publisher setpoint_vel_pub;
 		ros::Publisher setpoint_local_pub;
 		ros::Publisher setpoint_global_pub;
 
@@ -81,6 +86,7 @@ class Vehicle{
 		sensor_msgs::NavSatFix tar_global;
 
 		bool setpoint_publish_flag;
+		double kp;
 
 		/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -103,7 +109,9 @@ class Vehicle{
 		bool arming(bool _arm_state);
 		bool setMode(std::string _mode);
 		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
-		void gotoLocal(geometry_msgs::PoseStamped _tar_local);
+		void setLocalTarget(geometry_msgs::PoseStamped _tar_local);
+		void gotoLocal();
+		void gotoVel();
 
 		/* multi callback functions */
 		void multiArming(const std_msgs::Bool::ConstPtr& msg);
@@ -124,6 +132,9 @@ class Vehicle{
 		geometry_msgs::PoseStamped getLocalPosition();
 		geometry_msgs::PoseStamped getTargetLocal();
 
+		geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long, 
+			double coord_alt, double home_lat, double home_long, double home_alt);
+
 		bool isPublish();
 };
 
@@ -137,6 +148,7 @@ class SwarmVehicle{
 		std::vector<Vehicle>::iterator iter;
 
 		ros::NodeHandle nh;
+		ros::NodeHandle nh_global;
 		ros::ServiceServer multi_setpoint_local_server;
 		ros::ServiceServer multi_setpoint_global_server;
 		ros::ServiceServer goto_vehicle_server;
@@ -146,6 +158,7 @@ class SwarmVehicle{
 		
 		std::string formation;
 		double min_length;
+		bool control_method;
 		bool multi_setpoint_publish_flag;
 	public:
 		SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
@@ -167,8 +180,10 @@ class SwarmVehicle{
 		bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request& req,
 			swarm_ctrl_pkg::srvGoToVehicle::Response& res);	
 
-		geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long, 
-			double coord_alt, double home_lat, double home_long, double home_alt);
+		geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord, 
+			sensor_msgs::NavSatFix _home);
+		geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local, 
+			sensor_msgs::NavSatFix _home_global);
 
 		bool isPublish();
 

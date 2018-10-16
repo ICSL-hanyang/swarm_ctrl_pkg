@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv){
 	ros::init(argc, argv, "swarm_node");
-	ros::NodeHandle nh;
+	ros::NodeHandle nh("~");
 	ros::Rate rate(10);
 
 	VehicleInfo camila0_info, camila1_info;

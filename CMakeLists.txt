@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(swarm_ctrl_pkg)
 
+add_definitions(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   mavros
+  mavros_msgs
   mavros_extras
   geometry_msgs
+  geographic_msgs
   sensor_msgs
   message_generation
 )
@@ -26,6 +30,7 @@ generate_messages(
    DEPENDENCIES
    mavros_msgs
    geometry_msgs  
+   geographic_msgs
    std_msgs
 )
 
