@@ -1,6 +1,0 @@
-# set velocity control
-use_vel: true
-
-# set velocity control PID gain
-pid:
-  kp: 1.0

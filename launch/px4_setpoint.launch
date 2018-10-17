@@ -1,13 +1,14 @@
 <launch>
-  <!--arg name="fcu_url" default="/dev/ttyUSB0:921600"/-->
-  <arg name="fcu_url" default="udp://14650@192.168.0.21"/>
-  <arg name="gcs_url" default=""/>
+  <!--arg name="fcu_url" default="/dev/ttyUSB0:57600"/-->
+  <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
+  <arg name="gcs_url" default="udp://:14555@127.0.0.1:14550"/>
+
   <arg name="fcu_protocol" default="v2.0" />
   <arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
   <arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
 
 
-  <group ns = "camila1">
+  <group ns = "camila0">
     <arg name="ID" value="0"/>
     <node name="mavros" pkg="mavros" type="mavros_node" output="screen" respawn="true">
       <param name="fcu_url" value="$(arg fcu_url)"/>
@@ -23,10 +24,6 @@
       <remap from="/time_ref" to="camila$(arg ID)/mavros/time_reference" />
     </node>
   </group>
-
-
-
-
 
   <node name="cmd_node" pkg="swarm_ctrl_pkg" type="cmd_node" output="screen" respawn="true">
     <param name="takeoff_alt" value="2.5"/>

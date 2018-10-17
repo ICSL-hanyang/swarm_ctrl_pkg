@@ -5,7 +5,7 @@
   <arg name="fcu_protocol" default="v2.0" />
   <arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
   <arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
-  <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/launch/config.yaml" />
+  <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-config/config.yaml" />
 
   <!--node name="camila0" pkg="mavros" type="mavros_node" output="log" respawn="true">
     <param name="fcu_url" value="/dev/ttyACM0:921600"/>
