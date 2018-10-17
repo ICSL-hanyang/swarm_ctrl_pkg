@@ -22,6 +22,7 @@
 #include <mavros_msgs/SetMode.h>  
 #include <mavros_msgs/CommandBool.h>  
 #include <mavros_msgs/CommandHome.h>
+#include <mavros_msgs/HomePosition.h>
 #include <mavros_msgs/GlobalPositionTarget.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
@@ -57,6 +58,7 @@ class Vehicle{
 		/* ros subscriber*/
 		ros::Subscriber state_sub;
 		ros::Subscriber battery_sub;
+		ros::Subscriber home_sub;
 		ros::Subscriber local_pos_sub;
 		ros::Subscriber global_pos_sub;
 
@@ -104,6 +106,7 @@ class Vehicle{
 		mavros_msgs::State getState();
 		void batteryCB(const sensor_msgs::BatteryState::ConstPtr& msg);
 		sensor_msgs::BatteryState getBattery();
+		void homeCB(const mavros_msgs::HomePosition::ConstPtr& msg);
 		
 		/*main drone function*/
 		bool arming(bool _arm_state);
@@ -163,8 +166,8 @@ class SwarmVehicle{
 	public:
 		SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
 		SwarmVehicle(const SwarmVehicle &rhs);
-		~SwarmVehicle();
 		const SwarmVehicle& operator=(const SwarmVehicle &rhs);
+		~SwarmVehicle();
 		
 		void setSwarmInfo(std::string _swarm_name, int _num_of_vehicle);
 		std::string getSwarmInfo();

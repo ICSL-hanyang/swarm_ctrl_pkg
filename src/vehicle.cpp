@@ -52,6 +52,7 @@ void Vehicle::vehicleInit(){
 
 	state_sub = nh.subscribe("state", 10, &Vehicle::stateCB, this);
 	battery_sub = nh.subscribe("battery", 10, &Vehicle::batteryCB, this);
+	home_sub = nh.subscribe("home_position/home", 10, &Vehicle::homeCB, this);
 	local_pos_sub = nh.subscribe("local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub = nh.subscribe("global_position/global", 10, &Vehicle::globalPositionCB, this);
 	// global_pos_sub = nh.subscribe("global_position/raw/fix", 10, &Vehicle::globalPositionCB, this);
@@ -65,6 +66,57 @@ void Vehicle::vehicleInit(){
 	multi_set_home_sub = nh_mul.subscribe("set_home", 10, &Vehicle::multiSetHome, this);
 
 	ROS_INFO_STREAM(vehicle_info.vehicle_name <<" instance generated");
+}
+
+void Vehicle::setVehicleInfo(VehicleInfo new_vehicle_info){
+	vehicle_info.system_id = new_vehicle_info.system_id;
+	vehicle_info.vehicle_name = new_vehicle_info.vehicle_name;
+
+	vehicleInit();
+}
+
+VehicleInfo Vehicle::getInfo(){
+	return vehicle_info;
+}
+
+void Vehicle::stateCB(const mavros_msgs::State::ConstPtr& msg){
+	if(cur_state.connected != msg->connected){
+		if(msg->connected == true)
+			ROS_INFO_STREAM(vehicle_info.vehicle_name << " is connected");
+		else
+			ROS_WARN_STREAM(vehicle_info.vehicle_name << " is not connected");
+	}
+	if(cur_state.armed != msg->armed){
+		if(msg->armed == true)
+			ROS_INFO_STREAM(vehicle_info.vehicle_name << " is armed");
+		else
+			ROS_INFO_STREAM(vehicle_info.vehicle_name << " is disarmed");
+	}
+	if(cur_state.mode != msg->mode){
+		ROS_INFO_STREAM(vehicle_info.vehicle_name << " is " << msg->mode <<" mode");
+	}
+	cur_state = *msg;
+}
+
+mavros_msgs::State Vehicle::getState(){
+	return cur_state;
+}
+
+void Vehicle::batteryCB(const sensor_msgs::BatteryState::ConstPtr& msg){
+	cur_battery = *msg;
+}
+
+sensor_msgs::BatteryState Vehicle::getBattery(){
+	return cur_battery;
+}
+
+void Vehicle::homeCB(const mavros_msgs::HomePosition::ConstPtr& msg){
+	home_global.latitude = msg->geo.latitude;
+	home_global.longitude = msg->geo.longitude;
+	home_global.altitude = msg->geo.altitude;
+	home_local.pose.position.x = msg->position.x;
+	home_local.pose.position.y = msg->position.y;
+	home_local.pose.position.z = msg->position.z;
 }
 
 bool Vehicle::arming(bool _arm_state){
@@ -192,48 +244,6 @@ void Vehicle::multiSetHome(const std_msgs::Empty::ConstPtr& trigger){
 	}
 }
 
-void Vehicle::setVehicleInfo(VehicleInfo new_vehicle_info){
-	vehicle_info.system_id = new_vehicle_info.system_id;
-	vehicle_info.vehicle_name = new_vehicle_info.vehicle_name;
-
-	vehicleInit();
-}
-
-VehicleInfo Vehicle::getInfo(){
-	return vehicle_info;
-}
-
-void Vehicle::stateCB(const mavros_msgs::State::ConstPtr& msg){
-	if(cur_state.connected != msg->connected){
-		if(msg->connected == true)
-			ROS_INFO_STREAM(vehicle_info.vehicle_name << " is connected");
-		else
-			ROS_WARN_STREAM(vehicle_info.vehicle_name << " is not connected");
-	}
-	if(cur_state.armed != msg->armed){
-		if(msg->armed == true)
-			ROS_INFO_STREAM(vehicle_info.vehicle_name << " is armed");
-		else
-			ROS_INFO_STREAM(vehicle_info.vehicle_name << " is disarmed");
-	}
-	if(cur_state.mode != msg->mode){
-		ROS_INFO_STREAM(vehicle_info.vehicle_name << " is " << msg->mode <<" mode");
-	}
-	cur_state = *msg;
-}
-
-mavros_msgs::State Vehicle::getState(){
-	return cur_state;
-}
-
-void Vehicle::batteryCB(const sensor_msgs::BatteryState::ConstPtr& msg){
-	cur_battery = *msg;
-}
-
-sensor_msgs::BatteryState Vehicle::getBattery(){
-	return cur_battery;
-}
-
 bool Vehicle::setHomeGlobal(){
 	mavros_msgs::CommandHome msg;
 	
@@ -241,7 +251,6 @@ bool Vehicle::setHomeGlobal(){
 	msg.request.latitude = cur_global.latitude;
 	msg.request.longitude = cur_global.longitude;
 	msg.request.altitude = cur_global.altitude;
-
 
 	if(set_home_client.call(msg) && msg.response.success){
 		home_global = cur_global;
