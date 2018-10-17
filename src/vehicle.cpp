@@ -60,10 +60,14 @@ void Vehicle::vehicleInit(){
 	arming_client = nh.serviceClient<mavros_msgs::CommandBool>("cmd/arming");
 	set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("set_mode");
 	set_home_client = nh.serviceClient<mavros_msgs::CommandHome>("cmd/set_home");
+	takeoff_client = nh.serviceClient<mavros_msgs::CommandTOL>("cmd/takeoff");
+	land_client = nh.serviceClient<mavros_msgs::CommandTOL>("cmd/land");
 	
 	multi_arming_sub = nh_mul.subscribe("arming", 10, &Vehicle::multiArming, this);
 	multi_set_mode_sub = nh_mul.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
 	multi_set_home_sub = nh_mul.subscribe("set_home", 10, &Vehicle::multiSetHome, this);
+	multi_takeoff_sub = nh_mul.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
+	multi_land_sub = nh_mul.subscribe("land", 10, &Vehicle::multiLand, this);
 
 	ROS_INFO_STREAM(vehicle_info.vehicle_name <<" instance generated");
 }
@@ -143,6 +147,36 @@ bool Vehicle::setMode(std::string _mode){
 			ROS_ERROR_STREAM("Failed to call set_mode service. " << mode.response.mode_sent);		
 		return mode.response.mode_sent;
 	}
+}
+
+bool Vehicle::takeoff(double _takeoff_alt){
+	mavros_msgs::CommandTOL msg;
+	msg.request.min_pitch = 0;
+	msg.request.yaw = 0;
+	msg.request.latitude = cur_global.latitude;
+	msg.request.longitude = cur_global.longitude;
+	msg.request.altitude = home_global.altitude + _takeoff_alt;
+
+	if(takeoff_client.call(msg) && msg.response.success)
+		ROS_INFO_STREAM(msg.response.result);
+	else
+		ROS_ERROR_STREAM(vehicle_info.vehicle_name << " failed to call takeoff service. " << msg.response.result);
+	return msg.response.success;
+}
+
+bool Vehicle::land(){
+	mavros_msgs::CommandTOL msg;
+	msg.request.min_pitch = 0;
+	msg.request.yaw = 0;
+	msg.request.latitude = cur_global.latitude;
+	msg.request.longitude = cur_global.longitude;
+	msg.request.altitude = 0;
+
+	if(land_client.call(msg) && msg.response.success)
+		ROS_INFO_STREAM(msg.response.result);
+	else
+		ROS_ERROR_STREAM(vehicle_info.vehicle_name << " failed to call land service. " << msg.response.result);
+	return msg.response.success;
 }
 
 void Vehicle::gotoGlobal(sensor_msgs::NavSatFix _tar_global){
@@ -242,6 +276,16 @@ void Vehicle::multiSetHome(const std_msgs::Empty::ConstPtr& trigger){
 	if(setHomeGlobal()){
 		setHomeLocal();
 	}
+}
+
+void Vehicle::multiTakeoff(const std_msgs::Empty::ConstPtr& trigger){
+	int _takeoff_alt;
+	nh_global.getParam("takeoff_alt", _takeoff_alt);
+	takeoff(_takeoff_alt);
+}
+
+void Vehicle::multiLand(const std_msgs::Empty::ConstPtr& trigger){
+	land();
 }
 
 bool Vehicle::setHomeGlobal(){
@@ -361,7 +405,7 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 
 	for(int i = 0 ; i < num_of_vehicle ; i++){
 		vehicle_info[i].system_id = i+1;
-		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i+1);
+		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i+1) + "/mavros";
 		camila.push_back(Vehicle(vehicle_info[i]));
 	}
 	multi_setpoint_local_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
@@ -431,7 +475,7 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle){
 
 	for(int i=0 ; i < num_of_vehicle ; i++){
 		vehicle_info[i].system_id = i+1;
-		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i+1);
+		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i+1) + "/mavros";
 		camila.push_back(Vehicle(vehicle_info[i]));
 	}
 
@@ -619,6 +663,7 @@ bool SwarmVehicle::isPublish(){
 
 void SwarmVehicle::run(){
 	if(isPublish()){
+		bool control_method;
 		nh_global.getParam("use_vel", control_method);
 		for(iter = camila.begin() ; iter != camila.end() ; iter++){
 			if(control_method)

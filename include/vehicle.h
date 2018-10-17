@@ -20,6 +20,7 @@
 #include <sensor_msgs/BatteryState.h>
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/SetMode.h>  
+#include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/CommandBool.h>  
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
@@ -71,11 +72,15 @@ class Vehicle{
 		ros::ServiceClient arming_client;
 		ros::ServiceClient set_mode_client;
 		ros::ServiceClient set_home_client;
+		ros::ServiceClient takeoff_client;
+		ros::ServiceClient land_client;
 		
 		/* ros multi sub client */
 		ros::Subscriber multi_arming_sub;
 		ros::Subscriber multi_set_mode_sub;
 		ros::Subscriber multi_set_home_sub;
+		ros::Subscriber multi_takeoff_sub;
+		ros::Subscriber multi_land_sub;
 
 		/* local coordinate*/
 		geometry_msgs::PoseStamped home_local;
@@ -111,6 +116,8 @@ class Vehicle{
 		/*main drone function*/
 		bool arming(bool _arm_state);
 		bool setMode(std::string _mode);
+		bool takeoff(double _takeoff_alt);
+		bool land();
 		void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
 		void setLocalTarget(geometry_msgs::PoseStamped _tar_local);
 		void gotoLocal();
@@ -120,6 +127,8 @@ class Vehicle{
 		void multiArming(const std_msgs::Bool::ConstPtr& msg);
 		void multiSetMode(const std_msgs::String::ConstPtr& msg);
 		void multiSetHome(const std_msgs::Empty::ConstPtr& trigger);
+		void multiTakeoff(const std_msgs::Empty::ConstPtr& trigger);
+		void multiLand(const std_msgs::Empty::ConstPtr& trigger);
 		
 		//global position
 		bool setHomeGlobal();
@@ -161,7 +170,7 @@ class SwarmVehicle{
 		
 		std::string formation;
 		double min_length;
-		bool control_method;
+		// bool control_method;
 		bool multi_setpoint_publish_flag;
 	public:
 		SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
