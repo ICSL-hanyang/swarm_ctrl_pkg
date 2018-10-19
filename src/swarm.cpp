@@ -1,12 +1,13 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
 	ros::init(argc, argv, "swarm_node");
 	ros::NodeHandle nh("~");
 	ros::Rate rate(10);
 
-/* 	VehicleInfo camila0_info, camila1_info;
+	/* 	VehicleInfo camila0_info, camila1_info;
 	camila0_info.vehicle_name = "mavros";
 	camila1_info.vehicle_name = "mavros1";
 	camila0_info.system_id=1;	
@@ -25,7 +26,8 @@ int main(int argc, char **argv){
 	msg.pose.position.z = 2;
 
 	mavros_msgs::State state;
-	while(ros::ok()){
+	while (ros::ok())
+	{
 		/* state=camila->
 		if(state.connected==true && state.armed != true){
 			camila0.arming(true);
@@ -36,12 +38,11 @@ int main(int argc, char **argv){
 			camila0.setMode("offboard");
 		} */
 
-		
 		//camila.camila[0].gotoLocal(msg);
 		camila->run();
 
 		ros::spinOnce();
-		rate.sleep();	
+		rate.sleep();
 	}
 
 	delete camila;

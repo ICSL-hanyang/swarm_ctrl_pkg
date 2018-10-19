@@ -17,7 +17,8 @@
         "ratio": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "limits": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/home/sewoong/catkin_ws/devel/lib/python2.7/dist-packages",
