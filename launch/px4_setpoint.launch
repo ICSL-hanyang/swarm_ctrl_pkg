@@ -44,10 +44,17 @@
       <param name="target_component_id" value="1" />
       <param name="fcu_protocol" value="v2.0" />
 
-      <param name="local_position/tf/send" value="true" />
-      <param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
-      <!-- <param name="global_position/tf/send" value="false" />
+      <!-- <param name="global_position/tf/send" value="true" />
+      <param name="global_position/tf/global_frame_id" value="earth" />
+      <param name="global_position/tf/frame_id" value="map$(arg ID)" />
       <param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
+      <param name="local_position/tf/send" value="true" />
+      <param name="local_position/tf/frame_id" value="map$(arg ID)" />
+      <param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
+      <param name="setpoint_position/tf/listen" value="true" />
+      <param name="setpoint_position/tf/frame_id" value="map$(arg ID)" />
+      <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target" />
+
 
       <!-- load blacklist, config -->
       <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
@@ -80,10 +87,17 @@
       <param name="target_component_id" value="1" />
       <param name="fcu_protocol" value="v2.0" />
 
-      <param name="local_position/tf/send" value="true" />
-      <param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
-      <!-- <param name="global_position/tf/send" value="false" />
+      <!-- <param name="global_position/tf/send" value="true" />
+      <param name="global_position/tf/global_frame_id" value="earth" />
+      <param name="global_position/tf/frame_id" value="map$(arg ID)" />
       <param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
+      <param name="local_position/tf/send" value="true" />
+      <param name="local_position/tf/frame_id" value="map$(arg ID)" />
+      <param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
+      <param name="setpoint_position/tf/listen" value="true" />
+      <param name="setpoint_position/tf/frame_id" value="map$(arg ID)" />
+      <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target" />
+
 
       <!-- load blacklist, config -->
       <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
