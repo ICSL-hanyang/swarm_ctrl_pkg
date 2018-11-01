@@ -18,7 +18,14 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeindex": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "initializer_list": "cpp",
+        "string_view": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/home/sewoong/catkin_ws/devel/lib/python2.7/dist-packages",

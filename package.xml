@@ -4,7 +4,7 @@
   <version>0.0.4</version>
   <description>swarm control package</description>
   <maintainer email="gosupia@naver.com">sewoong</maintainer>
-  <license>TODO</license>
+  <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>l
   <build_depend>geometry_msgs</build_depend>
@@ -12,14 +12,15 @@
   <build_depend>mavros_extras</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>setpoint_server</build_depend>
   <build_depend>message_generation</build_depend>
-
 
   <run_depend>geometry_msgs</run_depend>
   <run_depend>mavros</run_depend>
   <run_depend>mavros_extras</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>setpoint_server</run_depend>
   <run_depend>message_runtime</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->

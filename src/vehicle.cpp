@@ -46,9 +46,6 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 
 void Vehicle::vehicleInit()
 {
-	/* home_global.latitude = 47.397742;
-	home_global.longitude = 8.5455937;
-	home_global.altitude = 535.323; */
 	setpoint_global_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("setpoint_position/global", 10);
 	setpoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>("setpoint_position/local", 10);
 	setpoint_vel_pub = nh.advertise<geometry_msgs::Twist>("setpoint_velocity/cmd_vel_unstamped", 10);
@@ -58,13 +55,13 @@ void Vehicle::vehicleInit()
 	home_sub = nh.subscribe("home_position/home", 10, &Vehicle::homeCB, this);
 	local_pos_sub = nh.subscribe("local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub = nh.subscribe("global_position/global", 10, &Vehicle::globalPositionCB, this);
-	// global_pos_sub = nh.subscribe("global_position/raw/fix", 10, &Vehicle::globalPositionCB, this);
 
 	arming_client = nh.serviceClient<mavros_msgs::CommandBool>("cmd/arming");
 	set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("set_mode");
 	set_home_client = nh.serviceClient<mavros_msgs::CommandHome>("cmd/set_home");
 	takeoff_client = nh.serviceClient<mavros_msgs::CommandTOL>("cmd/takeoff");
 	land_client = nh.serviceClient<mavros_msgs::CommandTOL>("cmd/land");
+	setpoint_client = nh.serviceClient<setpoint_server::SetPoint>("sp_server");
 
 	multi_arming_sub = nh_mul.subscribe("arming", 10, &Vehicle::multiArming, this);
 	multi_set_mode_sub = nh_mul.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
@@ -237,6 +234,10 @@ void Vehicle::gotoGlobal(sensor_msgs::NavSatFix _tar_global)
 void Vehicle::setLocalTarget(geometry_msgs::PoseStamped _tar_local)
 {
 	setpoint_publish_flag = true;
+	setpoint_server::SetPoint msg;
+	msg.request.x = _tar_local.pose.position.x;
+	msg.request.y = _tar_local.pose.position.y;
+	msg.request.z = _tar_local.pose.position.z;
 
 	if ((tar_local.pose.position.x != _tar_local.pose.position.x) ||
 		(tar_local.pose.position.y != _tar_local.pose.position.y) ||
@@ -246,26 +247,7 @@ void Vehicle::setLocalTarget(geometry_msgs::PoseStamped _tar_local)
 		ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info.vehicle_name.c_str(),
 				 tar_local.pose.position.x, tar_local.pose.position.y, tar_local.pose.position.z);
 	}
-}
-
-void Vehicle::gotoLocal()
-{
-	tar_local.header.seq += 1;
-	tar_local.header.stamp = ros::Time::now();
-	tar_local.header.frame_id = vehicle_info.vehicle_name;
-	setpoint_local_pub.publish(tar_local);
-}
-
-void Vehicle::gotoVel()
-{
-	nh_global.getParam("pid/kp", kp);
-	geometry_msgs::Twist vel;
-
-	vel.linear.x = (tar_local.pose.position.x - cur_local.pose.position.x) * kp;
-	vel.linear.y = (tar_local.pose.position.y - cur_local.pose.position.y) * kp;
-	vel.linear.z = (tar_local.pose.position.z - cur_local.pose.position.z) * kp;
-
-	setpoint_vel_pub.publish(vel);
+	setpoint_client.call(msg);
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
@@ -743,20 +725,4 @@ bool SwarmVehicle::isPublish()
 		}
 	}
 	return multi_setpoint_publish_flag;
-}
-
-void SwarmVehicle::run()
-{
-	if (isPublish())
-	{
-		bool control_method;
-		nh_global.getParam("use_vel", control_method);
-		for (iter = camila.begin(); iter != camila.end(); iter++)
-		{
-			if (control_method)
-				iter->gotoVel();
-			else
-				iter->gotoLocal();
-		}
-	}
 }

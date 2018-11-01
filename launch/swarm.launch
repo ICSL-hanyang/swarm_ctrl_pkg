@@ -4,4 +4,64 @@
     <rosparam command="load" file="$(arg swarm_config_yaml)"/>
   </node>
 
+  <group>
+    <arg name="ID" value="1"/>  
+    <node name="sp$(arg ID)" pkg="setpoint_server" type="sp_node" output="screen" respawn="true">
+        <param name="name" value="camila$(arg ID)/mavros"/>
+        <param name="pid/kp" value="1.0"/>
+        <param name="use_vel" value="true"/>
+        <param name="ID" value="$(arg ID)"/>
+    </node>
+  </group>
+
+  <group>
+    <arg name="ID" value="2"/>  
+    <node name="sp$(arg ID)" pkg="setpoint_server" type="sp_node" output="screen" respawn="true">
+        <param name="name" value="camila$(arg ID)/mavros"/>
+        <param name="pid/kp" value="1.0"/>
+        <param name="use_vel" value="true"/>
+        <param name="ID" value="$(arg ID)"/>
+    </node>
+  </group>
+
+  <group>
+    <arg name="ID" value="3"/>  
+    <node name="sp$(arg ID)" pkg="setpoint_server" type="sp_node" output="screen" respawn="true">
+        <param name="name" value="camila$(arg ID)/mavros"/>
+        <param name="pid/kp" value="1.0"/>
+        <param name="use_vel" value="true"/>
+        <param name="ID" value="$(arg ID)"/>
+    </node>
+  </group>
+
+  <group>
+    <arg name="ID" value="4"/>  
+    <node name="sp$(arg ID)" pkg="setpoint_server" type="sp_node" output="screen" respawn="true">
+        <param name="name" value="camila$(arg ID)/mavros"/>
+        <param name="pid/kp" value="1.0"/>
+        <param name="use_vel" value="true"/>
+        <param name="ID" value="$(arg ID)"/>
+    </node>
+  </group>
+
+  <group>
+    <arg name="ID" value="5"/>  
+    <node name="sp$(arg ID)" pkg="setpoint_server" type="sp_node" output="screen" respawn="true">
+        <param name="name" value="camila$(arg ID)/mavros"/>
+        <param name="pid/kp" value="1.0"/>
+        <param name="use_vel" value="true"/>
+        <param name="ID" value="$(arg ID)"/>
+    </node>
+  </group>
+
+  <group>
+    <arg name="ID" value="6"/>  
+    <node name="sp$(arg ID)" pkg="setpoint_server" type="sp_node" output="screen" respawn="true">
+        <param name="name" value="camila$(arg ID)/mavros"/>
+        <param name="pid/kp" value="1.0"/>
+        <param name="use_vel" value="true"/>
+        <param name="ID" value="$(arg ID)"/>
+    </node>
+  </group>
+
 </launch>

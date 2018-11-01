@@ -25,6 +25,7 @@
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
 #include <mavros_msgs/GlobalPositionTarget.h>
+#include <setpoint_server/SetPoint.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
@@ -75,8 +76,9 @@ class Vehicle
 	ros::ServiceClient set_home_client;
 	ros::ServiceClient takeoff_client;
 	ros::ServiceClient land_client;
+	ros::ServiceClient setpoint_client;
 
-	/* ros multi sub client */
+	/* ros multi sub */
 	ros::Subscriber multi_arming_sub;
 	ros::Subscriber multi_set_mode_sub;
 	ros::Subscriber multi_set_home_sub;
@@ -121,8 +123,6 @@ class Vehicle
 	bool land();
 	void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
 	void setLocalTarget(geometry_msgs::PoseStamped _tar_local);
-	void gotoLocal();
-	void gotoVel();
 
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &msg);
