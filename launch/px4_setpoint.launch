@@ -53,7 +53,10 @@
       <param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
       <param name="setpoint_position/tf/listen" value="true" />
       <param name="setpoint_position/tf/frame_id" value="map$(arg ID)" />
-      <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target" />
+      <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target_pos" />
+      <param name="setpoint_attitude/tf/listen" value="true" />
+      <param name="setpoint_attitude/tf/frame_id" value="map$(arg ID)" />
+      <param name="setpoint_attitude/tf/child_frame_id" value="camila$(arg ID)_target_att" />
 
 
       <!-- load blacklist, config -->
@@ -96,7 +99,7 @@
       <param name="local_position/tf/child_frame_id" value="camila$(arg ID)" />
       <param name="setpoint_position/tf/listen" value="true" />
       <param name="setpoint_position/tf/frame_id" value="map$(arg ID)" />
-      <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target" />
+      <param name="setpoint_position/tf/child_frame_id" value="camila1_target_pos" />
 
 
       <!-- load blacklist, config -->
@@ -109,6 +112,12 @@
   <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
     <rosparam command="load" file="$(arg swarm_config_yaml)"/>
   </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="setpoint_broadcaster" args="1 0 5 0 0 0 1 map1 camila1_target_pos 100" />
+
+  <node pkg="tf" type="static_transform_publisher" name="wto1offset_broadcaster" args="0 1 0 0 0 0  world map1 100" />
+  <node pkg="tf" type="static_transform_publisher" name="wto2offset_broadcaster" args="0 2 0 0 0 0  world map2 100" />
+
 
 </launch>
 
