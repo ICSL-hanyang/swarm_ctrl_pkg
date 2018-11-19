@@ -124,7 +124,7 @@ class Vehicle
 	bool setMode(std::string _mode);
 	bool takeoff(double _takeoff_alt);
 	bool land();
-	
+
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &msg);
 	void multiSetMode(const std_msgs::String::ConstPtr &msg);
@@ -157,10 +157,11 @@ class SwarmVehicle
 	//sensor_msgs::NavSatFix swarm_position_global;
 	sensor_msgs::NavSatFix swarm_map;
 
-	tf2_ros::StaticTransformBroadcaster static_offset_bc;
+	//tf2_ros::StaticTransformBroadcaster static_offset_bc;
+	geometry_msgs::TransformStamped swarm_target_TF;
 	tf2_ros::TransformBroadcaster swarm_target_bc;
 
-	std::string formation = "POINT";
+	std::string formation;
 
 	bool multi_setpoint_publish_flag;
 	//double angle;
@@ -177,12 +178,12 @@ class SwarmVehicle
 	void addVehicle(VehicleInfo _vehicle_info);
 	void deleteVehicle(VehicleInfo _vehicle_info);
 	void showVehicleList();
-
-	void setSwarmMap(); 
+	void transformSender(double x, double y, double z, double roll, double pitch, double yaw, ros::Time time, const std::string &frame_id, const std::string &child_frame_id);
+	void setSwarmMap();
 	void offsetPublisher();
-	void formationGenerater(); 
+	void formationGenerater();
 	bool setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
-							swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);  
+						swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);
 
 	geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
 										   sensor_msgs::NavSatFix _home);
