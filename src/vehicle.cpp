@@ -1,6 +1,25 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 
+const sensor_msgs::NavSatFix &operator+(const sensor_msgs::NavSatFix &a, const sensor_msgs::NavSatFix &b)
+{
+	sensor_msgs::NavSatFix result;
+	result.latitude = a.latitude + b.latitude;
+	result.longitude = a.longitude + b.longitude;
+	result.altitude = a.altitude + b.altitude;
+
+	return result;
+}
+
+sensor_msgs::NavSatFix &operator+=(sensor_msgs::NavSatFix &a, const sensor_msgs::NavSatFix &b)
+{
+	a.latitude += b.latitude;
+	a.longitude += b.longitude;
+	a.altitude += b.altitude;
+
+	return a;
+}
+
 Vehicle::Vehicle() : vehicle_info({1, "mavros"}),
 					 nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 					 nh_mul(ros::NodeHandle("multi")),
@@ -65,7 +84,6 @@ void Vehicle::vehicleInit()
 
 	multi_arming_sub = nh_mul.subscribe("arming", 10, &Vehicle::multiArming, this);
 	multi_set_mode_sub = nh_mul.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
-	multi_set_home_sub = nh_mul.subscribe("set_home", 10, &Vehicle::multiSetHome, this);
 	multi_takeoff_sub = nh_mul.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub = nh_mul.subscribe("land", 10, &Vehicle::multiLand, this);
 
@@ -273,7 +291,7 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i + 1) + "/mavros";
 		camila.push_back(Vehicle(vehicle_info[i]));
 	}
-	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setWorldTarget, this);
+	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 }
 
 SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs) : swarm_name(rhs.swarm_name),
@@ -290,7 +308,7 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs) : swarm_name(rhs.swarm_name)
 	{
 		camila.push_back(*it);
 	}
-	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setWorldTarget, this);
+	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 	*this = rhs;
 }
 
@@ -317,7 +335,7 @@ const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 	nh = ros::NodeHandle();
 	nh_global = ros::NodeHandle("~");
 
-	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setWorldTarget, this);
+	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 	return *this;
 }
 
@@ -345,7 +363,7 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle)
 	nh = ros::NodeHandle();
 	nh_global = ros::NodeHandle("~");
 
-	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setWorldTarget, this);
+	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 }
 
 std::string SwarmVehicle::getSwarmInfo()
@@ -382,34 +400,48 @@ void SwarmVehicle::showVehicleList()
 		ROS_INFO_STREAM(temp.system_id << " " << temp.vehicle_name);
 	}
 }
-sensor_msgs::NavSatFix SwarmVehicle::setSwarmMap()
+void SwarmVehicle::setSwarmMap()
 {
-	if (offset.size() == 0)
+	swarm_map.latitude = 0;
+	swarm_map.longitude = 0;
+	swarm_map.altitude = 0;
+
+	for (iter = camila.begin(); iter != camila.end(); iter++)
 	{
-		 //평균내기-객체간 연산?
-		for (iter = camila.begin(); iter != camila.end(); iter++)
-		{
-			sensor_msgs::NavSatFix follower = iter->getGlobalPosition();
-		}
+		sensor_msgs::NavSatFix gps_pos = iter->getGlobalPosition();
+		swarm_map += gps_pos;
 	}
-	return swarm_map;
+	swarm_map.latitude /= camila.size();
+	swarm_map.longitude /= camila.size();
+	swarm_map.altitude /= camila.size();
 }
 
 void SwarmVehicle::offsetPublisher()
 {
-	sensor_msgs::NavSatFix curr_vehicle = camila.front().getGlobalPosition();
-
 	int i = 0;
-	if (offset.size() == 0)
+	for (iter = camila.begin(); iter != camila.end(); iter++)
 	{
-		for (iter = camila.begin(); iter != camila.end(); iter++)
-		{
-			sensor_msgs::NavSatFix follower = iter->getGlobalPosition();
-			geometry_msgs::Vector3 _offset = convertGeoToENU(curr_vehicle, swarm_map);
-			offset.push_back(_offset);
-			ROS_INFO_STREAM("offset[" << i << "] = " << offset[i]);
-			i++;
-		}
+		geometry_msgs::TransformStamped tf_stamped;
+		sensor_msgs::NavSatFix gps_pos = iter->getGlobalPosition();
+		geometry_msgs::Vector3 _offset = convertGeoToENU(gps_pos, swarm_map);
+		offset.push_back(_offset);
+		ROS_INFO_STREAM("offset[" << i << "] = " << offset[i]);
+
+		tf_stamped.header.stamp = ros::Time::now();
+		tf_stamped.header.frame_id = "swarm_map";
+		tf_stamped.child_frame_id = "camila" + std::to_string(i+1);
+		tf_stamped.transform.translation.x = _offset.x;
+		tf_stamped.transform.translation.y = _offset.y;
+		tf_stamped.transform.translation.z = _offset.z;
+		tf2::Quaternion quat;
+		quat.setRPY(0, 0 , 0);
+		tf_stamped.transform.rotation.x = quat.x();
+		tf_stamped.transform.rotation.y = quat.y();
+		tf_stamped.transform.rotation.z = quat.z();
+		tf_stamped.transform.rotation.w = quat.w();
+
+		static_bc.sendTransform(tf_stamped);
+		i++;
 	}
 }
 

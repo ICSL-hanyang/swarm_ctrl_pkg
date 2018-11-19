@@ -12,14 +12,15 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
-#include <geographic_msgs/GeoPoint.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
-#include <geometry_msgs/TransformStamped.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <geographic_msgs/GeoPoint.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/BatteryState.h>
 #include <mavros_msgs/State.h>
@@ -94,7 +95,7 @@ class Vehicle
 	// geometry_msgs::PoseStamped tar_local;
 
 	/* global coordinate*/
-	//sensor_msgs::NavSatFix home_global;
+	sensor_msgs::NavSatFix home_global;
 	sensor_msgs::NavSatFix cur_global;
 	//sensor_msgs::NavSatFix tar_global;
 
@@ -155,6 +156,9 @@ class SwarmVehicle
 
 	//sensor_msgs::NavSatFix swarm_position_global;
 	sensor_msgs::NavSatFix swarm_map;
+
+	tf2_ros::StaticTransformBroadcaster static_bc;
+
 	std::string formation;
 
 	bool multi_setpoint_publish_flag;
@@ -173,7 +177,7 @@ class SwarmVehicle
 	void deleteVehicle(VehicleInfo _vehicle_info);
 	void showVehicleList();
 
-	sensor_msgs::NavSatFix setSwarmMap(); //gps 평균냄
+	void setSwarmMap(); //gps 평균냄
 	
 	void offsetPublisher();
 	void formationGenerater(); 
