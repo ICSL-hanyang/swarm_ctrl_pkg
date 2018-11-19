@@ -1,6 +1,23 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 
+bool operator!=(geometry_msgs::PoseStamped const &tar1, geometry_msgs::PoseStamped const &tar2)
+{
+	if ((tar1.header.frame_id != tar2.header.frame_id) ||
+		(tar1.pose.position.x != tar2.pose.position.x) ||
+		(tar1.pose.position.y != tar2.pose.position.y) ||
+		(tar1.pose.position.z != tar2.pose.position.z) ||
+		(tar1.pose.orientation.x != tar2.pose.orientation.x) ||
+		(tar1.pose.orientation.y != tar2.pose.orientation.y) ||
+		(tar1.pose.orientation.z != tar2.pose.orientation.z) ||
+		(tar1.pose.orientation.w != tar2.pose.orientation.w))
+	{
+		return true;
+	}
+	else
+		return false;
+}
+
 Vehicle::Vehicle() : vehicle_info({1, "mavros"}),
 					 nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 					 nh_mul(ros::NodeHandle("multi")),
@@ -239,9 +256,7 @@ void Vehicle::setLocalTarget(geometry_msgs::PoseStamped _tar_local)
 	msg.request.y = _tar_local.pose.position.y;
 	msg.request.z = _tar_local.pose.position.z;
 
-	if ((tar_local.pose.position.x != _tar_local.pose.position.x) ||
-		(tar_local.pose.position.y != _tar_local.pose.position.y) ||
-		(tar_local.pose.position.z != _tar_local.pose.position.z))
+	if (tar_local != _tar_local)
 	{
 		tar_local = _tar_local;
 		ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info.vehicle_name.c_str(),
