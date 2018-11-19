@@ -157,12 +157,13 @@ class SwarmVehicle
 	//sensor_msgs::NavSatFix swarm_position_global;
 	sensor_msgs::NavSatFix swarm_map;
 
-	tf2_ros::StaticTransformBroadcaster static_bc;
+	tf2_ros::StaticTransformBroadcaster static_offset_bc;
+	tf2_ros::TransformBroadcaster swarm_target_bc;
 
-	std::string formation;
+	std::string formation = "POINT";
 
 	bool multi_setpoint_publish_flag;
-	double angle;
+	//double angle;
 
   public:
 	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
@@ -177,8 +178,7 @@ class SwarmVehicle
 	void deleteVehicle(VehicleInfo _vehicle_info);
 	void showVehicleList();
 
-	void setSwarmMap(); //gps 평균냄
-	
+	void setSwarmMap(); 
 	void offsetPublisher();
 	void formationGenerater(); 
 	bool setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,

@@ -427,20 +427,21 @@ void SwarmVehicle::offsetPublisher()
 		offset.push_back(_offset);
 		ROS_INFO_STREAM("offset[" << i << "] = " << offset[i]);
 
+		//http://docs.ros.org/melodic/api/tf/html/c++/static__transform__publisher_8cpp_source.html  이 sender 함수 쓰게 해주셈
 		tf_stamped.header.stamp = ros::Time::now();
 		tf_stamped.header.frame_id = "swarm_map";
-		tf_stamped.child_frame_id = "camila" + std::to_string(i+1);
+		tf_stamped.child_frame_id = "camila" + std::to_string(i + 1) + "_map";
 		tf_stamped.transform.translation.x = _offset.x;
 		tf_stamped.transform.translation.y = _offset.y;
 		tf_stamped.transform.translation.z = _offset.z;
 		tf2::Quaternion quat;
-		quat.setRPY(0, 0 , 0);
+		quat.setRPY(0, 0, 0); //처음 비틀림 계속반영? ENU라서 상관 없으려나
 		tf_stamped.transform.rotation.x = quat.x();
 		tf_stamped.transform.rotation.y = quat.y();
 		tf_stamped.transform.rotation.z = quat.z();
 		tf_stamped.transform.rotation.w = quat.w();
 
-		static_bc.sendTransform(tf_stamped);
+		static_offset_bc.sendTransform(tf_stamped);
 		i++;
 	}
 }
@@ -448,10 +449,38 @@ void SwarmVehicle::offsetPublisher()
 bool SwarmVehicle::setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
 								  swarm_ctrl_pkg::srvSetSwarmTarget::Response &res)
 {
+	//얘도 sender 함수 적용
+	geometry_msgs::TransformStamped transformStamped;
+
+	transformStamped.header.stamp = ros::Time::now();
+	transformStamped.header.frame_id = "swarm_map";
+	transformStamped.child_frame_id = "swarm_target";
+	transformStamped.transform.translation.x = req.x;
+	transformStamped.transform.translation.y = req.y;
+	transformStamped.transform.translation.z = req.z;
+	tf2::Quaternion q;
+	q.setRPY(0, 0, req.yaw);
+	transformStamped.transform.rotation.x = q.x();
+	transformStamped.transform.rotation.y = q.y();
+	transformStamped.transform.rotation.z = q.z();
+	transformStamped.transform.rotation.w = q.w();
+	swarm_target_bc.sendTransform(transformStamped);
+
+	formation = req.formation;
+
 	res.success = true;
+
 	return res.success;
 }
 
+void formationGenerater()
+{
+	if (formation == "POINT"){
+
+
+	}
+	//else if (){}
+}
 geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(sensor_msgs::NavSatFix _coord,
 													 sensor_msgs::NavSatFix _home)
 {
