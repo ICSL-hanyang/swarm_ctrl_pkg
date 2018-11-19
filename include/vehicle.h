@@ -13,6 +13,10 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <geographic_msgs/GeoPoint.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -27,8 +31,7 @@
 #include <mavros_msgs/GlobalPositionTarget.h>
 #include <setpoint_server/SetPoint.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
-#include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
-#include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
+#include <swarm_ctrl_pkg/srvSetSwarmTarget.h>
 
 #define CONSTANTS_RADIUS_OF_EARTH 6371000 /* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
@@ -61,14 +64,14 @@ class Vehicle
 	/* ros subscriber*/
 	ros::Subscriber state_sub;
 	ros::Subscriber battery_sub;
-	ros::Subscriber home_sub;
-	ros::Subscriber local_pos_sub;
+	//ros::Subscriber home_sub;
+	//ros::Subscriber local_pos_sub;
 	ros::Subscriber global_pos_sub;
 
 	/* ros publisher*/
 	ros::Publisher setpoint_vel_pub;
-	ros::Publisher setpoint_local_pub;
-	ros::Publisher setpoint_global_pub;
+	// ros::Publisher setpoint_local_pub;
+	// ros::Publisher setpoint_global_pub;
 
 	/* ros service client*/
 	ros::ServiceClient arming_client;
@@ -76,7 +79,7 @@ class Vehicle
 	ros::ServiceClient set_home_client;
 	ros::ServiceClient takeoff_client;
 	ros::ServiceClient land_client;
-	ros::ServiceClient setpoint_client;
+	//ros::ServiceClient setpoint_client;
 
 	/* ros multi sub */
 	ros::Subscriber multi_arming_sub;
@@ -86,19 +89,19 @@ class Vehicle
 	ros::Subscriber multi_land_sub;
 
 	/* local coordinate*/
-	geometry_msgs::PoseStamped home_local;
-	geometry_msgs::PoseStamped cur_local;
-	geometry_msgs::PoseStamped tar_local;
+	// geometry_msgs::PoseStamped home_local;
+	// geometry_msgs::PoseStamped cur_local;
+	// geometry_msgs::PoseStamped tar_local;
 
 	/* global coordinate*/
-	sensor_msgs::NavSatFix home_global;
+	//sensor_msgs::NavSatFix home_global;
 	sensor_msgs::NavSatFix cur_global;
-	sensor_msgs::NavSatFix tar_global;
+	//sensor_msgs::NavSatFix tar_global;
 
 	bool setpoint_publish_flag;
 	double kp;
 
-	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
+	/*firmware version=> diagnositic_msgs/DiagnosticStatus*/
 
 	void vehicleInit();
 
@@ -114,16 +117,13 @@ class Vehicle
 	mavros_msgs::State getState();
 	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &msg);
 	sensor_msgs::BatteryState getBattery();
-	void homeCB(const mavros_msgs::HomePosition::ConstPtr &msg);
 
 	/*main drone function*/
 	bool arming(bool _arm_state);
 	bool setMode(std::string _mode);
 	bool takeoff(double _takeoff_alt);
 	bool land();
-	void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
-	void setLocalTarget(geometry_msgs::PoseStamped _tar_local);
-
+	
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &msg);
 	void multiSetMode(const std_msgs::String::ConstPtr &msg);
@@ -132,21 +132,8 @@ class Vehicle
 	void multiLand(const std_msgs::Empty::ConstPtr &trigger);
 
 	//global position
-	bool setHomeGlobal();
-	sensor_msgs::NavSatFix getHomeGlobal();
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg);
 	sensor_msgs::NavSatFix getGlobalPosition();
-	sensor_msgs::NavSatFix getTargetGlobal();
-
-	//local position
-	void setHomeLocal();
-	geometry_msgs::PoseStamped getHomeLocal();
-	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg);
-	geometry_msgs::PoseStamped getLocalPosition();
-	geometry_msgs::PoseStamped getTargetLocal();
-
-	geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long,
-										   double coord_alt, double home_lat, double home_long, double home_alt);
 
 	bool isPublish();
 };
@@ -164,14 +151,12 @@ class SwarmVehicle
 
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_global;
-	ros::ServiceServer multi_setpoint_local_server;
-	ros::ServiceServer multi_setpoint_global_server;
-	ros::ServiceServer goto_vehicle_server;
+	ros::ServiceServer swarm_target_server;
 
-	geometry_msgs::PoseStamped swarm_position_local;
-	sensor_msgs::NavSatFix swarm_position_global;
-
+	//sensor_msgs::NavSatFix swarm_position_global;
+	sensor_msgs::NavSatFix swarm_map;
 	std::string formation;
+
 	bool multi_setpoint_publish_flag;
 	double angle;
 
@@ -188,13 +173,12 @@ class SwarmVehicle
 	void deleteVehicle(VehicleInfo _vehicle_info);
 	void showVehicleList();
 
-	void updateOffset();
-	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
-							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);
-	bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request &req,
-							 swarm_ctrl_pkg::srvMultiSetpointGlobal::Response &res);
-	bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
-					 swarm_ctrl_pkg::srvGoToVehicle::Response &res);
+	sensor_msgs::NavSatFix setSwarmMap(); //gps 평균냄
+	
+	void offsetPublisher();
+	void formationGenerater(); 
+	bool setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
+							swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);  
 
 	geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
 										   sensor_msgs::NavSatFix _home);

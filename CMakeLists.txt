@@ -19,9 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_service_files(
    FILES
-   srvMultiSetpointLocal.srv
-   srvMultiSetpointGlobal.srv
-   srvMultiSetVelLocal.srv
+   srvSetSwarmTarget.srv
    srvGoToVehicle.srv
  )
 
