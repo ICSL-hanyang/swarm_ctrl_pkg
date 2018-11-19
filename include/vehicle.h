@@ -29,8 +29,7 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
-#include <mavros_msgs/GlobalPositionTarget.h>
-#include <setpoint_server/SetPoint.h>
+//#include <mavros_msgs/GlobalPositionTarget.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvSetSwarmTarget.h>
 

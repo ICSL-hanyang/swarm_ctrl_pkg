@@ -447,11 +447,11 @@ void SwarmVehicle::offsetPublisher()
 	}
 }
 
-void SwarmVehicle::transformSender(double x, double y, double z, double roll, double pitch, double yaw, ros::Time time, const std::string &frame_id, const std::string &child_frame_id)
+void SwarmVehicle::transformSender(double x, double y, double z, double roll, double pitch, double yaw, ros::Time call_time, const std::string &frame_id, const std::string &child_frame_id)
 {
 	tf2_ros::TransformBroadcaster tf_br;
 	geometry_msgs::TransformStamped transformStamped;
-	transformStamped.header.stamp = time;
+	transformStamped.header.stamp = call_time;
 	transformStamped.header.frame_id = frame_id;
 	transformStamped.child_frame_id = child_frame_id;
 	transformStamped.transform.translation.x = x;

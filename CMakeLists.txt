@@ -30,13 +30,12 @@ generate_messages(
    geometry_msgs  
    geographic_msgs
    std_msgs
-   setpoint_server
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES swarm_ctrl_pkg
-  CATKIN_DEPENDS geometry_msgs mavros mavros_extras roscpp std_msgs setpoint_server
+  CATKIN_DEPENDS geometry_msgs mavros mavros_extras roscpp std_msgs
  ## DEPENDS system_lib
 )
 
