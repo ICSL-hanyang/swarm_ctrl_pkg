@@ -34,7 +34,7 @@ alias arm="rostopic pub /multi/arming std_msgs/Bool 1"
 alias disarm="rostopic pub /multi/arming std_msgs/Bool 0" 
 alias takeoff="rostopic pub /multi/set_mode std_msgs/String 'auto.takeoff'" 
 alias land="rostopic pub /multi/set_mode std_msgs/String 'auto.land'" 
-alias goto='rosservice call /multi_setpoint_local -- '
+alias goto='rosservice call /multi_setpoint_local -- POINT 0 '
 ```
 
 <!--  mark down작성을 위한 예제들
