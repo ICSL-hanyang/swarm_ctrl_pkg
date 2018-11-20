@@ -52,7 +52,7 @@
       <param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
       <param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
       <param name="setpoint_position/tf/listen" value="true" />
-      <param name="setpoint_position/tf/frame_id" value="swarm_target" />
+      <param name="setpoint_position/tf/frame_id" value="swarm_map" />
       <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target" />
 
 
@@ -95,7 +95,7 @@
       <param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
       <param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
       <param name="setpoint_position/tf/listen" value="true" />
-      <param name="setpoint_position/tf/frame_id" value="swarm_target" />
+      <param name="setpoint_position/tf/frame_id" value="swarm_map" />
       <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_target" />
 
 
@@ -110,6 +110,7 @@
     <rosparam command="load" file="$(arg swarm_config_yaml)"/>
   </node>
 
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
 </launch>
 
 

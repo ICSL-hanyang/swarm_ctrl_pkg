@@ -18,7 +18,9 @@ int main(int argc, char **argv)
 
 	while (ros::ok())
 	{
+
 		camila->formationGenerater();
+
 		ros::spinOnce();
 		rate.sleep();
 	}

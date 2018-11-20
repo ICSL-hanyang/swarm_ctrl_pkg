@@ -24,7 +24,7 @@ Vehicle::Vehicle() : vehicle_info({1, "mavros"}),
 					 nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 					 nh_mul(ros::NodeHandle("multi")),
 					 nh_global(ros::NodeHandle("~")),
-					 setpoint_publish_flag(false)
+					 setpoint_publish_flag(true)
 {
 	vehicleInit();
 }
@@ -33,7 +33,7 @@ Vehicle::Vehicle(VehicleInfo _vehicle_info) : vehicle_info(_vehicle_info),
 											  nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 											  nh_mul(ros::NodeHandle("multi")),
 											  nh_global(ros::NodeHandle("~")),
-											  setpoint_publish_flag(false)
+											  setpoint_publish_flag(true)
 {
 	vehicleInit();
 }
@@ -204,7 +204,7 @@ bool Vehicle::land()
 	return msg.response.success;
 }
 
-/*multi란? -> 커멘드로 날라온 토픽을 서비스로 날리는 놈, 객체마다 있기에 동시에 서비스를 날리는 효과*/
+/*multi란? -> 커멘드로 날라온 단발 토픽을 mavros 서비스로 날리는 놈, 객체마다 있기에 동시에 서비스를 날리는 효과*/
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
 {
@@ -461,6 +461,7 @@ bool SwarmVehicle::setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &re
 	swarm_target_TF.transform.rotation.w = q.w();
 
 	formation = req.formation;
+	multi_setpoint_publish_flag = true;
 
 	res.success = true;
 
@@ -488,19 +489,22 @@ void SwarmVehicle::transformSender(double x, double y, double z, double roll, do
 
 void SwarmVehicle::formationGenerater()
 {
-	swarm_target_TF.header.stamp = ros::Time::now();
-	swarm_target_bc.sendTransform(swarm_target_TF);
+	if (multi_setpoint_publish_flag)
+	{ //요거 약간 병신같음
+		swarm_target_TF.header.stamp = ros::Time::now();
+		swarm_target_bc.sendTransform(swarm_target_TF);
 
-	geometry_msgs::TransformStamped vehicle_target_TF;
-	if (formation == "POINT")
-	{
-		vehicle_target_TF = swarm_target_TF;
-		int i = 0;
-		for (iter = camila.begin(); iter != camila.end(); iter++)
+		geometry_msgs::TransformStamped vehicle_target_TF;
+		if (formation == "POINT")
 		{
-			std::string vehicle_target = "camila" + std::to_string(i + 1) + "_target";
-			transformSender(0, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-			i++;
+			vehicle_target_TF = swarm_target_TF;
+			int i = 0;
+			for (iter = camila.begin(); iter != camila.end(); iter++)
+			{
+				std::string vehicle_target = "camila" + std::to_string(i + 1) + "_target";
+				transformSender(0, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+				i++;
+			}
 		}
 	}
 }
@@ -584,6 +588,7 @@ bool SwarmVehicle::isPublish()
 			multi_setpoint_publish_flag = false;
 			break;
 		}
+		//set_point publish_flag랑 is publish 정리
 		//vehicle 의 isPublish flag를 라즈단에서 결정
 	}
 	return multi_setpoint_publish_flag;
