@@ -163,7 +163,18 @@ class SwarmVehicle
 	std::string formation;
 
 	bool multi_setpoint_publish_flag;
-	//double angle;
+
+	/* private operation */
+	void setSwarmMap();
+	void offsetPublisher();
+	void formationGenerater();
+	geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
+										   sensor_msgs::NavSatFix _home);
+	geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local,
+											  sensor_msgs::NavSatFix _home_global);
+	bool setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
+						swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);
+	bool isPublish();
 
   public:
 	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
@@ -177,20 +188,8 @@ class SwarmVehicle
 	void addVehicle(VehicleInfo _vehicle_info);
 	void deleteVehicle(VehicleInfo _vehicle_info);
 	void showVehicleList();
-	void transformSender(double x, double y, double z, double roll, double pitch, double yaw, ros::Time time, const std::string &frame_id, const std::string &child_frame_id);
-	void setSwarmMap();
-	void offsetPublisher();
-	void formationGenerater();
-	bool setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
-						swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);
-
-	geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
-										   sensor_msgs::NavSatFix _home);
-	geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local,
-											  sensor_msgs::NavSatFix _home_global);
-
-	bool isPublish();
-
+	
+	void init();
 	void run();
 };
 
