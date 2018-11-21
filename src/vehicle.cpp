@@ -1,30 +1,12 @@
 #include <ros/ros.h>
 #include <vehicle.h>
-
-const sensor_msgs::NavSatFix operator+(const sensor_msgs::NavSatFix &a, const sensor_msgs::NavSatFix &b)
-{
-	sensor_msgs::NavSatFix result;
-	result.latitude = a.latitude + b.latitude;
-	result.longitude = a.longitude + b.longitude;
-	result.altitude = a.altitude + b.altitude;
-
-	return result;
-}
-
-sensor_msgs::NavSatFix &operator+=(sensor_msgs::NavSatFix &a, const sensor_msgs::NavSatFix &b)
-{
-	a.latitude += b.latitude;
-	a.longitude += b.longitude;
-	a.altitude += b.altitude;
-
-	return a;
-}
+#include <ros_msg_extension.h>
 
 Vehicle::Vehicle() : vehicle_info({1, "mavros"}),
 					 nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 					 nh_mul(ros::NodeHandle("multi")),
 					 nh_global(ros::NodeHandle("~")),
-					 setpoint_publish_flag(false)
+					 setpoint_publish_flag(true)
 {
 	vehicleInit();
 }
@@ -33,7 +15,7 @@ Vehicle::Vehicle(VehicleInfo _vehicle_info) : vehicle_info(_vehicle_info),
 											  nh(ros::NodeHandle(vehicle_info.vehicle_name)),
 											  nh_mul(ros::NodeHandle("multi")),
 											  nh_global(ros::NodeHandle("~")),
-											  setpoint_publish_flag(false)
+											  setpoint_publish_flag(true)
 {
 	vehicleInit();
 }
@@ -74,7 +56,7 @@ void Vehicle::vehicleInit()
 	battery_sub = nh.subscribe("battery", 10, &Vehicle::batteryCB, this);
 	//lookup 으로 확인하기
 	// local_pos_sub = nh.subscribe("local_position/pose", 10, &Vehicle::localPositionCB, this);
-	// global_pos_sub = nh.subscribe("global_position/global", 10, &Vehicle::globalPositionCB, this);
+	global_pos_sub = nh.subscribe("global_position/global", 10, &Vehicle::globalPositionCB, this);
 
 	arming_client = nh.serviceClient<mavros_msgs::CommandBool>("cmd/arming");
 	set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("set_mode");
@@ -204,7 +186,7 @@ bool Vehicle::land()
 	return msg.response.success;
 }
 
-/*multi란? -> 커멘드로 날라온 토픽을 서비스로 날리는 놈, 객체마다 있기에 동시에 서비스를 날리는 효과*/
+/*multi란? -> 커멘드로 날라온 단발 토픽을 mavros 서비스로 날리는 놈, 객체마다 있기에 동시에 서비스를 날리는 효과*/
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
 {
@@ -406,10 +388,38 @@ void SwarmVehicle::setSwarmMap()
 	swarm_map.longitude = 0;
 	swarm_map.altitude = 0;
 
+	VehicleInfo info = camila.front().getInfo();
+	sensor_msgs::NavSatFixConstPtr msg = ros::topic::waitForMessage<sensor_msgs::NavSatFix>(info.vehicle_name + "/global_position/global");
+
+	ros::Rate r(10);
+	unsigned int cnt = 0;
+	unsigned int sec = 0;
+	while (!msg)
+	{
+		ros::spinOnce();
+		cnt++;
+
+		if (cnt % 10 == 0)
+		{
+			if (msg)
+			{
+				ROS_INFO("GPS signal received !");
+				break;
+			}
+		}
+		else{
+			sec++;
+			ROS_INFO_STREAM("Waiting for GPS signal ..." << sec);
+		}
+		r.sleep();
+	}
+
+	int i = 0;
 	for (iter = camila.begin(); iter != camila.end(); iter++)
 	{
 		sensor_msgs::NavSatFix gps_pos = iter->getGlobalPosition();
 		swarm_map += gps_pos;
+		i++;
 	}
 	swarm_map.latitude /= camila.size();
 	swarm_map.longitude /= camila.size();
@@ -421,49 +431,27 @@ void SwarmVehicle::offsetPublisher()
 	int i = 0;
 	for (iter = camila.begin(); iter != camila.end(); iter++)
 	{
-		//geometry_msgs::TransformStamped tf_stamped;
+		geometry_msgs::TransformStamped tf_stamped;
 		sensor_msgs::NavSatFix gps_pos = iter->getGlobalPosition();
 		geometry_msgs::Vector3 _offset = convertGeoToENU(gps_pos, swarm_map);
 		offset.push_back(_offset);
 		ROS_INFO_STREAM("offset[" << i << "] = " << offset[i]);
 
-		// tf_stamped.header.stamp = ros::Time::now();
-		// tf_stamped.header.frame_id = "swarm_map";
-		// tf_stamped.child_frame_id = "camila" + std::to_string(i + 1) + "_map";
-		// tf_stamped.transform.translation.x = _offset.x;
-		// tf_stamped.transform.translation.y = _offset.y;
-		// tf_stamped.transform.translation.z = _offset.z;
-		// tf2::Quaternion quat;
-		// quat.setRPY(0, 0, 0); //처음 비틀림 계속반영? ENU라서 상관 없으려나
-		// tf_stamped.transform.rotation.x = quat.x();
-		// tf_stamped.transform.rotation.y = quat.y();
-		// tf_stamped.transform.rotation.z = quat.z();
-		// tf_stamped.transform.rotation.w = quat.w();
-		// static_offset_bc.sendTransform(tf_stamped);
-
-		std::string vehicle_map = "camila" + std::to_string(i + 1) + "_map";
-		transformSender(_offset.x, _offset.y, _offset.z, 0, 0, 0, ros::Time::now(), "swarm_map", vehicle_map);
+		tf_stamped.header.stamp = ros::Time::now();
+		tf_stamped.header.frame_id = "swarm_map";
+		tf_stamped.child_frame_id = "camila" + std::to_string(i + 1) + "_map";
+		tf_stamped.transform.translation.x = _offset.x;
+		tf_stamped.transform.translation.y = _offset.y;
+		tf_stamped.transform.translation.z = _offset.z;
+		tf2::Quaternion quat;
+		quat.setRPY(0, 0, 0);
+		tf_stamped.transform.rotation.x = quat.x();
+		tf_stamped.transform.rotation.y = quat.y();
+		tf_stamped.transform.rotation.z = quat.z();
+		tf_stamped.transform.rotation.w = quat.w();
+		static_offset_bc.sendTransform(tf_stamped);
 		i++;
 	}
-}
-
-void SwarmVehicle::transformSender(double x, double y, double z, double roll, double pitch, double yaw, ros::Time call_time, const std::string &frame_id, const std::string &child_frame_id)
-{
-	tf2_ros::TransformBroadcaster tf_br;
-	geometry_msgs::TransformStamped transformStamped;
-	transformStamped.header.stamp = call_time;
-	transformStamped.header.frame_id = frame_id;
-	transformStamped.child_frame_id = child_frame_id;
-	transformStamped.transform.translation.x = x;
-	transformStamped.transform.translation.y = y;
-	transformStamped.transform.translation.z = z;
-	tf2::Quaternion q;
-	q.setRPY(roll, pitch, yaw);
-	transformStamped.transform.rotation.x = q.x();
-	transformStamped.transform.rotation.y = q.y();
-	transformStamped.transform.rotation.z = q.z();
-	transformStamped.transform.rotation.w = q.w();
-	tf_br.sendTransform(transformStamped);
 }
 
 bool SwarmVehicle::setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
@@ -481,9 +469,9 @@ bool SwarmVehicle::setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &re
 	swarm_target_TF.transform.rotation.y = q.y();
 	swarm_target_TF.transform.rotation.z = q.z();
 	swarm_target_TF.transform.rotation.w = q.w();
-	swarm_target_bc.sendTransform(swarm_target_TF);
 
 	formation = req.formation;
+	multi_setpoint_publish_flag = true;
 
 	res.success = true;
 
@@ -492,16 +480,23 @@ bool SwarmVehicle::setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &re
 
 void SwarmVehicle::formationGenerater()
 {
-	geometry_msgs::TransformStamped vehicle_target_TF;
+	if (multi_setpoint_publish_flag)
+	{ //요거 약간 병신같음
+		swarm_target_TF.header.stamp = ros::Time::now();
+		swarm_target_bc.sendTransform(swarm_target_TF);
 
-	//if(formation == POINT)
-	vehicle_target_TF = swarm_target_TF;
-	int i = 0;
-	for (iter = camila.begin(); iter != camila.end(); iter++)
-	{
-		std::string vehicle_target = "camila" + std::to_string(i + 1) + "_target";
-		transformSender(vehicle_target_TF.transform.translation.x, vehicle_target_TF.transform.translation.y, vehicle_target_TF.transform.translation.z, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		i++;
+		geometry_msgs::TransformStamped vehicle_target_TF;
+		if (formation == "POINT")
+		{
+			vehicle_target_TF = swarm_target_TF;
+			int i = 0;
+			for (iter = camila.begin(); iter != camila.end(); iter++)
+			{
+				std::string vehicle_target = "camila" + std::to_string(i + 1) + "_target";
+				transformSender(0, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+				i++;
+			}
+		}
 	}
 }
 geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(sensor_msgs::NavSatFix _coord,
@@ -584,6 +579,17 @@ bool SwarmVehicle::isPublish()
 			multi_setpoint_publish_flag = false;
 			break;
 		}
+		//set_point publish_flag랑 is publish 정리
+		//vehicle 의 isPublish flag를 라즈단에서 결정
 	}
 	return multi_setpoint_publish_flag;
+}
+
+void SwarmVehicle::init(){
+	setSwarmMap();
+	offsetPublisher();
+}
+
+void SwarmVehicle::run(){
+	formationGenerater();
 }

@@ -12,14 +12,11 @@ int main(int argc, char **argv)
 
 	ROS_INFO("swarm_node start");
 
-	mavros_msgs::State state;
-	camila->setSwarmMap();
-	camila->offsetPublisher();
+	camila->init();
 
 	while (ros::ok())
 	{
-
-		camila->formationGenerater();
+		camila->run();
 
 		ros::spinOnce();
 		rate.sleep();
