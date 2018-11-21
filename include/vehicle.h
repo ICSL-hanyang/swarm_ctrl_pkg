@@ -156,7 +156,7 @@ class SwarmVehicle
 	//sensor_msgs::NavSatFix swarm_position_global;
 	sensor_msgs::NavSatFix swarm_map;
 
-	//tf2_ros::StaticTransformBroadcaster static_offset_bc;
+	tf2_ros::StaticTransformBroadcaster static_offset_bc;
 	geometry_msgs::TransformStamped swarm_target_TF;
 	tf2_ros::TransformBroadcaster swarm_target_bc;
 
