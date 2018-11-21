@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 
-const sensor_msgs::NavSatFix &operator+(const sensor_msgs::NavSatFix &a, const sensor_msgs::NavSatFix &b)
+const sensor_msgs::NavSatFix operator+(const sensor_msgs::NavSatFix &a, const sensor_msgs::NavSatFix &b)
 {
 	sensor_msgs::NavSatFix result;
 	result.latitude = a.latitude + b.latitude;
