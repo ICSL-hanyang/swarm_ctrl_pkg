@@ -394,7 +394,7 @@ void SwarmVehicle::setSwarmMap()
 	ros::Rate r(10);
 	unsigned int cnt = 0;
 	unsigned int sec = 0;
-	while (!msg)
+	while (cnt<300)
 	{
 		ros::spinOnce();
 		cnt++;

@@ -5,7 +5,7 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "swarm_node");
 	ros::NodeHandle nh("~");
-	ros::Rate rate(10);
+	ros::Rate rate(20);
 
 	SwarmVehicle *camila;
 	camila = new SwarmVehicle("camila", 2);
