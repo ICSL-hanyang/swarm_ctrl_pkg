@@ -61,7 +61,7 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="2"/>
+			<param name="num_drone" value="3"/>
 			<param name="id" value="1"/>
 			<param name="max_force" value="3"/>
 			<param name="max_speed" value="3"/>
@@ -112,7 +112,7 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="2"/>
+			<param name="num_drone" value="3"/>
 			<param name="id" value="2"/>
 			<param name="max_force" value="3"/>
 			<param name="max_speed" value="3"/>
@@ -163,8 +163,8 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="2"/>
-			<param name="id" value="2"/>
+			<param name="num_drone" value="3"/>
+			<param name="id" value="3"/>
 			<param name="max_force" value="3"/>
 			<param name="max_speed" value="3"/>
 			<param name="seek_weight" value="1"/>
