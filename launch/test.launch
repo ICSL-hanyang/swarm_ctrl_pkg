@@ -65,7 +65,7 @@
 			<param name="id" value="1"/>
 			<param name="max_force" value="3"/>
 			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="1"/>
+			<param name="seek_weight" value="2"/>
 			<param name="separate_weight" value="1"/>
 		</node>
 	</group>
@@ -116,7 +116,7 @@
 			<param name="id" value="2"/>
 			<param name="max_force" value="3"/>
 			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="1"/>
+			<param name="seek_weight" value="2"/>
 			<param name="separate_weight" value="1"/>
 		</node>
 	</group>
@@ -167,7 +167,7 @@
 			<param name="id" value="3"/>
 			<param name="max_force" value="3"/>
 			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="1"/>
+			<param name="seek_weight" value="2"/>
 			<param name="separate_weight" value="1"/>
 		</node>
 	</group>
