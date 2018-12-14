@@ -45,6 +45,23 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 	return *this;
 }
 
+Vehicle::~Vehicle(){
+	state_sub.shutdown();
+	global_pos_sub.shutdown();
+	multi_arming_sub.shutdown();
+	multi_set_mode_sub.shutdown();
+	multi_takeoff_sub.shutdown();
+	multi_land_sub.shutdown();
+
+	setpoint_vel_pub.shutdown();
+
+	arming_client.shutdown();
+	set_mode_client.shutdown();
+	set_home_client.shutdown();
+	takeoff_client.shutdown();
+	land_client.shutdown();
+}
+
 void Vehicle::vehicleInit()
 {
 	//camila1's_target frame을 publish 하게
@@ -237,14 +254,6 @@ void Vehicle::multiLand(const std_msgs::Empty::ConstPtr &trigger)
 void Vehicle::globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg)
 {
 	cur_global = *msg;
-
-	/* geometry_msgs::Vector3 pose = convertGeoToENU(cur_global.latitude, cur_global.longitude,
-		cur_global.altitude, home_global.latitude, home_global.longitude, home_global.altitude);
-	cur_local.pose.position.x = pose.x;
-	cur_local.pose.position.y = pose.y;
-	cur_local.pose.position.z = pose.z; */
-	/* ROS_INFO_STREAM(cur_local.pose.position.x << " " << cur_local.pose.position.y 
-		<<" "<< cur_local.pose.position.z); */
 }
 
 sensor_msgs::NavSatFix Vehicle::getGlobalPosition()
@@ -323,6 +332,7 @@ const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 
 SwarmVehicle::~SwarmVehicle()
 {
+	swarm_target_server.shutdown();
 	std::vector<Vehicle>().swap(camila);
 }
 
@@ -394,7 +404,7 @@ void SwarmVehicle::setSwarmMap()
 	ros::Rate r(10);
 	unsigned int cnt = 0;
 	unsigned int sec = 0;
-	while (!msg)
+	while (cnt < 300)
 	{
 		ros::spinOnce();
 		cnt++;

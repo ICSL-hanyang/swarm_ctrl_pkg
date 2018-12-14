@@ -110,6 +110,7 @@ class Vehicle
 	Vehicle(VehicleInfo _vehicle_info);
 	Vehicle(const Vehicle &rhs);
 	const Vehicle &operator=(const Vehicle &rhs);
+	~Vehicle();
 
 	void setVehicleInfo(VehicleInfo new_vehicle_info);
 	VehicleInfo getInfo();

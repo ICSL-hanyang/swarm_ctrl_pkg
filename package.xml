@@ -6,7 +6,7 @@
   <maintainer email="gosupia@naver.com">sewoong</maintainer>
   <license>BSD</license>
 
-  <buildtool_depend>catkin</buildtool_depend>l
+  <buildtool_depend>catkin</buildtool_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>mavros</build_depend>
   <build_depend>mavros_extras</build_depend>
