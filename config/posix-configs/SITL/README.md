@@ -17,9 +17,19 @@ make posix_sitl_default sitl_gazebo
 ```bash
 source ~/Drone/Firmware/Tools/setup_gazebo.bash ~/Drone/Firmware ~/Drone/Firmware/build/posix_sitl_default
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/Drone/Firmware
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/Drone/Firmware/Tools/sitl_gazebo
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/Drone/Firmware/Tools/sitl_gazebo 
 ```
-3. launch
+3. Delete echo:
+```bash
+~/Drone/Firmware/Tools 안에 
+setup_gazebo.bash 
+에서 아래 3줄 주석
+#echo -e "GAZEBO_PLUGIN_PATH $GAZEBO_PLUGIN_PATH"
+#echo -e "GAZEBO_MODEL_PATH $GAZEBO_MODEL_PATH"
+#echo -e "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
+```
+
+4. launch
 ```
 roslaunch swarm_ctrl_pkg multi_uav_mavros_sitl.launch 
 ```
