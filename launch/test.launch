@@ -10,6 +10,14 @@
 	<arg name="debug" default="false"/>
 	<arg name="verbose" default="false"/>
 	<arg name="paused" default="false"/>
+
+	<!-- setpoint ctrl -->
+	<arg name="num_drone" default="3"/>
+	<arg name="max_force" default="3"/>
+	<arg name="max_speed" default="3"/>
+	<arg name="seek_weight" default="2"/>
+	<arg name="separate_weight" default="1"/>
+
 	<!-- Gazebo sim -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
 		<arg name="gui" value="$(arg gui)"/>
@@ -61,12 +69,12 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="3"/>
-			<param name="id" value="1"/>
-			<param name="max_force" value="3"/>
-			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="2"/>
-			<param name="separate_weight" value="1"/>
+			<param name="num_drone" value="$(arg num_drone)"/>
+			<param name="id" value="$(arg ID)"/>
+			<param name="max_force" value="$(arg max_force)"/>
+			<param name="max_speed" value="$(arg max_speed)"/>
+			<param name="seek_weight" value="$(arg seek_weight)"/>
+			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 
@@ -112,12 +120,12 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="3"/>
-			<param name="id" value="2"/>
-			<param name="max_force" value="3"/>
-			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="2"/>
-			<param name="separate_weight" value="1"/>
+			<param name="num_drone" value="$(arg num_drone)"/>
+			<param name="id" value="$(arg ID)"/>
+			<param name="max_force" value="$(arg max_force)"/>
+			<param name="max_speed" value="$(arg max_speed)"/>
+			<param name="seek_weight" value="$(arg seek_weight)"/>
+			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 
@@ -163,12 +171,12 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="3"/>
-			<param name="id" value="3"/>
-			<param name="max_force" value="3"/>
-			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="2"/>
-			<param name="separate_weight" value="1"/>
+			<param name="num_drone" value="$(arg num_drone)"/>
+			<param name="id" value="$(arg ID)"/>
+			<param name="max_force" value="$(arg max_force)"/>
+			<param name="max_speed" value="$(arg max_speed)"/>
+			<param name="seek_weight" value="$(arg seek_weight)"/>
+			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 
