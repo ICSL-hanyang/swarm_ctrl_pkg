@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 	camila = new SwarmVehicle("camila", 3);
 
 	ROS_INFO("swarm_node start");
-
+	
 	camila->init();
 
 	while (ros::ok())

@@ -14,7 +14,7 @@
 	<!-- setpoint ctrl -->
 	<arg name="num_drone" default="3"/>
 	<arg name="max_force" default="3"/>
-	<arg name="max_speed" default="3"/>
+	<arg name="max_speed" default="1"/>
 	<arg name="seek_weight" default="2"/>
 	<arg name="separate_weight" default="1"/>
 
