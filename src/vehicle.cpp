@@ -397,7 +397,7 @@ void SwarmVehicle::setSwarmMap()
 	swarm_map.latitude = 0;
 	swarm_map.longitude = 0;
 	swarm_map.altitude = 0;
-
+	
 	VehicleInfo info = camila.front().getInfo();
 	sensor_msgs::NavSatFixConstPtr msg = ros::topic::waitForMessage<sensor_msgs::NavSatFix>(info.vehicle_name + "/global_position/global");
 
@@ -414,7 +414,7 @@ void SwarmVehicle::setSwarmMap()
 			if (msg)
 			{
 				ROS_INFO("GPS signal received !");
-				break;
+				//break;
 			}
 		}
 		else{

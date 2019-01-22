@@ -62,6 +62,78 @@ Visualization Manager:
           Value: true
         camila2_map:
           Value: true
+        camila3_base_link:
+          Value: true
+        camila3_map:
+          Value: true
+        camila4_base_link:
+          Value: true
+        camila4_map:
+          Value: true
+        camila5_base_link:
+          Value: true
+        camila5_map:
+          Value: true
+        camila6_base_link:
+          Value: true
+        camila6_map:
+          Value: true
+        camila7_base_link:
+          Value: true
+        camila7_map:
+          Value: true
+        camila8_base_link:
+          Value: true
+        camila8_map:
+          Value: true
+        camila9_base_link:
+          Value: true
+        camila9_map:
+          Value: true
+        camila10_base_link:
+          Value: true
+        camila10_map:
+          Value: true
+        camila11_base_link:
+          Value: true
+        camila11_map:
+          Value: true
+        camila12_base_link:
+          Value: true
+        camila12_map:
+          Value: true
+        camila13_base_link:
+          Value: true
+        camila13_map:
+          Value: true
+        camila14_base_link:
+          Value: true
+        camila14_map:
+          Value: true
+        camila15_base_link:
+          Value: true
+        camila15_map:
+          Value: true
+        camila16_base_link:
+          Value: true
+        camila16_map:
+          Value: true
+        camila17_base_link:
+          Value: true
+        camila17_map:
+          Value: true
+        camila18_base_link:
+          Value: true
+        camila18_map:
+          Value: true
+        camila19_base_link:
+          Value: true
+        camila19_map:
+          Value: true
+        camila20_base_link:
+          Value: true
+        camila20_map:
+          Value: true
         fcu:
           Value: true
         fcu_frd:
@@ -84,6 +156,60 @@ Visualization Manager:
               {}
           camila2_map:
             camila2_base_link:
+              {}
+          camila3_map:
+            camila3_base_link:
+              {}
+          camila4_map:
+            camila4_base_link:
+              {}
+          camila5_map:
+            camila5_base_link:
+              {}
+          camila6_map:
+            camila6_base_link:
+              {}
+          camila7_map:
+            camila7_base_link:
+              {}
+          camila8_map:
+            camila8_base_link:
+              {}
+          camila9_map:
+            camila9_base_link:
+              {}
+          camila10_map:
+            camila10_base_link:
+              {}
+          camila11_map:
+            camila10_base_link:
+              {}
+          camila12_map:
+            camila10_base_link:
+              {}
+          camila13_map:
+            camila10_base_link:
+              {}
+          camila14_map:
+            camila10_base_link:
+              {}
+          camila15_map:
+            camila10_base_link:
+              {}
+          camila16_map:
+            camila10_base_link:
+              {}
+          camila17_map:
+            camila10_base_link:
+              {}
+          camila18_map:
+            camila10_base_link:
+              {}
+          camila19_map:
+            camila10_base_link:
+              {}
+          camila20_map:
+            camila10_base_link:
               {}
       Update Interval: 0
       Value: true
