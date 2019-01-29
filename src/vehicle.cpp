@@ -65,7 +65,7 @@ Vehicle::~Vehicle()
 
 void Vehicle::vehicleInit()
 {
-	cur_global.latitude= 0;
+	cur_global.latitude = 0;
 	cur_global.longitude = 0;
 	cur_global.altitude = 0;
 
@@ -266,9 +266,10 @@ sensor_msgs::NavSatFix Vehicle::getGlobalPosition()
 	return cur_global;
 }
 
-bool Vehicle::isReceivedGlobalPos(){
+bool Vehicle::isReceivedGlobalPos()
+{
 	sensor_msgs::NavSatFixConstPtr msg = ros::topic::waitForMessage<sensor_msgs::NavSatFix>(vehicle_info.vehicle_name + "/global_position/global");
-	if(msg && (cur_state.mode == "AUTO.LOITER" || cur_state.mode == "auto.loiter"))
+	if (msg && (cur_state.mode == "AUTO.LOITER" || cur_state.mode == "auto.loiter"))
 		return true;
 	else
 		return false;
@@ -364,8 +365,9 @@ void SwarmVehicle::setSwarmMap()
 		ros::Time now = ros::Time::now();
 
 		cnt = 0;
-		for(auto &vehicle : camila){
-			if(vehicle.isReceivedGlobalPos())
+		for (auto &vehicle : camila)
+		{
+			if (vehicle.isReceivedGlobalPos())
 				cnt++;
 		}
 
@@ -374,14 +376,15 @@ void SwarmVehicle::setSwarmMap()
 			ROS_INFO_STREAM("Waiting for GPS signal ..." << cnt);
 			sec++;
 		}
-		
-		if(now - start > ros::Duration(30)){
+
+		if (now - start > ros::Duration(30))
+		{
 			ROS_WARN_STREAM("GPS time out! only " << cnt << " vehilces get GPS signal.");
 			break;
 		}
 	}
 
-	for (auto& vehicle : camila)
+	for (auto &vehicle : camila)
 	{
 		sensor_msgs::NavSatFix gps_pos = vehicle.getGlobalPosition();
 		swarm_map += gps_pos;
@@ -394,7 +397,7 @@ void SwarmVehicle::setSwarmMap()
 void SwarmVehicle::offsetPublisher()
 {
 	int i = 0;
-	for (auto& vehicle : camila)
+	for (auto &vehicle : camila)
 	{
 		geometry_msgs::TransformStamped tf_stamped;
 		sensor_msgs::NavSatFix gps_pos = vehicle.getGlobalPosition();
@@ -430,7 +433,7 @@ void SwarmVehicle::formationGenerater()
 		if (formation == "POINT")
 		{
 			vehicle_target_TF = swarm_target_TF;
-			for (auto& vehicle : camila)
+			for (auto &vehicle : camila)
 			{
 				std::string vehicle_target = "camila" + std::to_string(vehicle.getInfo().system_id) + "_target";
 				transformSender(0, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
@@ -536,7 +539,7 @@ bool SwarmVehicle::setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &re
 bool SwarmVehicle::isPublish()
 {
 	multi_setpoint_publish_flag = true;
-	for (auto& vehicle : camila)
+	for (auto &vehicle : camila)
 	{
 		if (vehicle.isPublish() != true)
 		{
@@ -547,6 +550,37 @@ bool SwarmVehicle::isPublish()
 		//vehicle 의 isPublish flag를 라즈단에서 결정
 	}
 	return multi_setpoint_publish_flag;
+}
+
+void SwarmVehicle::scenario1()
+{
+	geometry_msgs::TransformStamped vehicle_target_TF;
+	vehicle_target_TF = swarm_target_TF;
+	double root_3125 = sqrt(31.25);
+	double root_25 = sqrt(2.5);
+	double MSec = ros::Time::now().toNSec() / 1000000;
+	double x = 0.0002 * MSec; // MSec가 초당 1000씩 증가하므로 0.2 rad/s
+	for (auto &vehicle : camila)
+	{
+		int id = vehicle.getInfo().system_id;
+		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
+		if (id < 4)
+			transformSender(-5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id < 7)
+			transformSender(0, ((id % 3) * 5 - 5) + root_25 * cos(x), root_25 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id < 10)
+			transformSender(5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id < 13)
+			transformSender(-5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id < 16)
+			transformSender(0, ((id % 3) * 5 - 5) + root_25 * cos(x), root_25 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id < 19)
+			transformSender(5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id < 20)
+			transformSender(-10, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id == 20)
+			transformSender(10, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	}
 }
 
 void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle)
@@ -599,7 +633,7 @@ void SwarmVehicle::deleteVehicle(VehicleInfo _vehicle_info)
 
 void SwarmVehicle::showVehicleList()
 {
-	for (auto& vehicle : camila)
+	for (auto &vehicle : camila)
 	{
 		VehicleInfo temp = vehicle.getInfo();
 		ROS_INFO_STREAM(temp.system_id << " " << temp.vehicle_name);
