@@ -54,8 +54,8 @@ class Vehicle
 	VehicleInfo vehicle_info;
 
 	ros::NodeHandle nh;
-	ros::NodeHandle nh_mul;
-	ros::NodeHandle nh_global;
+	ros::NodeHandle& rNH_mul;
+	ros::NodeHandle& rNH_global;
 
 	/*drone state*/
 	mavros_msgs::State cur_state;
@@ -64,14 +64,10 @@ class Vehicle
 	/* ros subscriber*/
 	ros::Subscriber state_sub;
 	ros::Subscriber battery_sub;
-	//ros::Subscriber home_sub;
-	//ros::Subscriber local_pos_sub;
 	ros::Subscriber global_pos_sub;
 
 	/* ros publisher*/
 	ros::Publisher setpoint_vel_pub;
-	// ros::Publisher setpoint_local_pub;
-	// ros::Publisher setpoint_global_pub;
 
 	/* ros service client*/
 	ros::ServiceClient arming_client;
@@ -79,7 +75,6 @@ class Vehicle
 	ros::ServiceClient set_home_client;
 	ros::ServiceClient takeoff_client;
 	ros::ServiceClient land_client;
-	//ros::ServiceClient setpoint_client;
 
 	/* ros multi sub */
 	ros::Subscriber multi_arming_sub;
@@ -88,15 +83,9 @@ class Vehicle
 	ros::Subscriber multi_takeoff_sub;
 	ros::Subscriber multi_land_sub;
 
-	/* local coordinate*/
-	// geometry_msgs::PoseStamped home_local;
-	// geometry_msgs::PoseStamped cur_local;
-	// geometry_msgs::PoseStamped tar_local;
-
 	/* global coordinate*/
 	sensor_msgs::NavSatFix home_global;
 	sensor_msgs::NavSatFix cur_global;
-	//sensor_msgs::NavSatFix tar_global;
 
 	bool setpoint_publish_flag;
 
@@ -108,8 +97,9 @@ class Vehicle
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg);
 
   public:
-	Vehicle();
-	Vehicle(const VehicleInfo &_vehicle_info);
+	Vehicle() = delete;
+	Vehicle(ros::NodeHandle&, ros::NodeHandle&);
+	Vehicle(ros::NodeHandle&, ros::NodeHandle&, const VehicleInfo &_vehicle_info);
 	Vehicle(const Vehicle &rhs);
 	const Vehicle &operator=(const Vehicle &rhs);
 	~Vehicle();
@@ -151,11 +141,11 @@ class SwarmVehicle
 	std::vector<geometry_msgs::Vector3> offset;
 
 	ros::NodeHandle nh;
-	ros::NodeHandle nh_global;
+	ros::NodeHandle nh_mul;
+	ros::NodeHandle& rNH_global;
 
 	ros::ServiceServer swarm_target_server;
 
-	//sensor_msgs::NavSatFix swarm_position_global;
 	sensor_msgs::NavSatFix swarm_map;
 
 	tf2_ros::StaticTransformBroadcaster static_offset_bc;
@@ -181,7 +171,7 @@ class SwarmVehicle
 	void scenario1();
 
   public:
-	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
+	SwarmVehicle(ros::NodeHandle&, std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
 	SwarmVehicle(const SwarmVehicle &rhs);
 	const SwarmVehicle &operator=(const SwarmVehicle &rhs);
 	~SwarmVehicle();

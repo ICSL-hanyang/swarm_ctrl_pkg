@@ -2,29 +2,32 @@
 #include <vehicle.h>
 #include <ros_msg_extension.h>
 
-Vehicle::Vehicle() : vehicle_info({1, "mavros"}),
-					 nh(ros::NodeHandle(vehicle_info.vehicle_name)),
-					 nh_mul(ros::NodeHandle("multi")),
-					 nh_global(ros::NodeHandle("~")),
-					 setpoint_publish_flag(true)
+Vehicle::Vehicle(ros::NodeHandle &_rNH_mul, ros::NodeHandle &_rNH_global)
+	: vehicle_info({1, "mavros"}),
+	  nh("camila"),
+	  rNH_mul(_rNH_mul),
+	  rNH_global(_rNH_global),
+	  setpoint_publish_flag(true)
 {
 	vehicleInit();
 }
 
-Vehicle::Vehicle(const VehicleInfo &_vehicle_info) : vehicle_info(_vehicle_info),
-													 nh(ros::NodeHandle(vehicle_info.vehicle_name)),
-													 nh_mul(ros::NodeHandle("multi")),
-													 nh_global(ros::NodeHandle("~")),
-													 setpoint_publish_flag(true)
+Vehicle::Vehicle(ros::NodeHandle &_rNH_mul, ros::NodeHandle &_rNH_global, const VehicleInfo &_vehicle_info)
+	: vehicle_info(_vehicle_info),
+	  nh(_vehicle_info.vehicle_name),
+	  rNH_mul(_rNH_mul),
+	  rNH_global(_rNH_global),
+	  setpoint_publish_flag(true)
 {
 	vehicleInit();
 }
 
-Vehicle::Vehicle(const Vehicle &rhs) : vehicle_info(rhs.vehicle_info),
-									   nh(ros::NodeHandle(vehicle_info.vehicle_name)),
-									   nh_mul(ros::NodeHandle("multi")),
-									   nh_global(ros::NodeHandle("~")),
-									   setpoint_publish_flag(rhs.setpoint_publish_flag)
+Vehicle::Vehicle(const Vehicle &rhs)
+	: vehicle_info(rhs.vehicle_info),
+	  nh(rhs.nh),
+	  rNH_mul(rhs.rNH_mul),
+	  rNH_global(rhs.rNH_global),
+	  setpoint_publish_flag(rhs.setpoint_publish_flag)
 {
 	vehicleInit();
 	*this = rhs;
@@ -38,9 +41,9 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 	}
 	vehicle_info = rhs.vehicle_info;
 	setpoint_publish_flag = rhs.setpoint_publish_flag;
-	nh = ros::NodeHandle(vehicle_info.vehicle_name);
-	nh_mul = ros::NodeHandle("multi");
-	nh_global = ros::NodeHandle("~");
+	nh = rhs.nh;
+	rNH_mul = rhs.rNH_mul;
+	rNH_global = rhs.rNH_global;
 	vehicleInit();
 	return *this;
 }
@@ -69,15 +72,11 @@ void Vehicle::vehicleInit()
 	cur_global.longitude = 0;
 	cur_global.altitude = 0;
 
-	//camila1's_target frame을 publish 하게
-	// setpoint_global_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("setpoint_position/global", 10);
-	// setpoint_local_pub = nh.advertise<geometry_msgs::PoseStamped>("setpoint_position/local", 10);
 	setpoint_vel_pub = nh.advertise<geometry_msgs::Twist>("setpoint_velocity/cmd_vel_unstamped", 10);
 
 	state_sub = nh.subscribe("state", 10, &Vehicle::stateCB, this);
 	battery_sub = nh.subscribe("battery", 10, &Vehicle::batteryCB, this);
-	//lookup 으로 확인하기
-	// local_pos_sub = nh.subscribe("local_position/pose", 10, &Vehicle::localPositionCB, this);
+
 	global_pos_sub = nh.subscribe("global_position/global", 10, &Vehicle::globalPositionCB, this);
 
 	arming_client = nh.serviceClient<mavros_msgs::CommandBool>("cmd/arming");
@@ -86,10 +85,10 @@ void Vehicle::vehicleInit()
 	takeoff_client = nh.serviceClient<mavros_msgs::CommandTOL>("cmd/takeoff");
 	land_client = nh.serviceClient<mavros_msgs::CommandTOL>("cmd/land");
 
-	multi_arming_sub = nh_mul.subscribe("arming", 10, &Vehicle::multiArming, this);
-	multi_set_mode_sub = nh_mul.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
-	multi_takeoff_sub = nh_mul.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
-	multi_land_sub = nh_mul.subscribe("land", 10, &Vehicle::multiLand, this);
+	multi_arming_sub = rNH_mul.subscribe("arming", 10, &Vehicle::multiArming, this);
+	multi_set_mode_sub = rNH_mul.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
+	multi_takeoff_sub = rNH_mul.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
+	multi_land_sub = rNH_mul.subscribe("land", 10, &Vehicle::multiLand, this);
 
 	ROS_INFO_STREAM(vehicle_info.vehicle_name << " instance generated");
 }
@@ -132,6 +131,7 @@ void Vehicle::setVehicleInfo(VehicleInfo &new_vehicle_info)
 	vehicle_info.system_id = new_vehicle_info.system_id;
 	vehicle_info.vehicle_name = new_vehicle_info.vehicle_name;
 
+	nh = ros::NodeHandle(vehicle_info.vehicle_name);
 	vehicleInit();
 }
 
@@ -252,7 +252,7 @@ void Vehicle::multiSetMode(const std_msgs::String::ConstPtr &msg)
 void Vehicle::multiTakeoff(const std_msgs::Empty::ConstPtr &trigger)
 {
 	int _takeoff_alt;
-	nh_global.getParam("takeoff_alt", _takeoff_alt);
+	rNH_global.getParam("takeoff_alt", _takeoff_alt);
 	takeoff(_takeoff_alt);
 }
 
@@ -281,11 +281,13 @@ bool Vehicle::isPublish()
 }
 
 //default value : default name = camila, _num_of_vehicle = 1;
-SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm_name(_swarm_name),
-																		   num_of_vehicle(_num_of_vehicle),
-																		   nh(ros::NodeHandle()),
-																		   nh_global(ros::NodeHandle("~")),
-																		   multi_setpoint_publish_flag(false)
+SwarmVehicle::SwarmVehicle(ros::NodeHandle &_rNH, std::string _swarm_name, int _num_of_vehicle)
+	: swarm_name(_swarm_name),
+	  num_of_vehicle(_num_of_vehicle),
+	  nh(ros::NodeHandle()),
+	  nh_mul("multi"),
+	  rNH_global(_rNH),
+	  multi_setpoint_publish_flag(false)
 {
 	VehicleInfo vehicle_info[num_of_vehicle];
 	camila.reserve(num_of_vehicle);
@@ -294,16 +296,18 @@ SwarmVehicle::SwarmVehicle(std::string _swarm_name, int _num_of_vehicle) : swarm
 	{
 		vehicle_info[i].system_id = i + 1;
 		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i + 1) + "/mavros";
-		camila.push_back(Vehicle(vehicle_info[i]));
+		camila.push_back(Vehicle(nh_mul, rNH_global, vehicle_info[i]));
 	}
 	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 }
 
-SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs) : swarm_name(rhs.swarm_name),
-													  num_of_vehicle(rhs.num_of_vehicle),
-													  nh(ros::NodeHandle()),
-													  nh_global(ros::NodeHandle("~")),
-													  multi_setpoint_publish_flag(rhs.multi_setpoint_publish_flag)
+SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
+	: swarm_name(rhs.swarm_name),
+	  num_of_vehicle(rhs.num_of_vehicle),
+	  nh(ros::NodeHandle()),
+	  nh_mul("multi"),
+	  rNH_global(rhs.rNH_global),
+	  multi_setpoint_publish_flag(rhs.multi_setpoint_publish_flag)
 {
 	VehicleInfo vehicle_info[num_of_vehicle];
 	camila.reserve(num_of_vehicle);
@@ -336,8 +340,9 @@ const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 		camila.push_back(*it);
 	}
 
-	nh = ros::NodeHandle();
-	nh_global = ros::NodeHandle("~");
+	nh = rhs.nh;
+	nh_mul = rhs.nh_mul;
+	rNH_global = rhs.rNH_global;
 
 	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 	return *this;
@@ -439,7 +444,8 @@ void SwarmVehicle::formationGenerater()
 				transformSender(0, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 			}
 		}
-		else if(formation == "SCEN1"){
+		else if (formation == "SCEN1")
+		{
 			scenario1();
 		}
 	}
@@ -599,11 +605,10 @@ void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle)
 	{
 		vehicle_info[i].system_id = i + 1;
 		vehicle_info[i].vehicle_name = swarm_name + std::to_string(i + 1) + "/mavros";
-		camila.push_back(Vehicle(vehicle_info[i]));
+		camila.push_back(Vehicle(nh_mul, rNH_global, vehicle_info[i]));
 	}
 
 	nh = ros::NodeHandle();
-	nh_global = ros::NodeHandle("~");
 
 	swarm_target_server = nh.advertiseService("multi_setpoint_local", &SwarmVehicle::setSwarmTarget, this);
 }
@@ -615,7 +620,7 @@ std::string SwarmVehicle::getSwarmInfo() const
 
 void SwarmVehicle::addVehicle(VehicleInfo _vehicle_info)
 {
-	camila.push_back(Vehicle(_vehicle_info));
+	camila.push_back(Vehicle(nh_mul, rNH_global, _vehicle_info));
 	num_of_vehicle++;
 }
 
