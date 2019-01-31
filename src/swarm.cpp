@@ -7,8 +7,10 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh("~");
 	ros::Rate rate(20);
 
+	double num_drone;
+	nh.getParam("num_drone", num_drone);
 	SwarmVehicle *camila;
-	camila = new SwarmVehicle("camila", 3);
+	camila = new SwarmVehicle("camila", (int) num_drone);
 
 	ROS_INFO("swarm_node start");
 	
