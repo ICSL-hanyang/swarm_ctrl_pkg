@@ -13,7 +13,7 @@
     <arg name="paused" default="false"/>
 
     <!-- setpoint ctrl -->
-    <arg name="num_drone" default="50"/>
+    <arg name="num_drone" default="30"/>
     <arg name="kp" default="0.5"/>
     <arg name="kp_sp" default="3"/>
     <arg name="range_sp" default="5"/>
