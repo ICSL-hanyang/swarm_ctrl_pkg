@@ -563,33 +563,90 @@ bool SwarmVehicle::isPublish()
 
 void SwarmVehicle::scenario1()
 {
-	geometry_msgs::TransformStamped vehicle_target_TF;
-	vehicle_target_TF = swarm_target_TF;
-	double root_3125 = sqrt(31.25);
-	double root_25 = sqrt(2.5);
 	double MSec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.0002 * MSec; // MSec가 초당 1000씩 증가하므로 0.2 rad/s
-	for (auto &vehicle : camila)
-	{
-		int id = vehicle.getInfo().system_id;
-		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
-		if (id < 4)
-			transformSender(-5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id < 7)
-			transformSender(0, ((id % 3) * 5 - 5) + root_25 * cos(x), root_25 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id < 10)
-			transformSender(5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id < 13)
-			transformSender(-5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id < 16)
-			transformSender(0, ((id % 3) * 5 - 5) + root_25 * cos(x), root_25 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id < 19)
-			transformSender(5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id < 20)
-			transformSender(-10, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-		else if (id == 20)
-			transformSender(10, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
-	}
+	double cosx = cos(x);
+	double sinx = sin(x);
+	std::string vehicle_target = "camila1_target";
+	transformSender(-45*cosx, -45*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila2_target";
+	transformSender(-40*cosx, -40*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila3_target";
+	transformSender(-35*cosx, -35*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila4_target";
+	transformSender(-40*cosx, -40*sinx, 20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila5_target";
+	transformSender(-40*cosx, -40*sinx, 10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila6_target";
+	transformSender(-40*cosx, -40*sinx, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila7_target";
+	transformSender(-40*cosx, -40*sinx, -10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila8_target";
+	transformSender(-45*cosx, -45*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila9_target";
+	transformSender(-40*cosx, -40*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila10_target";
+	transformSender(-35*cosx, -35*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila11_target";
+	transformSender(-20*cosx, -20*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila12_target";
+	transformSender(-15*cosx, -15*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila13_target";
+	transformSender(-25*cosx, -25*sinx, 20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila14_target";
+	transformSender(-10*cosx, -10*sinx, 20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila15_target";
+	transformSender(-25*cosx, -25*sinx, 10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila16_target";
+	transformSender(-25*cosx, -25*sinx, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila17_target";
+	transformSender(-25*cosx, -25*sinx, -10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila18_target";
+	transformSender(-10*cosx, -10*sinx, -10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila19_target";
+	transformSender(-20*cosx, -20*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila20_target";
+	transformSender(-15*cosx, -15*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila21_target";
+	transformSender(5*cosx, 5*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila22_target";
+	transformSender(10*cosx, 10*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila23_target";
+	transformSender(0, 0, 20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila24_target";
+	transformSender(15*cosx, 15*sinx, 20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila2;5_target";
+	transformSender(5*cosx, 5*sinx, 10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila26_target";
+	transformSender(10*cosx, 10*sinx, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila27_target";
+	transformSender(15*cosx, 15*sinx, -10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila28_target";
+	transformSender(0, 0, -10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila29_target";
+	transformSender(5*cosx, 5*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila30_target";
+	transformSender(10*cosx, 10*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila31_target";
+	transformSender(25*cosx, 25*sinx, 30, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila32_target";
+	transformSender(25*cosx, 25*sinx, 20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila33_target";
+	transformSender(25*cosx, 25*sinx, 10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila34_target";
+	transformSender(25*cosx, 25*sinx, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila35_target";
+	transformSender(25*cosx, 25*sinx, -10, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila36_target";
+	transformSender(25*cosx, 25*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila37_target";
+	transformSender(30*cosx, 30*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila38_target";
+	transformSender(35*cosx, 35*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila39_target";
+	transformSender(40*cosx, 40*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	vehicle_target = "camila40_target";
+	transformSender(50*cosx, 50*sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 }
 
 void SwarmVehicle::setSwarmInfo(std::string _swarm_name, int _num_of_vehicle)
