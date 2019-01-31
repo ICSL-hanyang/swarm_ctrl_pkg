@@ -1,30 +1,33 @@
 <launch>
-	<!-- MAVROS posix SITL environment launch script -->
-	<!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
-	<!-- vehicle model and world -->
-	<arg name="est" default="ekf2"/>
-	<arg name="vehicle" default="iris"/>
-	<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
-	<!-- gazebo configs -->
-	<arg name="gui" default="true"/>
-	<arg name="debug" default="false"/>
-	<arg name="verbose" default="false"/>
-	<arg name="paused" default="false"/>
+    <!-- MAVROS posix SITL environment launch script -->
+    <!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
+    <!-- vehicle model and world -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="iris"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
 
-	<!-- setpoint ctrl -->
-	<arg name="num_drone" default="20"/>
-	<arg name="max_force" default="3"/>
-	<arg name="max_speed" default="3"/>
-	<arg name="seek_weight" default="2"/>
-	<arg name="separate_weight" default="1"/>
-	<!-- Gazebo sim -->
-	<include file="$(find gazebo_ros)/launch/empty_world.launch">
-		<arg name="gui" value="$(arg gui)"/>
-		<arg name="world_name" value="$(arg world)"/>
-		<arg name="debug" value="$(arg debug)"/>
-		<arg name="verbose" value="$(arg verbose)"/>
-		<arg name="paused" value="$(arg paused)"/>
-	</include>
+    <!-- gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+
+    <!-- setpoint ctrl -->
+    <arg name="num_drone" default="20"/>
+    <arg name="kp" default="0.5"/>
+    <arg name="kp_sp" default="3"/>
+    <arg name="range_sp" default="5"/>
+    <arg name="max_speed" default="3"/>
+
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="world_name" value="$(arg world)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+    </include>
+
 	
 	<!-- <machine name="heromin" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" />	 -->
 	<machine name="kdh" address="192.168.0.12" user="kdh" password="wkfk" env-loader="/home/kdh/catkin_ws/devel/env.sh" default="true" />	
@@ -63,20 +66,9 @@
 			<param name="setpoint_position/tf/listen" value="true" />
 			<param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
 			<param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-			<param name ="/use_sim_time" value="true"/>
 		</node>
 	</group>
 	<group ns="camila2">
@@ -112,21 +104,9 @@
 			<param name="setpoint_position/tf/listen" value="true" />
 			<param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
 			<param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-
-			<param name ="/use_sim_time" value="true"/>
 		</node>
 	</group>
 	<group ns="camila3">
@@ -167,16 +147,6 @@
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-
-			<param name ="/use_sim_time" value="true"/>
 		</node>
 	</group>
 
@@ -219,14 +189,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila5">
 		
@@ -265,14 +227,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila6">
 		<arg name="ID" value="6"/>
@@ -308,14 +262,6 @@
 
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 	<group ns="camila7">
@@ -353,14 +299,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila8">
 		<arg name="ID" value="8"/>
@@ -397,14 +335,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila9">
 		<arg name="ID" value="9"/>
@@ -440,14 +370,6 @@
 
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 	<group ns="camila10">
@@ -486,14 +408,6 @@
 
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 		<!-- </machine> -->
 	</group>
@@ -537,14 +451,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila12">
 		<!-- MAVROS and vehicle configs -->
@@ -585,14 +491,6 @@
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 	<group ns="camila13">
@@ -635,14 +533,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila14">
 		<!-- MAVROS and vehicle configs -->
@@ -683,14 +573,6 @@
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 	<group ns="camila15">
@@ -733,14 +615,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila16">
 		<!-- MAVROS and vehicle configs -->
@@ -781,14 +655,6 @@
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 	<group ns="camila17">
@@ -831,14 +697,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila18">
 		<!-- MAVROS and vehicle configs -->
@@ -879,14 +737,6 @@
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
 		</node>
 	</group>
 	<group ns="camila19">
@@ -929,14 +779,6 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 	<group ns="camila20">
 		<!-- MAVROS and vehicle configs -->
@@ -978,20 +820,21 @@
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="$(arg num_drone)"/>
-			<param name="id" value="$(arg ID)"/>
-			<param name="max_force" value="$(arg max_force)"/>
-			<param name="max_speed" value="$(arg max_speed)"/>
-			<param name="seek_weight" value="$(arg seek_weight)"/>
-			<param name="separate_weight" value="$(arg separate_weight)"/>
-		</node>
 	</group>
 
 	<arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 	</node>
+
+	<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
+        <param name="num_drone" value="$(arg num_drone)"/>
+        <param name="kp" value="$(arg kp)"/>
+        <param name="max_speed" value="$(arg max_speed)"/>
+        <param name="kp_sp" value="$(arg kp_sp)"/>
+        <param name="range_sp" value="$(arg range_sp)"/>
+		<param name ="/use_sim_time" value="true"/>
+    </node>
 
 	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
 </launch>

@@ -178,6 +178,8 @@ class SwarmVehicle
 						swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);
 	bool isPublish();
 
+	void scenario1();
+
   public:
 	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
 	SwarmVehicle(const SwarmVehicle &rhs);
