@@ -439,6 +439,9 @@ void SwarmVehicle::formationGenerater()
 				transformSender(0, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 			}
 		}
+		else if(formation == "SCEN1"){
+			scenario1();
+		}
 	}
 }
 
