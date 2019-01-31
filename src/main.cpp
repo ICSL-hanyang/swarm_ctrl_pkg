@@ -9,8 +9,7 @@ int main(int argc, char **argv)
 
 	double num_drone;
 	nh.getParam("num_drone", num_drone);
-	SwarmVehicle *camila;
-	camila = new SwarmVehicle("camila", (int) num_drone);
+	std::unique_ptr<SwarmVehicle> camila(new SwarmVehicle("camila", num_drone));
 
 	ROS_INFO("swarm_node start");
 	
@@ -24,6 +23,6 @@ int main(int argc, char **argv)
 		rate.sleep();
 	}
 
-	delete camila;
+	camila.release();
 	return 0;
 }
