@@ -404,7 +404,7 @@ void SwarmVehicle::setSwarmMap()
 	ros::Rate r(10);
 	unsigned int cnt = 0;
 	unsigned int sec = 0;
-	while (cnt < 300)
+	while (cnt < 600)
 	{
 		ros::spinOnce();
 		cnt++;
@@ -414,7 +414,7 @@ void SwarmVehicle::setSwarmMap()
 			if (msg)
 			{
 				ROS_INFO("GPS signal received !");
-				break;
+				// break;
 			}
 		}
 		else{
