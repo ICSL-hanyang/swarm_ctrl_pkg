@@ -12,7 +12,7 @@
 	<arg name="paused" default="false"/>
 
 	<!-- setpoint ctrl -->
-	<arg name="num_drone" default="15"/>
+	<arg name="num_drone" default="20"/>
 	<arg name="max_force" default="3"/>
 	<arg name="max_speed" default="3"/>
 	<arg name="seek_weight" default="2"/>
