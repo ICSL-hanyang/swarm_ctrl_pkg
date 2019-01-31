@@ -1,185 +1,163 @@
 <launch>
-	<!-- MAVROS posix SITL environment launch script -->
-	<!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
-	<!-- vehicle model and world -->
-	<arg name="est" default="ekf2"/>
-	<arg name="vehicle" default="iris"/>
-	<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
-	<!-- gazebo configs -->
-	<arg name="gui" default="true"/>
-	<arg name="debug" default="false"/>
-	<arg name="verbose" default="false"/>
-	<arg name="paused" default="false"/>
-	<!-- Gazebo sim -->
-	<include file="$(find gazebo_ros)/launch/empty_world.launch">
-		<arg name="gui" value="$(arg gui)"/>
-		<arg name="world_name" value="$(arg world)"/>
-		<arg name="debug" value="$(arg debug)"/>
-		<arg name="verbose" value="$(arg verbose)"/>
-		<arg name="paused" value="$(arg paused)"/>
-	</include>
-	<!-- UAV1 -->
-	<group ns="camila1">
-		<!-- MAVROS and vehicle configs -->
-		<arg name="ID" value="1"/>
-		<arg name="fcu_url" default="udp://:14540@localhost:14557"/>
-		<!-- PX4 SITL and vehicle spawn -->
-		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
-			<arg name="x" value="0"/>
-			<arg name="y" value="$(arg ID)"/>
-			<arg name="z" value="0"/>
-			<arg name="R" value="0"/>
-			<arg name="P" value="0"/>
-			<arg name="Y" value="0"/>
-			<arg name="vehicle" value="$(arg vehicle)"/>
-			<arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
-			<arg name="mavlink_udp_port" value="14560"/>
-			<arg name="ID" value="$(arg ID)"/>
-		</include>
-		<!-- MAVROS -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
-			<param name="fcu_url" value="$(arg fcu_url)"/>
-			<param name="gcs_url" value=""/>
-			<param name="target_system_id" value="$(arg ID)"/>
-			<param name="target_component_id" value="1" />
-			<param name="fcu_protocol" value="v2.0" />
+    <!-- MAVROS posix SITL environment launch script -->
+    <!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
+    <!-- vehicle model and world -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="iris"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
 
-			<!-- <param name="global_position/tf/send" value="true" />
-      <param name="global_position/tf/global_frame_id" value="earth" />
-      <param name="global_position/tf/frame_id" value="map$(arg ID)" />
-      <param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
-			<param name="local_position/tf/send" value="true" />
-			<param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
-			<param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
-			<param name="setpoint_position/tf/listen" value="true" />
-			<param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
-			<param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+    <!-- gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
 
+    <!-- setpoint ctrl -->
+    <arg name="num_drone" default="3"/>
+    <arg name="kp" default="0.5"/>
+    <arg name="kp_sp" default="0.8"/>
+    <arg name="range_sp" default="3"/>
+    <arg name="max_speed" default="3"/>
 
-			<!-- load blacklist, config -->
-			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
-			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="3"/>
-			<param name="id" value="1"/>
-			<param name="max_force" value="3"/>
-			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="2"/>
-			<param name="separate_weight" value="1"/>
-		</node>
-	</group>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="world_name" value="$(arg world)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+    </include>
 
-	<group ns="camila2">
-		<!-- MAVROS and vehicle configs -->
-		<arg name="ID" value="2"/>
-		<arg name="fcu_url" default="udp://:14541@localhost:14558"/>
-		<!-- PX4 SITL and vehicle spawn -->
-		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
-			<arg name="x" value="0"/>
-			<arg name="y" value="$(arg ID)"/>
-			<arg name="z" value="0"/>
-			<arg name="R" value="0"/>
-			<arg name="P" value="0"/>
-			<arg name="Y" value="0"/>
-			<arg name="vehicle" value="$(arg vehicle)"/>
-			<arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
-			<arg name="mavlink_udp_port" value="14561"/>
-			<arg name="ID" value="$(arg ID)"/>
-		</include>
-		<!-- MAVROS -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
-			<param name="fcu_url" value="$(arg fcu_url)"/>
-			<param name="gcs_url" value=""/>
-			<param name="target_system_id" value="$(arg ID)"/>
-			<param name="target_component_id" value="1" />
-			<param name="fcu_protocol" value="v2.0" />
+    <!-- UAV1 -->
+    <group ns="camila1">
+        <!-- MAVROS and vehicle configs -->
+        <arg name="ID" value="1"/>
+        <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="$(arg ID)"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+            <arg name="mavlink_udp_port" value="14560"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
 
-			<!-- <param name="global_position/tf/send" value="true" />
-      <param name="global_position/tf/global_frame_id" value="earth" />
-      <param name="global_position/tf/frame_id" value="map$(arg ID)" />
-      <param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
-			<param name="local_position/tf/send" value="true" />
-			<param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
-			<param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
-			<param name="setpoint_position/tf/listen" value="true" />
-			<param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
-			<param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+        <!-- MAVROS -->
+        <node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+            <param name="fcu_url" value="$(arg fcu_url)"/>
+            <param name="gcs_url" value=""/>
+            <param name="target_system_id" value="$(arg ID)"/>
+            <param name="target_component_id" value="1" />
+            <param name="fcu_protocol" value="v2.0" />
+            <!-- <param name="global_position/tf/send" value="true" /><param name="global_position/tf/global_frame_id" value="earth" /><param name="global_position/tf/frame_id" value="map$(arg ID)" /><param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
+            <param name="local_position/tf/send" value="true" />
+            <param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
+            <param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
+            <param name="setpoint_position/tf/listen" value="true" />
+            <param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
+            <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+            <!-- load blacklist, config -->
+            <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
+            <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
+        </node>
+    </group>
 
+    <group ns="camila2">
+        <!-- MAVROS and vehicle configs -->
+        <arg name="ID" value="2"/>
+        <arg name="fcu_url" default="udp://:14541@localhost:14558"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="$(arg ID)"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+            <arg name="mavlink_udp_port" value="14561"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
 
-			<!-- load blacklist, config -->
-			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
-			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="3"/>
-			<param name="id" value="2"/>
-			<param name="max_force" value="3"/>
-			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="2"/>
-			<param name="separate_weight" value="1"/>
-		</node>
-	</group>
+        <!-- MAVROS -->
+        <node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+            <param name="fcu_url" value="$(arg fcu_url)"/>
+            <param name="gcs_url" value=""/>
+            <param name="target_system_id" value="$(arg ID)"/>
+            <param name="target_component_id" value="1" />
+            <param name="fcu_protocol" value="v2.0" />
+            <!-- <param name="global_position/tf/send" value="true" /><param name="global_position/tf/global_frame_id" value="earth" /><param name="global_position/tf/frame_id" value="map$(arg ID)" /><param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
+            <param name="local_position/tf/send" value="true" />
+            <param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
+            <param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
+            <param name="setpoint_position/tf/listen" value="true" />
+            <param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
+            <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+            <!-- load blacklist, config -->
+            <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
+            <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
+        </node>
+    </group>
 
-	<group ns="camila3">
-		<!-- MAVROS and vehicle configs -->
-		<arg name="ID" value="3"/>
-		<arg name="fcu_url" default="udp://:14542@localhost:14559"/>
-		<!-- PX4 SITL and vehicle spawn -->
-		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
-			<arg name="x" value="0"/>
-			<arg name="y" value="$(arg ID)"/>
-			<arg name="z" value="0"/>
-			<arg name="R" value="0"/>
-			<arg name="P" value="0"/>
-			<arg name="Y" value="0"/>
-			<arg name="vehicle" value="$(arg vehicle)"/>
-			<arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
-			<arg name="mavlink_udp_port" value="14562"/>
-			<arg name="ID" value="$(arg ID)"/>
-		</include>
-		<!-- MAVROS -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
-			<param name="fcu_url" value="$(arg fcu_url)"/>
-			<param name="gcs_url" value=""/>
-			<param name="target_system_id" value="$(arg ID)"/>
-			<param name="target_component_id" value="1" />
-			<param name="fcu_protocol" value="v2.0" />
+    <group ns="camila3">
+        <!-- MAVROS and vehicle configs -->
+        <arg name="ID" value="3"/>
+        <arg name="fcu_url" default="udp://:14542@localhost:14559"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="$(arg ID)"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+            <arg name="mavlink_udp_port" value="14562"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
 
-			<!-- <param name="global_position/tf/send" value="true" />
-      <param name="global_position/tf/global_frame_id" value="earth" />
-      <param name="global_position/tf/frame_id" value="map$(arg ID)" />
-      <param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
-			<param name="local_position/tf/send" value="true" />
-			<param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
-			<param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
-			<param name="setpoint_position/tf/listen" value="true" />
-			<param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
-			<param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+        <!-- MAVROS -->
+        <node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+            <param name="fcu_url" value="$(arg fcu_url)"/>
+            <param name="gcs_url" value=""/>
+            <param name="target_system_id" value="$(arg ID)"/>
+            <param name="target_component_id" value="1" />
+            <param name="fcu_protocol" value="v2.0" />
+            <!-- <param name="global_position/tf/send" value="true" /><param name="global_position/tf/global_frame_id" value="earth" /><param name="global_position/tf/frame_id" value="map$(arg ID)" /><param name="global_position/tf/child_frame_id" value="camila$(arg ID)" /> -->
+            <param name="local_position/tf/send" value="true" />
+            <param name="local_position/tf/frame_id" value="camila$(arg ID)_map" />
+            <param name="local_position/tf/child_frame_id" value="camila$(arg ID)_base_link" />
+            <param name="setpoint_position/tf/listen" value="true" />
+            <param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
+            <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+            <!-- load blacklist, config -->
+            <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
+            <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
+        </node>
+    </group>
 
+    <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
+    <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
+        <rosparam command="load" file="$(arg swarm_config_yaml)"/>
+    </node>
 
-			<!-- load blacklist, config -->
-			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
-			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
-		</node>
-		<node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-			<param name="num_drone" value="3"/>
-			<param name="id" value="3"/>
-			<param name="max_force" value="3"/>
-			<param name="max_speed" value="3"/>
-			<param name="seek_weight" value="2"/>
-			<param name="separate_weight" value="1"/>
-		</node>
-	</group>
-
-	<arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
-	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
-		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
-	</node>
-
-	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
+    <node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
+        <param name="num_drone" value="$(arg num_drone)"/>
+        <param name="kp" value="$(arg kp)"/>
+        <param name="max_speed" value="$(arg max_speed)"/>
+        <param name="kp_sp" value="$(arg kp_sp)"/>
+        <param name="range_sp" value="$(arg range_sp)"/>
+    </node>
+	
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
 </launch>
-
 
 
 

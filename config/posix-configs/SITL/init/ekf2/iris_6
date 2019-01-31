@@ -44,7 +44,7 @@ param set RTL_RETURN_ALT 30.0
 param set SDLOG_DIRS_MAX 7
 param set SENS_BOARD_ROT 0
 param set SENS_BOARD_X_OFF 0.000001
-param set SITL_UDP_PRT 14565
+param set SITL_UDP_PRT 13006
 param set SYS_AUTOSTART 4010
 param set SYS_MC_EST_GROUP 2
 param set SYS_RESTART_TYPE 2
@@ -64,18 +64,18 @@ ekf2 start
 mc_pos_control start
 mc_att_control start
 mixer load /dev/pwm_output0 ROMFS/px4fmu_common/mixers/quad_w.main.mix
-mavlink start -x -u 14556 -r 4000000
-mavlink start -x -u 14537 -r 4000000 -m onboard -o 14545
-mavlink stream -r 50 -s POSITION_TARGET_LOCAL_NED -u 14556
-mavlink stream -r 50 -s LOCAL_POSITION_NED -u 14556
-mavlink stream -r 50 -s GLOBAL_POSITION_INT -u 14556
-mavlink stream -r 50 -s ATTITUDE -u 14556
-mavlink stream -r 50 -s ATTITUDE_QUATERNION -u 14556
-mavlink stream -r 50 -s ATTITUDE_TARGET -u 14556
-mavlink stream -r 50 -s SERVO_OUTPUT_RAW_0 -u 14556
-mavlink stream -r 20 -s RC_CHANNELS -u 14556
-mavlink stream -r 250 -s HIGHRES_IMU -u 14556
-mavlink stream -r 10 -s OPTICAL_FLOW_RAD -u 14556
+mavlink start -x -u 13306 -r 4000000
+mavlink start -x -u 13106 -r 4000000 -m onboard -o 13206
+mavlink stream -r 50 -s POSITION_TARGET_LOCAL_NED -u 13306
+mavlink stream -r 50 -s LOCAL_POSITION_NED -u 13306
+mavlink stream -r 50 -s GLOBAL_POSITION_INT -u 13306
+mavlink stream -r 50 -s ATTITUDE -u 13306
+mavlink stream -r 50 -s ATTITUDE_QUATERNION -u 13306
+mavlink stream -r 50 -s ATTITUDE_TARGET -u 13306
+mavlink stream -r 50 -s SERVO_OUTPUT_RAW_0 -u 13306
+mavlink stream -r 20 -s RC_CHANNELS -u 13306
+mavlink stream -r 250 -s HIGHRES_IMU -u 13306
+mavlink stream -r 10 -s OPTICAL_FLOW_RAD -u 13306
 logger start -e -t
 mavlink boot_complete
 replay trystart

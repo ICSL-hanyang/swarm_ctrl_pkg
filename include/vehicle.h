@@ -99,30 +99,30 @@ class Vehicle
 	//sensor_msgs::NavSatFix tar_global;
 
 	bool setpoint_publish_flag;
-	double kp;
 
 	/*firmware version=> diagnositic_msgs/DiagnosticStatus*/
 
 	void vehicleInit();
+	void stateCB(const mavros_msgs::State::ConstPtr &msg);
+	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &msg);
+	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg);
 
   public:
 	Vehicle();
-	Vehicle(VehicleInfo _vehicle_info);
+	Vehicle(const VehicleInfo &_vehicle_info);
 	Vehicle(const Vehicle &rhs);
 	const Vehicle &operator=(const Vehicle &rhs);
 	~Vehicle();
 
-	void setVehicleInfo(VehicleInfo new_vehicle_info);
-	VehicleInfo getInfo();
-	void stateCB(const mavros_msgs::State::ConstPtr &msg);
-	mavros_msgs::State getState();
-	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &msg);
-	sensor_msgs::BatteryState getBattery();
+	void setVehicleInfo(VehicleInfo &new_vehicle_info);
+	VehicleInfo getInfo() const;
+	mavros_msgs::State getState() const;
+	sensor_msgs::BatteryState getBattery() const;
 
 	/*main drone function*/
-	bool arming(bool _arm_state);
-	bool setMode(std::string _mode);
-	bool takeoff(double _takeoff_alt);
+	bool arming(const bool &_arm_state);
+	bool setMode(const std::string &_mode);
+	bool takeoff(const double &_takeoff_alt);
 	bool land();
 
 	/* multi callback functions */
@@ -133,9 +133,9 @@ class Vehicle
 	void multiLand(const std_msgs::Empty::ConstPtr &trigger);
 
 	//global position
-	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg);
 	sensor_msgs::NavSatFix getGlobalPosition();
 
+	bool isReceivedGlobalPos();
 	bool isPublish();
 };
 
@@ -152,6 +152,7 @@ class SwarmVehicle
 
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_global;
+
 	ros::ServiceServer swarm_target_server;
 
 	//sensor_msgs::NavSatFix swarm_position_global;
@@ -169,13 +170,15 @@ class SwarmVehicle
 	void setSwarmMap();
 	void offsetPublisher();
 	void formationGenerater();
-	geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
+	static geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
 										   sensor_msgs::NavSatFix _home);
-	geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local,
+	static geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local,
 											  sensor_msgs::NavSatFix _home_global);
 	bool setSwarmTarget(swarm_ctrl_pkg::srvSetSwarmTarget::Request &req,
 						swarm_ctrl_pkg::srvSetSwarmTarget::Response &res);
 	bool isPublish();
+
+	void scenario1();
 
   public:
 	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
@@ -184,12 +187,12 @@ class SwarmVehicle
 	~SwarmVehicle();
 
 	void setSwarmInfo(std::string _swarm_name, int _num_of_vehicle);
-	std::string getSwarmInfo();
+	std::string getSwarmInfo() const;
 
 	void addVehicle(VehicleInfo _vehicle_info);
 	void deleteVehicle(VehicleInfo _vehicle_info);
 	void showVehicleList();
-	
+
 	void init();
 	void run();
 };
