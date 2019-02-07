@@ -37,8 +37,8 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="1"/>
 		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.12:13201@192.168.0.12:13101"/>
-		<arg name="gcs_url" default="udp://192.168.0.12:14540@192.168.0.12:13301"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13201@192.168.0.12:13101"/>
+		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13301"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -53,7 +53,7 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="kdh" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
@@ -75,8 +75,8 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="2"/>
 		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.12:13202@192.168.0.12:13102"/>
-		<arg name="gcs_url" default="udp://192.168.0.12:14540@192.168.0.12:13302"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13202@192.168.0.12:13102"/>
+		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13302"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -91,7 +91,7 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="kdh" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
@@ -113,8 +113,8 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="3"/>
 		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.12:13203@192.168.0.12:13103"/>
-		<arg name="gcs_url" default="udp://192.168.0.12:14540@192.168.0.12:13303"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13203@192.168.0.12:13103"/>
+		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13303"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -129,7 +129,7 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="kdh" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
@@ -154,8 +154,8 @@
 		
 		<arg name="ID" value="4"/>
 		
-		<arg name="fcu_url" default="udp://192.168.0.12:13204@192.168.0.12:13104"/>
-		<arg name="gcs_url" default="udp://192.168.0.12:14540@192.168.0.12:13304"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13204@192.168.0.12:13104"/>
+		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13304"/>
 		
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -170,7 +170,7 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 	
-		<node machine ="kdh" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
@@ -194,8 +194,8 @@
 		
 		<arg name="ID" value="5"/>
 		
-		<arg name="fcu_url" default="udp://192.168.0.12:13205@192.168.0.12:13105"/>
-		<arg name="gcs_url" default="udp://192.168.0.12:14540@192.168.0.12:13305"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13205@192.168.0.12:13105"/>
+		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13305"/>
 
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -209,7 +209,7 @@
 			<arg name="mavlink_udp_port" value="13005"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		<node machine ="kdh" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
@@ -1645,6 +1645,7 @@
 	<arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
+		<param name="num_drone" value="$(arg num_drone)"/>
 	</node>
 
 	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
