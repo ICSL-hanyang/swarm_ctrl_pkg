@@ -1,3 +1,5 @@
+<!-- 분산 셋포인트 제어용 런치 
+swarm_ctrl_pkg의 tf_ctrl 브랜치와 setpoint_ctrl_pkg의 p_ctrl 브랜치 사용 -->
 <launch>
     <!-- MAVROS posix SITL environment launch script -->
     <!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
@@ -65,6 +67,16 @@
             <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
             <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
         </node>
+
+        <!-- setpoint_ctrl_node -->
+        <node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
+            <param name="num_drone" value="$(arg num_drone)"/>
+            <param name="id" value="$(arg ID)"/>
+            <param name="kp" value="$(arg kp)"/>
+            <param name="max_speed" value="$(arg max_speed)"/>
+            <param name="kp_sp" value="$(arg kp_sp)"/>
+            <param name="range_sp" value="$(arg range_sp)"/>
+        </node>
     </group>
 
     <group ns="camila2">
@@ -102,6 +114,16 @@
             <!-- load blacklist, config -->
             <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
             <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
+        </node>
+
+        <!-- setpoint_ctrl_node -->
+        <node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
+            <param name="num_drone" value="$(arg num_drone)"/>
+            <param name="id" value="$(arg ID)"/>
+            <param name="kp" value="$(arg kp)"/>
+            <param name="max_speed" value="$(arg max_speed)"/>
+            <param name="kp_sp" value="$(arg kp_sp)"/>
+            <param name="range_sp" value="$(arg range_sp)"/>
         </node>
     </group>
 
@@ -141,22 +163,23 @@
             <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
             <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
         </node>
+
+        <!-- setpoint_ctrl_node -->
+        <node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
+            <param name="num_drone" value="$(arg num_drone)"/>
+            <param name="id" value="$(arg ID)"/>
+            <param name="kp" value="$(arg kp)"/>
+            <param name="max_speed" value="$(arg max_speed)"/>
+            <param name="kp_sp" value="$(arg kp_sp)"/>
+            <param name="range_sp" value="$(arg range_sp)"/>
+        </node>
     </group>
 
     <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
     <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
         <rosparam command="load" file="$(arg swarm_config_yaml)"/>
-        <param name="num_drone" value="$(arg num_drone)"/>
     </node>
-
-    <node name="setpoint_ctrl_node" pkg="setpoint_ctrl_pkg" type="setpoint_ctrl_node" output="screen" respawn="true">
-        <param name="num_drone" value="$(arg num_drone)"/>
-        <param name="kp" value="$(arg kp)"/>
-        <param name="max_speed" value="$(arg max_speed)"/>
-        <param name="kp_sp" value="$(arg kp_sp)"/>
-        <param name="range_sp" value="$(arg range_sp)"/>
-    </node>
-	
+    
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
 </launch>
 
