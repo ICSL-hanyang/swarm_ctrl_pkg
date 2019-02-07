@@ -179,6 +179,8 @@ class SwarmVehicle
 	bool isPublish();
 
 	void scenario1();
+	void scenario2();
+	void scenario3();
 
   public:
 	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value

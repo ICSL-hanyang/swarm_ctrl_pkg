@@ -189,7 +189,7 @@ bool Vehicle::takeoff(const double &_takeoff_alt)
 	msg.request.latitude = cur_global.latitude;
 	msg.request.longitude = cur_global.longitude;
 	msg.request.altitude = home_global.altitude + _takeoff_alt;
-
+	
 	if (takeoff_client.call(msg) && msg.response.success)
 		ROS_INFO_STREAM(msg.response.result);
 	else
@@ -219,7 +219,8 @@ void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
 {
 	mavros_msgs::CommandBool arm;
 	arm.request.value = msg->data;
-
+	// int id = this->getInfo().system_id;
+	// ros::Duration(id).sleep();
 	if (arming_client.call(arm) && arm.response.success)
 	{
 	}
@@ -253,6 +254,7 @@ void Vehicle::multiTakeoff(const std_msgs::Empty::ConstPtr &trigger)
 {
 	int _takeoff_alt;
 	nh_global.getParam("takeoff_alt", _takeoff_alt);
+	
 	takeoff(_takeoff_alt);
 }
 
@@ -376,7 +378,7 @@ void SwarmVehicle::setSwarmMap()
 			sec++;
 		}
 
-		if (now - start > ros::Duration(30))
+		if (now - start > ros::Duration(60))
 		{
 			ROS_WARN_STREAM("GPS time out! only " << cnt << " vehilces get GPS signal.");
 			break;
@@ -440,6 +442,12 @@ void SwarmVehicle::formationGenerater()
 		}
 		else if(formation == "SCEN1"){
 			scenario1();
+		}
+		else if(formation == "SCEN2"){
+			scenario2();
+		}
+		else if(formation == "SCEN3"){
+			scenario3();
 		}
 	}
 }
@@ -559,7 +567,6 @@ void SwarmVehicle::scenario1()
 	geometry_msgs::TransformStamped vehicle_target_TF;
 	vehicle_target_TF = swarm_target_TF;
 	double root_3125 = sqrt(31.25);
-	double root_25 = sqrt(2.5);
 	double MSec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.0002 * MSec; // MSec가 초당 1000씩 증가하므로 0.2 rad/s
 	for (auto &vehicle : camila)
@@ -569,19 +576,177 @@ void SwarmVehicle::scenario1()
 		if (id < 4)
 			transformSender(-5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id < 7)
-			transformSender(0, ((id % 3) * 5 - 5) + root_25 * cos(x), root_25 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			transformSender(0, ((id % 3) * 5 - 5) + 2.5 * cos(x), 2.5 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id < 10)
 			transformSender(5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) - 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id < 13)
 			transformSender(-5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id < 16)
-			transformSender(0, ((id % 3) * 5 - 5) + root_25 * cos(x), root_25 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			transformSender(0, ((id % 3) * 5 - 5) + 2.5 * cos(x), 2.5 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id < 19)
 			transformSender(5, ((id % 3) * 5 - 5) + root_3125 * cos(x), root_3125 * sin(x) + 2.5, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id < 20)
 			transformSender(-10, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 		else if (id == 20)
 			transformSender(10, 0, 0, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+	}
+}
+void SwarmVehicle::scenario2()
+{
+	geometry_msgs::TransformStamped vehicle_target_TF;
+	vehicle_target_TF = swarm_target_TF;
+	double MSec = ros::Time::now().toNSec() / 1000000;
+	//double x = 0.001 * MSec; // MSec가 초당 1000씩 증가하므로 1 rad/s
+	double x = 0;
+	double scale = 2;
+	for (auto &vehicle : camila)
+	{
+		int id = vehicle.getInfo().system_id;
+		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
+		
+		if (id <= 3)
+			transformSender((2*(id%3)-2)*scale, 0, 6*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 6)
+			transformSender((2*(id%3)-2)*scale, 0, -6*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 9)
+			transformSender(-4*scale, 0, (3*(id%3)-3)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 12)
+			transformSender(4*scale, 0, (3*(id%3)-3)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 14)
+			transformSender((-2*(id%2)-5)*scale, 0, (2*(id%2)+7)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 16)
+			transformSender((2*(id%2)+5)*scale, 0, (2*(id%2)+7)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 18)
+			transformSender((2*(id%2)-7)*scale, 0, (2*(id%2)-9)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 20)
+			transformSender((-2*(id%2)+7)*scale, 0, (2*(id%2)-9)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 25){
+			if (id%5 == 2)
+				transformSender((-9)*scale, 5, (11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((-9+2*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((-9+2*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((-9+4*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((-9+4*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+		else if (id <= 30){
+			if (id%5 == 2)
+				transformSender((9)*scale, 5, (11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((9+2*sqrt(2)*cos(x-M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((9+2*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((9+4*sqrt(2)*cos(x-M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((9+4*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+		else if (id <= 35){
+			if (id%5 == 2)
+				transformSender((-9)*scale, 5, (-11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((-9+2*sqrt(2)*cos(x-M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((-9+2*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((-9+4*sqrt(2)*cos(x-M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((-9+4*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+		else if (id <= 40){
+			if (id%5 == 2)
+				transformSender((9)*scale, 5, (-11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((9+2*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((9+2*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((9+4*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((9+4*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+	}
+}
+void SwarmVehicle::scenario3()
+{
+	geometry_msgs::TransformStamped vehicle_target_TF;
+	vehicle_target_TF = swarm_target_TF;
+	double MSec = ros::Time::now().toNSec() / 1000000;
+	double x = 0.0005 * MSec; // MSec가 초당 1000씩 증가하므로 1 rad/s
+	//double x = 0;
+	double scale = 2;
+	for (auto &vehicle : camila)
+	{
+		int id = vehicle.getInfo().system_id;
+		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
+		
+		if (id <= 3)
+			transformSender((2*(id%3)-2)*scale, 0, 6*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 6)
+			transformSender((2*(id%3)-2)*scale, 0, -6*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 9)
+			transformSender(-4*scale, 0, (3*(id%3)-3)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 12)
+			transformSender(4*scale, 0, (3*(id%3)-3)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 14)
+			transformSender((-2*(id%2)-5)*scale, 0, (2*(id%2)+7)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 16)
+			transformSender((2*(id%2)+5)*scale, 0, (2*(id%2)+7)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 18)
+			transformSender((2*(id%2)-7)*scale, 0, (2*(id%2)-9)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 20)
+			transformSender((-2*(id%2)+7)*scale, 0, (2*(id%2)-9)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		else if (id <= 25){
+			if (id%5 == 2)
+				transformSender((-9)*scale, 5, (11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((-9+2*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((-9+2*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((-9+4*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((-9+4*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+		else if (id <= 30){
+			if (id%5 == 2)
+				transformSender((9)*scale, 5, (11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((9+2*sqrt(2)*cos(x-M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((9+2*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (11+2*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((9+4*sqrt(2)*cos(x-M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((9+4*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (11+4*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+		else if (id <= 35){
+			if (id%5 == 2)
+				transformSender((-9)*scale, 5, (-11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((-9+2*sqrt(2)*cos(x-M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((-9+2*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((-9+4*sqrt(2)*cos(x-M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(x-M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((-9+4*sqrt(2)*cos(x+3*M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(x+3*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
+		else if (id <= 40){
+			if (id%5 == 2)
+				transformSender((9)*scale, 5, (-11)*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 1)
+				transformSender((9+2*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 3)
+				transformSender((9+2*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (-11+2*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else if (id%5 == 0)
+				transformSender((9+4*sqrt(2)*cos(-x+M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(-x+M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+			else
+				transformSender((9+4*sqrt(2)*cos(-x+5*M_PI_4))*scale, 5, (-11+4*sqrt(2)*sin(-x+5*M_PI_4))*scale, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
+		}
 	}
 }
 

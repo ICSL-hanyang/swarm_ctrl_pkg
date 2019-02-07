@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 	ros::Rate rate(20);
 
 	SwarmVehicle *camila;
-	camila = new SwarmVehicle("camila", 20);
+	camila = new SwarmVehicle("camila", 40);
 
 	ROS_INFO("swarm_node start");
 	

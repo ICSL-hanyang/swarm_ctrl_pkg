@@ -2066,7 +2066,7 @@
 		<param name ="/use_sim_time" value="true"/>
     </node>
 
-	<!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" /> -->
+	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />
 </launch>
 
 
