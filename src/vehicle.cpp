@@ -445,10 +445,10 @@ void SwarmVehicle::formationGenerater()
 		{
 			scenario1();
 		}
-		else if(formation == "SCEN2"){
+		else if(formation_ == "SCEN2"){
 			scenario2();
 		}
-		else if(formation == "SCEN3"){
+		else if(formation_ == "SCEN3"){
 			scenario3();
 		}
 	}
@@ -651,17 +651,17 @@ void SwarmVehicle::scenario1() const
 	vehicle_target = "camila40_target";
 	transformSender(50 * cosx, 50 * sinx, -20, 0, 0, 0, ros::Time::now(), "swarm_target", vehicle_target);
 }
-void SwarmVehicle::scenario2()
+void SwarmVehicle::scenario2() const
 {
 	geometry_msgs::TransformStamped vehicle_target_TF;
-	vehicle_target_TF = swarm_target_TF;
+	vehicle_target_TF = swarm_target_TF_;
 	double MSec = ros::Time::now().toNSec() / 1000000;
 	//double x = 0.001 * MSec; // MSec가 초당 1000씩 증가하므로 1 rad/s
 	double x = 0;
 	double scale = 2;
-	for (auto &vehicle : camila)
+	for (auto &vehicle : camila_)
 	{
-		int id = vehicle.getInfo().system_id;
+		int id = vehicle.getInfo().system_id_;
 		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
 		
 		if (id <= 3)
@@ -730,17 +730,17 @@ void SwarmVehicle::scenario2()
 		}
 	}
 }
-void SwarmVehicle::scenario3()
+void SwarmVehicle::scenario3() const
 {
 	geometry_msgs::TransformStamped vehicle_target_TF;
-	vehicle_target_TF = swarm_target_TF;
+	vehicle_target_TF = swarm_target_TF_;
 	double MSec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.0005 * MSec; // MSec가 초당 1000씩 증가하므로 1 rad/s
 	//double x = 0;
 	double scale = 2;
-	for (auto &vehicle : camila)
+	for (auto &vehicle : camila_)
 	{
-		int id = vehicle.getInfo().system_id;
+		int id = vehicle.getInfo().system_id_;
 		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
 		
 		if (id <= 3)
