@@ -47,6 +47,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(swarm_node src/swarm.cpp src/vehicle.cpp)
+add_executable(swarm_node src/main.cpp src/vehicle.cpp)
 ##add_dependencies(swarm_node ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(swarm_node ${catkin_LIBRARIES})

@@ -7,17 +7,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh("~");
 	ros::Rate rate(10);
 
-	/* 	VehicleInfo camila0_info, camila1_info;
-	camila0_info.vehicle_name = "mavros";
-	camila1_info.vehicle_name = "mavros1";
-	camila0_info.system_id=1;	
-	camila1_info.system_id=1;
-	VehicleInfo mav_info;
-	mav_info.system_id = 2;
-	mav_info.vehicle_name = "mav2"; */
-
-	SwarmVehicle *camila;
-	camila = new SwarmVehicle("camila", 6);
+	std::unique_ptr<SwarmVehicle> camila(new SwarmVehicle(nh, "camila", 6));
 
 	ROS_INFO("swarm_node start");
 	geometry_msgs::PoseStamped msg;
@@ -45,6 +35,6 @@ int main(int argc, char **argv)
 		rate.sleep();
 	}
 
-	delete camila;
+	camila.release();
 	return 0;
 }

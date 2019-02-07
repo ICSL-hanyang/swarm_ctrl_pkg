@@ -35,8 +35,8 @@
 
 typedef struct vehicle_info
 {
-	int system_id;
-	std::string vehicle_name;
+	int vehicle_id_;
+	std::string vehicle_name_;
 } VehicleInfo;
 
 /* 	Drone modes : 
@@ -47,146 +47,135 @@ typedef struct vehicle_info
 class Vehicle
 {
   private:
-	VehicleInfo vehicle_info;
+	VehicleInfo vehicle_info_;
 
-	ros::NodeHandle nh;
-	ros::NodeHandle nh_mul;
-	ros::NodeHandle nh_global;
+	ros::NodeHandle nh_;
+	ros::NodeHandle& nh_mul_;
+	ros::NodeHandle& nh_global_;
 
 	/*drone state*/
-	mavros_msgs::State cur_state;
-	sensor_msgs::BatteryState cur_battery;
+	mavros_msgs::State cur_state_;
+	sensor_msgs::BatteryState cur_battery_;
 
 	/* ros subscriber*/
-	ros::Subscriber state_sub;
-	ros::Subscriber battery_sub;
-	ros::Subscriber home_sub;
-	ros::Subscriber local_pos_sub;
-	ros::Subscriber global_pos_sub;
+	ros::Subscriber state_sub_;
+	ros::Subscriber battery_sub_;
+	ros::Subscriber home_sub_;
+	ros::Subscriber local_pos_sub_;
+	ros::Subscriber global_pos_sub_;
 
 	/* ros publisher*/
-	ros::Publisher setpoint_vel_pub;
-	ros::Publisher setpoint_local_pub;
-	ros::Publisher setpoint_global_pub;
+	ros::Publisher setpoint_vel_pub_;
+	ros::Publisher setpoint_local_pub_;
+	ros::Publisher setpoint_global_pub_;
 
 	/* ros service client*/
-	ros::ServiceClient arming_client;
-	ros::ServiceClient set_mode_client;
-	ros::ServiceClient set_home_client;
-	ros::ServiceClient takeoff_client;
-	ros::ServiceClient land_client;
+	ros::ServiceClient arming_client_;
+	ros::ServiceClient set_mode_client_;
+	ros::ServiceClient set_home_client_;
+	ros::ServiceClient takeoff_client_;
+	ros::ServiceClient land_client_;
 
 	/* ros multi sub client */
-	ros::Subscriber multi_arming_sub;
-	ros::Subscriber multi_set_mode_sub;
-	ros::Subscriber multi_set_home_sub;
-	ros::Subscriber multi_takeoff_sub;
-	ros::Subscriber multi_land_sub;
+	ros::Subscriber multi_arming_sub_;
+	ros::Subscriber multi_set_mode_sub_;
+	ros::Subscriber multi_set_home_sub_;
+	ros::Subscriber multi_takeoff_sub_;
+	ros::Subscriber multi_land_sub_;
 
 	/* local coordinate*/
-	geometry_msgs::PoseStamped home_local;
-	geometry_msgs::PoseStamped cur_local;
-	geometry_msgs::PoseStamped tar_local;
+	geometry_msgs::PoseStamped home_local_;
+	geometry_msgs::PoseStamped cur_local_;
+	geometry_msgs::PoseStamped tar_local_;
 
 	/* global coordinate*/
-	sensor_msgs::NavSatFix home_global;
-	sensor_msgs::NavSatFix cur_global;
-	sensor_msgs::NavSatFix tar_global;
+	sensor_msgs::NavSatFix home_global_;
+	sensor_msgs::NavSatFix cur_global_;
+	sensor_msgs::NavSatFix tar_global_;
 
-	bool setpoint_publish_flag;
-	double kp;
+	bool setpoint_publish_flag_;
+	static double kp_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
 	void vehicleInit();
+	void stateCB(const mavros_msgs::State::ConstPtr &);
+	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &);
+	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
+	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
+	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
+
+	/* multi callback functions */
+	void multiArming(const std_msgs::Bool::ConstPtr &);
+	void multiSetMode(const std_msgs::String::ConstPtr &);
+	void multiSetHome(const std_msgs::Empty::ConstPtr &);
+	void multiTakeoff(const std_msgs::Empty::ConstPtr &);
+	void multiLand(const std_msgs::Empty::ConstPtr &);
 
   public:
-	Vehicle();
-	Vehicle(VehicleInfo _vehicle_info);
-	Vehicle(const Vehicle &rhs);
-	const Vehicle &operator=(const Vehicle &rhs);
+	Vehicle() = delete;
+	Vehicle(ros::NodeHandle &, ros::NodeHandle &);
+	Vehicle(ros::NodeHandle &, ros::NodeHandle &, const VehicleInfo &);
+	Vehicle(const Vehicle &);
+	const Vehicle &operator=(const Vehicle &);
 
-	void setVehicleInfo(VehicleInfo new_vehicle_info);
-	VehicleInfo getInfo();
-	void stateCB(const mavros_msgs::State::ConstPtr &msg);
-	mavros_msgs::State getState();
-	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &msg);
-	sensor_msgs::BatteryState getBattery();
-	void homeCB(const mavros_msgs::HomePosition::ConstPtr &msg);
+	void setVehicleInfo(const VehicleInfo &);
+	VehicleInfo getInfo() const;
+	mavros_msgs::State getState() const;
+	sensor_msgs::BatteryState getBattery() const;
 
 	/*main drone function*/
-	bool arming(bool _arm_state);
-	bool setMode(std::string _mode);
-	bool takeoff(double _takeoff_alt);
+	bool arming(const bool &);
+	bool setMode(const std::string &);
+	bool takeoff(const double &);
 	bool land();
-	void gotoGlobal(sensor_msgs::NavSatFix _tar_global);
-	void setLocalTarget(geometry_msgs::PoseStamped _tar_local);
+	void gotoGlobal(const sensor_msgs::NavSatFix &);
+	void setLocalTarget(const geometry_msgs::PoseStamped &);
 	void gotoLocal();
 	void gotoVel();
 
-	/* multi callback functions */
-	void multiArming(const std_msgs::Bool::ConstPtr &msg);
-	void multiSetMode(const std_msgs::String::ConstPtr &msg);
-	void multiSetHome(const std_msgs::Empty::ConstPtr &trigger);
-	void multiTakeoff(const std_msgs::Empty::ConstPtr &trigger);
-	void multiLand(const std_msgs::Empty::ConstPtr &trigger);
-
 	//global position
 	bool setHomeGlobal();
-	sensor_msgs::NavSatFix getHomeGlobal();
-	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg);
-	sensor_msgs::NavSatFix getGlobalPosition();
-	sensor_msgs::NavSatFix getTargetGlobal();
+	sensor_msgs::NavSatFix getHomeGlobal() const;
+	sensor_msgs::NavSatFix getGlobalPosition() const;
+	sensor_msgs::NavSatFix getTargetGlobal() const;
 
 	//local position
 	void setHomeLocal();
-	geometry_msgs::PoseStamped getHomeLocal();
-	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg);
-	geometry_msgs::PoseStamped getLocalPosition();
-	geometry_msgs::PoseStamped getTargetLocal();
+	geometry_msgs::PoseStamped getHomeLocal() const;
+	geometry_msgs::PoseStamped getLocalPosition() const;
+	geometry_msgs::PoseStamped getTargetLocal() const;
 
-	geometry_msgs::Vector3 convertGeoToENU(double coord_lat, double coord_long,
-										   double coord_alt, double home_lat, double home_long, double home_alt);
+	geometry_msgs::Vector3 convertGeoToENU(const double &,const double &, const double &, 
+	const double &, const double &, const double &);
 
-	bool isPublish();
+	bool isPublish() const;
 };
 
 class SwarmVehicle
 {
   private:
 	/* swarm_info */
-	std::string swarm_name;
-	int num_of_vehicle;
+	std::string swarm_name_;
+	int num_of_vehicle_;
 
-	std::vector<Vehicle> camila;
-	std::vector<Vehicle>::iterator iter;
-	std::vector<geometry_msgs::Vector3> offset;
+	std::vector<Vehicle> camila_;
+	std::vector<Vehicle>::iterator iter_;
+	std::vector<geometry_msgs::Vector3> offset_;
 
-	ros::NodeHandle nh;
-	ros::NodeHandle nh_global;
-	ros::ServiceServer multi_setpoint_local_server;
-	ros::ServiceServer multi_setpoint_global_server;
-	ros::ServiceServer goto_vehicle_server;
+	ros::NodeHandle nh_;
+	ros::NodeHandle nh_mul_;
+	ros::NodeHandle& nh_global_;
+	ros::ServiceServer multi_setpoint_local_server_;
+	ros::ServiceServer multi_setpoint_global_server_;
+	ros::ServiceServer goto_vehicle_server_;
 
-	geometry_msgs::PoseStamped swarm_position_local;
-	sensor_msgs::NavSatFix swarm_position_global;
+	geometry_msgs::PoseStamped swarm_position_local_;
+	sensor_msgs::NavSatFix swarm_position_global_;
 
-	std::string formation;
-	bool multi_setpoint_publish_flag;
-	double angle;
-
-  public:
-	SwarmVehicle(std::string _swarm_name = "camila", int _num_of_vehicle = 1); //have to add default value
-	SwarmVehicle(const SwarmVehicle &rhs);
-	const SwarmVehicle &operator=(const SwarmVehicle &rhs);
-	~SwarmVehicle();
-
-	void setSwarmInfo(std::string _swarm_name, int _num_of_vehicle);
-	std::string getSwarmInfo();
-
-	void addVehicle(VehicleInfo _vehicle_info);
-	void deleteVehicle(VehicleInfo _vehicle_info);
-	void showVehicleList();
+	std::string formation_;
+	bool multi_setpoint_publish_flag_;
+	double angle_;
 
 	void updateOffset();
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
@@ -196,12 +185,24 @@ class SwarmVehicle
 	bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 					 swarm_ctrl_pkg::srvGoToVehicle::Response &res);
 
-	geometry_msgs::Vector3 convertGeoToENU(sensor_msgs::NavSatFix _coord,
-										   sensor_msgs::NavSatFix _home);
-	geographic_msgs::GeoPoint convertENUToGeo(geometry_msgs::PoseStamped _local,
-											  sensor_msgs::NavSatFix _home_global);
-
+	static geometry_msgs::Vector3 convertGeoToENU(const sensor_msgs::NavSatFix &,
+										   const sensor_msgs::NavSatFix &);
+	static geographic_msgs::GeoPoint convertENUToGeo(const geometry_msgs::PoseStamped &,
+											  const sensor_msgs::NavSatFix &);
 	bool isPublish();
+
+  public:
+	SwarmVehicle(ros::NodeHandle &, const std::string &swarm_name = "camila", const int &num_of_vehicle = 1);
+	SwarmVehicle(const SwarmVehicle &);
+	const SwarmVehicle &operator=(const SwarmVehicle &);
+	~SwarmVehicle();
+
+	void setSwarmInfo(const std::string &, const int &);
+	std::string getSwarmInfo() const;
+
+	void addVehicle(const VehicleInfo &);
+	void deleteVehicle(const VehicleInfo &);
+	void showVehicleList() const;
 
 	void run();
 };
