@@ -168,13 +168,9 @@ class SwarmVehicle
 						swarm_ctrl_pkg::srvSetSwarmTarget::Response &);
 	bool isPublish();
 
-<<<<<<< HEAD
-	void scenario1();
-	void scenario2();
-	void scenario3();
-=======
 	void scenario1() const;
->>>>>>> 4ea3e04952fb3f5d048db1379b067a42f9bd9a2a
+	void scenario2() const;
+	void scenario3() const;
 
   public:
 	SwarmVehicle(ros::NodeHandle &, const std::string &swarm_name = "camila", const int &num_of_vehicle = 1);
