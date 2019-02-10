@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 
-double Vehicle::kp_;
+double Vehicle::kp_vel_;
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global) 
 			: vehicle_info_({1, "mavros"}),
@@ -49,23 +49,27 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 	return *this;
 }
 
+Vehicle::~Vehicle(){
+	release();
+}
+
 void Vehicle::vehicleInit()
 {
-	setpoint_global_pub_ = nh_.advertise<mavros_msgs::GlobalPositionTarget>("setpoint_position/global", 10);
-	setpoint_local_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("setpoint_position/local", 10);
-	setpoint_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("setpoint_velocity/cmd_vel_unstamped", 10);
+	setpoint_global_pub_ = nh_.advertise<mavros_msgs::GlobalPositionTarget>("mavros/setpoint_position/global", 10);
+	setpoint_local_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+	setpoint_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
 
-	state_sub_ = nh_.subscribe("state", 10, &Vehicle::stateCB, this);
-	battery_sub_ = nh_.subscribe("battery", 10, &Vehicle::batteryCB, this);
-	home_sub_ = nh_.subscribe("home_position/home", 10, &Vehicle::homeCB, this);
-	local_pos_sub_ = nh_.subscribe("local_position/pose", 10, &Vehicle::localPositionCB, this);
-	global_pos_sub_ = nh_.subscribe("global_position/global", 10, &Vehicle::globalPositionCB, this);
+	state_sub_ = nh_.subscribe("mavros/state", 10, &Vehicle::stateCB, this);
+	battery_sub_ = nh_.subscribe("mavros/battery", 10, &Vehicle::batteryCB, this);
+	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &Vehicle::homeCB, this);
+	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
+	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
 
-	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("cmd/arming");
-	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("set_mode");
-	set_home_client_ = nh_.serviceClient<mavros_msgs::CommandHome>("cmd/set_home");
-	takeoff_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("cmd/takeoff");
-	land_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("cmd/land");
+	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
+	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+	set_home_client_ = nh_.serviceClient<mavros_msgs::CommandHome>("mavros/cmd/set_home");
+	takeoff_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/takeoff");
+	land_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/land");
 
 	multi_arming_sub_ = nh_mul_.subscribe("arming", 10, &Vehicle::multiArming, this);
 	multi_set_mode_sub_ = nh_mul_.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
@@ -74,6 +78,30 @@ void Vehicle::vehicleInit()
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
 
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
+}
+
+void Vehicle::release(){
+	setpoint_global_pub_.shutdown();
+	setpoint_local_pub_.shutdown();
+	setpoint_vel_pub_.shutdown();
+
+	state_sub_.shutdown();
+	battery_sub_.shutdown();
+	home_sub_.shutdown();
+	local_pos_sub_.shutdown();
+	global_pos_sub_.shutdown();
+
+	arming_client_.shutdown();
+	set_mode_client_.shutdown();
+	set_home_client_.shutdown();
+	takeoff_client_.shutdown();
+	land_client_.shutdown();
+
+	multi_arming_sub_.shutdown();
+	multi_set_mode_sub_.shutdown();
+	multi_set_home_sub_.shutdown();
+	multi_takeoff_sub_.shutdown();
+	multi_land_sub_.shutdown();
 }
 
 void Vehicle::stateCB(const mavros_msgs::State::ConstPtr &msg)
@@ -117,14 +145,6 @@ void Vehicle::homeCB(const mavros_msgs::HomePosition::ConstPtr &msg)
 void Vehicle::globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg)
 {
 	cur_global_ = *msg;
-
-	/* geometry_msgs::Vector3 pose = convertGeoToENU(cur_global_.latitude, cur_global_.longitude,
-		cur_global_.altitude, home_global_.latitude, home_global_.longitude, home_global_.altitude);
-	cur_local_.pose.position.x = pose.x;
-	cur_local_.pose.position.y = pose.y;
-	cur_local_.pose.position.z = pose.z; */
-	/* ROS_INFO_STREAM(cur_local_.pose.position.x << " " << cur_local_.pose.position.y 
-		<<" "<< cur_local_.pose.position.z); */
 }
 
 void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -134,44 +154,23 @@ void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
 {
-	mavros_msgs::CommandBool arm;
-	arm.request.value = msg->data;
-
-	if (arming_client_.call(arm) && arm.response.success)
-	{
-	}
+	if(arming(msg->data));
 	else
-	{
-		ROS_ERROR_STREAM(vehicle_info_.vehicle_name_ << " failed to call arming service. " << arm.response.result);
-	}
+		ROS_ERROR_STREAM(vehicle_info_.vehicle_name_ << " failed to call multi arming service. ");
 }
 
 void Vehicle::multiSetMode(const std_msgs::String::ConstPtr &msg)
 {
-	mavros_msgs::SetMode mode;
-	mode.request.custom_mode = msg->data;
-	if (((mode.request.custom_mode == "offboard") || (mode.request.custom_mode == "OFFBOARD")) && (!setpoint_publish_flag_))
-	{
-		ROS_WARN("Please publish setpoint first");
-	}
+	if(setMode(msg->data));
 	else
-	{
-		if (set_mode_client_.call(mode) && mode.response.mode_sent)
-		{
-		}
-		else
-		{
-			ROS_ERROR_STREAM(vehicle_info_.vehicle_name_ << " failed to call set_mode service. " << mode.response.mode_sent);
-		}
-	}
+		ROS_ERROR_STREAM(vehicle_info_.vehicle_name_<<" failed to call multi set_mode service. ");
+
 }
 
 void Vehicle::multiSetHome(const std_msgs::Empty::ConstPtr &trigger)
 {
 	if (setHomeGlobal())
-	{
 		setHomeLocal();
-	}
 }
 
 void Vehicle::multiTakeoff(const std_msgs::Empty::ConstPtr &trigger)
@@ -190,6 +189,10 @@ void Vehicle::setVehicleInfo(const VehicleInfo &new_vehicle_info)
 {
 	vehicle_info_.vehicle_id_ = new_vehicle_info.vehicle_id_;
 	vehicle_info_.vehicle_name_ = new_vehicle_info.vehicle_name_;
+
+	release();
+
+	nh_ = ros::NodeHandle(vehicle_info_.vehicle_name_);
 
 	vehicleInit();
 }
@@ -232,10 +235,9 @@ bool Vehicle::setMode(const std::string &current_mode)
 	}
 	else
 	{
-		if (set_mode_client_.call(mode) && mode.response.mode_sent)
-			;
+		if (set_mode_client_.call(mode) && mode.response.mode_sent);
 		else
-			ROS_ERROR_STREAM("Failed to call set_mode service. " << mode.response.mode_sent);
+			ROS_ERROR_STREAM(vehicle_info_.vehicle_name_ <<" failed to call set_mode service. " << mode.response.mode_sent);
 		return mode.response.mode_sent;
 	}
 }
@@ -332,12 +334,12 @@ void Vehicle::gotoLocal()
 
 void Vehicle::gotoVel()
 {
-	nh_global_.getParam("pid/kp", kp_);
+	nh_global_.getParam("pid/kp", kp_vel_);
 	geometry_msgs::Twist vel;
 
-	vel.linear.x = (tar_local_.pose.position.x - cur_local_.pose.position.x) * kp_;
-	vel.linear.y = (tar_local_.pose.position.y - cur_local_.pose.position.y) * kp_;
-	vel.linear.z = (tar_local_.pose.position.z - cur_local_.pose.position.z) * kp_;
+	vel.linear.x = (tar_local_.pose.position.x - cur_local_.pose.position.x) * kp_vel_;
+	vel.linear.y = (tar_local_.pose.position.y - cur_local_.pose.position.y) * kp_vel_;
+	vel.linear.z = (tar_local_.pose.position.z - cur_local_.pose.position.z) * kp_vel_;
 
 	setpoint_vel_pub_.publish(vel);
 }
@@ -404,36 +406,6 @@ geometry_msgs::PoseStamped Vehicle::getTargetLocal() const
 	return tar_local_;
 }
 
-geometry_msgs::Vector3 Vehicle::convertGeoToENU(const double &coord_lat, const double &coord_long, 
-const double &coord_alt, const double &home_lat, const double &home_long, const double &home_alt)
-{
-	static const float epsilon = std::numeric_limits<double>::epsilon();
-
-	double lat_rad = coord_lat * M_DEG_TO_RAD;
-	double lon_rad = coord_long * M_DEG_TO_RAD;
-
-	double ref_lon_rad = home_long * M_DEG_TO_RAD;
-	double ref_lat_rad = home_lat * M_DEG_TO_RAD;
-
-	double sin_lat = sin(lat_rad);
-	double cos_lat = cos(lat_rad);
-	double cos_d_lon = cos(lon_rad - ref_lon_rad);
-
-	double ref_sin_lat = sin(ref_lat_rad);
-	double ref_cos_lat = cos(ref_lat_rad);
-
-	double c = acos(ref_sin_lat * sin_lat + ref_cos_lat * cos_lat * cos_d_lon);
-	double k = (fabs(c) < epsilon) ? 1.0 : (c / sin(c));
-
-	geometry_msgs::Vector3 offset_;
-
-	offset_.x = k * cos_lat * sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH;
-	offset_.y = k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH;
-	offset_.z = coord_alt - home_alt;
-
-	return offset_;
-}
-
 bool Vehicle::isPublish() const
 {
 	return setpoint_publish_flag_;
@@ -454,12 +426,11 @@ SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_
 	for (int i = 0; i < num_of_vehicle_; i++)
 	{
 		vehicle_info_[i].vehicle_id_ = i + 1;
-		vehicle_info_[i].vehicle_name_ = swarm_name_ + std::to_string(i + 1) + "/mavros";
+		vehicle_info_[i].vehicle_name_ = swarm_name_ + std::to_string(i + 1);
 		camila_.push_back(Vehicle(nh_mul_, nh_global_, vehicle_info_[i]));
 	}
-	multi_setpoint_local_server_ = nh_.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
-	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
-	goto_vehicle_server_ = nh_.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
+
+	swarmServiceInit();
 }
 
 SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs) 
@@ -474,12 +445,13 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
-	{
 		camila_.push_back(*it);
-	}
-	multi_setpoint_local_server_ = nh_.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
-	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
-	goto_vehicle_server_ = nh_.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
+
+	nh_ = rhs.nh_;
+	nh_mul_ = rhs.nh_mul_;
+	nh_global_ = rhs.nh_global_;
+
+	swarmServiceInit();
 
 	*this = rhs;
 }
@@ -487,36 +459,44 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
 const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 {
 	if (this == &rhs)
-	{
 		return *this;
-	}
 
 	swarm_name_ = rhs.swarm_name_;
 	num_of_vehicle_ = rhs.num_of_vehicle_;
 
 	std::vector<Vehicle>().swap(camila_);
 	camila_.reserve(num_of_vehicle_);
-	VehicleInfo vehicle_info_[num_of_vehicle_];
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
-	{
 		camila_.push_back(*it);
-	}
 
-	nh_ = ros::NodeHandle();
-	nh_global_ = ros::NodeHandle("~");
+	nh_ = rhs.nh_;
+	nh_mul_ = rhs.nh_mul_;
+	nh_global_ = rhs.nh_global_;
 
-	multi_setpoint_local_server_ = nh_.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
-	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
-	goto_vehicle_server_ = nh_.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
+	swarmServiceInit();
 
 	return *this;
 }
 
-SwarmVehicle::~SwarmVehicle()
+void SwarmVehicle::swarmServiceInit(){
+	multi_setpoint_local_server_ = nh_.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
+	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
+	goto_vehicle_server_ = nh_.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
+}
+
+void SwarmVehicle::release()
 {
 	std::vector<Vehicle>().swap(camila_);
+	multi_setpoint_global_server_.shutdown();
+	multi_setpoint_local_server_.shutdown();
+	goto_vehicle_server_.shutdown();
+}
+
+SwarmVehicle::~SwarmVehicle()
+{
+	release();
 }
 
 void SwarmVehicle::updateOffset()
@@ -528,9 +508,9 @@ void SwarmVehicle::updateOffset()
 	{
 		if (num_of_vehicle_ != 1)
 			angle_ = 2.0 * M_PI / (num_of_vehicle_ - 1);
-		for (iter_ = camila_.begin(); iter_ != camila_.end(); iter_++)
+		for (auto &vehicle : camila_)
 		{
-			sensor_msgs::NavSatFix follower = iter_->getGlobalPosition();
+			sensor_msgs::NavSatFix follower = vehicle.getGlobalPosition();
 			geometry_msgs::Vector3 _offset = convertGeoToENU(leader, follower);
 			offset_.push_back(_offset);
 			ROS_INFO_STREAM("offset_[" << i << "] = " << offset_[i]);
@@ -555,19 +535,19 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 	nh_global_.getParam("spacing", spacing);
 
 	int i = 0;
-	for (iter_ = camila_.begin(); iter_ != camila_.end(); iter_++)
+	for (auto &vehicle : camila_)
 	{
-		if (iter_ != camila_.begin())
+		if (vehicle.getInfo().vehicle_id_ != 1)
 		{
 			angle = i * angle_;
 
 			msg_f.pose.position.x = msg.pose.position.x + offset_[i].x + spacing * cos(angle);
 			msg_f.pose.position.y = msg.pose.position.y + offset_[i].y + spacing * sin(angle);
 			msg_f.pose.position.z = msg.pose.position.z;
-			iter_->setLocalTarget(msg_f);
+			vehicle.setLocalTarget(msg_f);
 		}
 		else
-			iter_->setLocalTarget(msg);
+			vehicle.setLocalTarget(msg);
 		i++;
 	}
 	res.success = true;
@@ -590,18 +570,13 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 
 	updateOffset();
 
-	if (num_of_vehicle_ != 1)
+	if (req.num_drone > 0 && req.num_drone <= num_of_vehicle_)
 	{
 		msg.pose.position.x = req.x + offset_[req.num_drone - 1].x;
 		msg.pose.position.y = req.y + offset_[req.num_drone - 1].y;
 		msg.pose.position.z = req.z;
 	}
-	else
-	{
-		msg.pose.position.x = req.x;
-		msg.pose.position.y = req.y;
-		msg.pose.position.z = req.z;
-	}
+
 	iter_->setLocalTarget(msg);
 
 	return true;
@@ -680,9 +655,9 @@ geographic_msgs::GeoPoint SwarmVehicle::convertENUToGeo(const geometry_msgs::Pos
 bool SwarmVehicle::isPublish()
 {
 	multi_setpoint_publish_flag_ = true;
-	for (iter_ = camila_.begin(); iter_ != camila_.end(); iter_++)
+	for (auto &vehicle : camila_)
 	{
-		if (iter_->isPublish() != true)
+		if (vehicle.isPublish() != true)
 		{
 			multi_setpoint_publish_flag_ = false;
 			break;
@@ -696,19 +671,17 @@ void SwarmVehicle::setSwarmInfo(const std::string &swarm_name, const int &num_of
 	swarm_name_ = swarm_name;
 	num_of_vehicle_ = num_of_vehicle;
 
-	std::vector<Vehicle>().swap(camila_);
+	release(); // service 및 camila vector 초기화
+
 	camila_.reserve(num_of_vehicle_);
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 
 	for (int i = 0; i < num_of_vehicle_; i++)
 	{
 		vehicle_info_[i].vehicle_id_ = i + 1;
-		vehicle_info_[i].vehicle_name_ = swarm_name_ + std::to_string(i + 1) + "/mavros";
+		vehicle_info_[i].vehicle_name_ = swarm_name_ + std::to_string(i + 1);
 		camila_.push_back(Vehicle(nh_mul_, nh_global_, vehicle_info_[i]));
 	}
-
-	nh_ = ros::NodeHandle();
-	nh_global_ = ros::NodeHandle("~");
 
 	multi_setpoint_local_server_ = nh_.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
@@ -733,7 +706,7 @@ void SwarmVehicle::deleteVehicle(const VehicleInfo &vehicle_info)
 		VehicleInfo temp = iter_->getInfo();
 		if ((temp.vehicle_id_ == vehicle_info.vehicle_id_) && (temp.vehicle_name_ == vehicle_info.vehicle_name_))
 		{
-			camila_.erase(iter_);
+			iter_ = camila_.erase(iter_);
 			ROS_INFO_STREAM("Delete vehicle : sys_id : " << temp.vehicle_id_ << ", name : " << temp.vehicle_name_);
 			num_of_vehicle_--;
 			break;
@@ -756,12 +729,12 @@ void SwarmVehicle::run()
 	{
 		bool control_method;
 		nh_global_.getParam("use_vel", control_method);
-		for (iter_ = camila_.begin(); iter_ != camila_.end(); iter_++)
+		for (auto &vehicle : camila_)
 		{
 			if (control_method)
-				iter_->gotoVel();
+				vehicle.gotoVel();
 			else
-				iter_->gotoLocal();
+				vehicle.gotoLocal();
 		}
 	}
 }

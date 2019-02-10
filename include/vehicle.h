@@ -94,11 +94,12 @@ class Vehicle
 	sensor_msgs::NavSatFix tar_global_;
 
 	bool setpoint_publish_flag_;
-	static double kp_;
+	static double kp_vel_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
 	void vehicleInit();
+	void release();
 	void stateCB(const mavros_msgs::State::ConstPtr &);
 	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &);
 	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
@@ -118,6 +119,7 @@ class Vehicle
 	Vehicle(ros::NodeHandle &, ros::NodeHandle &, const VehicleInfo &);
 	Vehicle(const Vehicle &);
 	const Vehicle &operator=(const Vehicle &);
+	~Vehicle();
 
 	void setVehicleInfo(const VehicleInfo &);
 	VehicleInfo getInfo() const;
@@ -145,9 +147,6 @@ class Vehicle
 	geometry_msgs::PoseStamped getHomeLocal() const;
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
-
-	geometry_msgs::Vector3 convertGeoToENU(const double &,const double &, const double &, 
-	const double &, const double &, const double &);
 
 	bool isPublish() const;
 };
@@ -177,6 +176,8 @@ class SwarmVehicle
 	bool multi_setpoint_publish_flag_;
 	double angle_;
 
+	void swarmServiceInit();
+	void release();
 	void updateOffset();
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
 							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);

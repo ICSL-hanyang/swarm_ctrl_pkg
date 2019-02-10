@@ -8,4 +8,4 @@ pid:
   kp: 1.0
 
 # distance between drones
-spacing: 3.0
+spacing: 5.0
