@@ -1646,7 +1646,10 @@
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
+<<<<<<< HEAD
 		<param name ="/use_sim_time" value="true"/>
+=======
+>>>>>>> 1aae5dd20e8e4c6ec6f8cfd30b72f1715f9c268e
 	</node>
 
 	<node type="rviz" name="rviz" pkg="rviz" args="-d $(find swarm_ctrl_pkg)/config/tool-configs/rviz_config.rviz" />

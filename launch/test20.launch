@@ -28,13 +28,25 @@
         <arg name="paused" value="$(arg paused)"/>
     </include>
 
+<<<<<<< HEAD
+=======
+	
+	<machine name="heromin" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" />	
+	<machine name="kdh" address="192.168.0.12" user="kdh" password="wkfk" env-loader="/home/kdh/catkin_ws/devel/env.sh" default="true" />	
+	
+>>>>>>> 1aae5dd20e8e4c6ec6f8cfd30b72f1715f9c268e
 	<!-- UAV1 -->
 	<group ns="camila1">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="1"/>
 		<!--udp://:"remote port"@localhost:"udp port" -->
+<<<<<<< HEAD
 		<arg name="fcu_url" default="udp://192.168.0.12:13201@192.168.0.12:13101"/>
 		<arg name="gcs_url" default="udp://192.168.0.12:14540@192.168.0.12:13301"/>
+=======
+		<arg name="fcu_url" default="udp://192.168.0.3:13201@192.168.0.12:13101"/>
+		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13301"/>
+>>>>>>> 1aae5dd20e8e4c6ec6f8cfd30b72f1715f9c268e
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -49,7 +61,7 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
