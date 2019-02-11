@@ -7,11 +7,12 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh("~");
 	ros::Rate rate(20);
 
-	SwarmVehicle *camila;
-	camila = new SwarmVehicle("camila", 20);
+	double num_drone;
+	nh.getParam("num_drone", num_drone);
+	std::unique_ptr<SwarmVehicle> camila(new SwarmVehicle(nh, "camila", num_drone));
 
 	ROS_INFO("swarm_node start");
-	
+
 	camila->init();
 
 	while (ros::ok())
@@ -22,6 +23,6 @@ int main(int argc, char **argv)
 		rate.sleep();
 	}
 
-	delete camila;
+	camila.release();
 	return 0;
 }

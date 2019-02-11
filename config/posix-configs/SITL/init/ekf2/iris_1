@@ -67,15 +67,15 @@ mixer load /dev/pwm_output0 ROMFS/px4fmu_common/mixers/quad_w.main.mix
 mavlink start -x -u 13301 -r 4000000
 mavlink start -x -u 13101 -r 4000000 -m onboard -o 13201
 mavlink stream -r 50 -s POSITION_TARGET_LOCAL_NED -u 13301
-mavlink stream -r 50 -s LOCAL_POSITION_NED -u 13301
-mavlink stream -r 50 -s GLOBAL_POSITION_INT -u 13301
+mavlink stream -r 10 -s LOCAL_POSITION_NED -u 13301
+mavlink stream -r 10 -s GLOBAL_POSITION_INT -u 13301
 mavlink stream -r 50 -s ATTITUDE -u 13301
 mavlink stream -r 50 -s ATTITUDE_QUATERNION -u 13301
 mavlink stream -r 50 -s ATTITUDE_TARGET -u 13301
-mavlink stream -r 50 -s SERVO_OUTPUT_RAW_0 -u 13301
-mavlink stream -r 20 -s RC_CHANNELS -u 13301
-mavlink stream -r 250 -s HIGHRES_IMU -u 13301
-mavlink stream -r 10 -s OPTICAL_FLOW_RAD -u 13301
+mavlink stream -r 1 -s SERVO_OUTPUT_RAW_0 -u 13301
+mavlink stream -r 1 -s RC_CHANNELS -u 13301
+mavlink stream -r 125 -s HIGHRES_IMU -u 13301
+mavlink stream -r 1 -s OPTICAL_FLOW_RAD -u 13301
 logger start -e -t
 mavlink boot_complete
 replay trystart

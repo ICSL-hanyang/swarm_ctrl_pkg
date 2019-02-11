@@ -1,11 +1,16 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
+    <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
+        <rosparam command="load" file="$(arg swarm_config_yaml)"/>
+    </node>
+
     <!-- MAVROS posix SITL environment launch script -->
     <!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
     <!-- vehicle model and world -->
     <arg name="est" default="ekf2"/>
     <arg name="vehicle" default="iris"/>
-    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/world_uwb.world"/>
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>
@@ -27,7 +32,7 @@
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
             <arg name="x" value="0"/>
-            <arg name="y" value="$(arg ID)"/>
+            <arg name="y" value="0"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
@@ -52,7 +57,7 @@
         <arg name="fcu_url" default="udp://:14541@localhost:14558"/>
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
-            <arg name="x" value="0"/>
+            <arg name="x" value="1"/>
             <arg name="y" value="$(arg ID)"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
@@ -78,7 +83,7 @@
         <arg name="fcu_url" default="udp://:14542@localhost:14559"/>
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
-            <arg name="x" value="0"/>
+            <arg name="x" value="2"/>
             <arg name="y" value="$(arg ID)"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
@@ -103,7 +108,7 @@
         <arg name="fcu_url" default="udp://:14543@localhost:14539"/>
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
-            <arg name="x" value="0"/>
+            <arg name="x" value="3"/>
             <arg name="y" value="$(arg ID)"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
@@ -128,7 +133,7 @@
         <arg name="fcu_url" default="udp://:14544@localhost:14538"/>
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
-            <arg name="x" value="0"/>
+            <arg name="x" value="4"/>
             <arg name="y" value="$(arg ID)"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
@@ -153,7 +158,7 @@
         <arg name="fcu_url" default="udp://:14545@localhost:14537"/>
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
-            <arg name="x" value="0"/>
+            <arg name="x" value="5"/>
             <arg name="y" value="$(arg ID)"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
