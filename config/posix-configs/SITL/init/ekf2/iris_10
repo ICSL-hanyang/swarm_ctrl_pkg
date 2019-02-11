@@ -66,6 +66,32 @@ mc_att_control start
 mixer load /dev/pwm_output0 ROMFS/px4fmu_common/mixers/quad_w.main.mix
 mavlink start -x -u 13310 -r 4000000
 mavlink start -x -u 13110 -r 4000000 -m onboard -o 13210
+
+mavlink stream -u 13110 -s ADSB_VEHICLE                -r 20
+mavlink stream -u 13110 -s ACTUATOR_CONTROL_TARGET0    -r 5
+mavlink stream -u 13110 -s ALTITUDE                    -r 1
+mavlink stream -u 13110 -s ATTITUDE                    -r 5
+mavlink stream -u 13110 -s COLLISION                   -r 1
+mavlink stream -u 13110 -s DEBUG                       -r 5
+mavlink stream -u 13110 -s DEBUG_VECT                  -r 5
+mavlink stream -u 13110 -s ESTIMATOR_STATUS            -r 5
+mavlink stream -u 13110 -s EXTENDED_SYS_STATE          -r 5
+mavlink stream -u 13110 -s GLOBAL_POSITION_INT         -r 20
+mavlink stream -u 13110 -s GPS_RAW_INT                 -r 30
+mavlink stream -u 13110 -s GPS2_RAW                    -r 30
+mavlink stream -u 13110 -s HOME_POSITION               -r 1
+mavlink stream -u 13110 -s LOCAL_POSITION_NED          -r 10
+mavlink stream -u 13110 -s POSITION_TARGET_LOCAL_NED   -r 10
+mavlink stream -u 13110 -s POSITION_TARGET_GLOBAL_INT  -r 10
+mavlink stream -u 13110 -s PING                        -r 1
+mavlink stream -u 13110 -s SERVO_OUTPUT_RAW_0          -r 5
+mavlink stream -u 13110 -s SYS_STATUS                  -r 5
+mavlink stream -u 13110 -s SYSTEM_TIME                 -r 1
+mavlink stream -u 13110 -s TIMESYNC                    -r 10
+mavlink stream -u 13110 -s TRAJECTORY_REPRESENTATION_WAYPOINTS -r 5
+mavlink stream -u 13110 -s ESTIMATOR_STATUS            -r 1
+mavlink stream -u 13110 -s HIGHRES_IMU                 -r 0
+
 mavlink stream -r 50 -s POSITION_TARGET_LOCAL_NED -u 13310
 mavlink stream -r 50 -s LOCAL_POSITION_NED -u 13310
 mavlink stream -r 50 -s GLOBAL_POSITION_INT -u 13310
