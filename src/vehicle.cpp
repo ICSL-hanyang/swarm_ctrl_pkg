@@ -603,13 +603,13 @@ geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(const sensor_msgs::NavSatFi
 	double c = acos(ref_sin_lat * sin_lat + ref_cos_lat * cos_lat * cos_d_lon);
 	double k = (fabs(c) < epsilon) ? 1.0 : (c / sin(c));
 
-	geometry_msgs::Vector3 offset_;
+	geometry_msgs::Vector3 offset;
 
-	offset_.x = k * cos_lat * sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH;
-	offset_.y = k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH;
-	offset_.z = coord.altitude - home.altitude;
+	offset.x = k * cos_lat * sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH;
+	offset.y = k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH;
+	offset.z = coord.altitude - home.altitude;
 
-	return offset_;
+	return offset;
 }
 
 geographic_msgs::GeoPoint SwarmVehicle::convertENUToGeo(const geometry_msgs::PoseStamped &local,
