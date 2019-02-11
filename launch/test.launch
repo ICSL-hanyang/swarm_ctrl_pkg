@@ -19,6 +19,9 @@
     <arg name="range_sp" default="3"/>
     <arg name="max_speed" default="3"/>
 
+    <!-- tf -->
+    <arg name="tf_rate" default="10"/>
+
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -27,8 +30,7 @@
         <arg name="verbose" value="$(arg verbose)"/>
         <arg name="paused" value="$(arg paused)"/>
     </include>
-    <machine name="kdh" address="192.168.0.12" user="kdh" password="wkfk" env-loader="/home/kdh/catkin_ws/devel/env.sh" default="true" />	
-	
+    
     <!-- UAV1 -->
     <group ns="camila1">
         <!-- MAVROS and vehicle configs -->
@@ -63,6 +65,7 @@
             <param name="setpoint_position/tf/listen" value="true" />
             <param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
             <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
+            <param name="setpoint_position/tf/rate_limit" value="$(arg tf_rate)" />
             <!-- load blacklist, config -->
             <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
             <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />

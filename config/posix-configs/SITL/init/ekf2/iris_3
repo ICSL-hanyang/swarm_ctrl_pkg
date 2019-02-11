@@ -66,12 +66,12 @@ mc_att_control start
 mixer load /dev/pwm_output0 ROMFS/px4fmu_common/mixers/quad_w.main.mix
 mavlink start -x -u 13303 -r 4000000
 mavlink start -x -u 13103 -r 4000000 -m onboard -o 13203
-mavlink stream -r 50 -s POSITION_TARGET_LOCAL_NED -u 13303
-mavlink stream -r 50 -s LOCAL_POSITION_NED -u 13303
-mavlink stream -r 50 -s GLOBAL_POSITION_INT -u 13303
-mavlink stream -r 50 -s ATTITUDE -u 13303
-mavlink stream -r 50 -s ATTITUDE_QUATERNION -u 13303
-mavlink stream -r 50 -s ATTITUDE_TARGET -u 13303
+mavlink stream -r 10 -s POSITION_TARGET_LOCAL_NED -u 13303
+mavlink stream -r 10 -s LOCAL_POSITION_NED -u 13303
+mavlink stream -r 10 -s GLOBAL_POSITION_INT -u 13303
+mavlink stream -r 10 -s ATTITUDE -u 13303
+mavlink stream -r 10 -s ATTITUDE_QUATERNION -u 13303
+mavlink stream -r 10 -s ATTITUDE_TARGET -u 13303
 mavlink stream -r 1 -s SERVO_OUTPUT_RAW_0 -u 13303
 mavlink stream -r 1 -s RC_CHANNELS -u 13303
 mavlink stream -r 125 -s HIGHRES_IMU -u 13303
