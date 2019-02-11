@@ -20,7 +20,7 @@
     <arg name="max_speed" default="3"/>
 
     <!-- tf -->
-    <arg name="tf_rate" default="10"/>
+    <!-- <arg name="tf_rate" default="10"/> -->
 
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -65,7 +65,7 @@
             <param name="setpoint_position/tf/listen" value="true" />
             <param name="setpoint_position/tf/frame_id" value="camila$(arg ID)_map" />
             <param name="setpoint_position/tf/child_frame_id" value="camila$(arg ID)_setpoint" />
-            <param name="setpoint_position/tf/rate_limit" value="$(arg tf_rate)" />
+            <!-- <param name="setpoint_position/tf/rate_limit" value="$(arg tf_rate)" /> -->
             <!-- load blacklist, config -->
             <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
             <rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />

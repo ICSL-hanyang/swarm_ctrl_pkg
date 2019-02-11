@@ -76,9 +76,9 @@ mavlink stream -u 13131 -s DEBUG -r 5
 mavlink stream -u 13131 -s DEBUG_VECT -r 5
 mavlink stream -u 13131 -s ESTIMATOR_STATUS -r 5
 mavlink stream -u 13131 -s EXTENDED_SYS_STATE -r 5
-mavlink stream -u 13131 -s GLOBAL_POSITION_INT -r 20
-mavlink stream -u 13131 -s GPS_RAW_INT -r 30
-mavlink stream -u 13131 -s GPS2_RAW -r 30
+mavlink stream -u 13131 -s GLOBAL_POSITION_INT -r 10
+mavlink stream -u 13131 -s GPS_RAW_INT -r 10
+mavlink stream -u 13131 -s GPS2_RAW -r 10
 mavlink stream -u 13131 -s HOME_POSITION -r 1
 mavlink stream -u 13131 -s LOCAL_POSITION_NED -r 10
 mavlink stream -u 13131 -s POSITION_TARGET_LOCAL_NED -r 10
