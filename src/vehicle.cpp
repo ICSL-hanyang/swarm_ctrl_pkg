@@ -1,34 +1,44 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 
-double Vehicle::kp_vel_;
-
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global) 
-			: vehicle_info_({1, "mavros"}),
-					 nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
-					 nh_mul_(nh_mul),
-					 nh_global_(nh_global),
-					 setpoint_publish_flag_(false)
+	: vehicle_info_({1, "mavros"}),
+	nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
+	nh_mul_(nh_mul),
+	nh_global_(nh_global),
+	pos_(tf2::Vector3(0,0,0)),
+	sum_sp_(tf2::Vector3(0,0,0)),
+	err_(tf2::Vector3(0,0,0)),
+	setpoint_pos_(tf2::Vector3(0,0,0)),
+	setpoint_publish_flag_(false)
 {
 	vehicleInit();
 }
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global, const VehicleInfo &vehicle_info) 
-: vehicle_info_(vehicle_info),
-											  nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
-											  nh_mul_(nh_mul),
-											  nh_global_(nh_global),
-											  setpoint_publish_flag_(false)
+	: vehicle_info_(vehicle_info),
+	nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
+	nh_mul_(nh_mul),
+	nh_global_(nh_global),
+	pos_(tf2::Vector3(0,0,0)),
+	sum_sp_(tf2::Vector3(0,0,0)),
+	err_(tf2::Vector3(0,0,0)),
+	setpoint_pos_(tf2::Vector3(0,0,0)),
+	setpoint_publish_flag_(false)
 {
 	vehicleInit();
 }
 
 Vehicle::Vehicle(const Vehicle &rhs) 
-: vehicle_info_(rhs.vehicle_info_),
-									   nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
-									   nh_mul_(rhs.nh_mul_),
-									   nh_global_(rhs.nh_global_),
-									   setpoint_publish_flag_(rhs.setpoint_publish_flag_)
+	: vehicle_info_(rhs.vehicle_info_),
+	nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
+	nh_mul_(rhs.nh_mul_),
+	nh_global_(rhs.nh_global_),
+	pos_(rhs.pos_),
+	sum_sp_(rhs.sum_sp_),
+	err_(rhs.err_),
+	setpoint_pos_(rhs.setpoint_pos_),
+	setpoint_publish_flag_(rhs.setpoint_publish_flag_)
 {
 	vehicleInit();
 	*this = rhs;
@@ -37,14 +47,19 @@ Vehicle::Vehicle(const Vehicle &rhs)
 const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 {
 	if (this == &rhs)
-	{
 		return *this;
-	}
+
 	vehicle_info_ = rhs.vehicle_info_;
 	setpoint_publish_flag_ = rhs.setpoint_publish_flag_;
+
 	nh_ = ros::NodeHandle(vehicle_info_.vehicle_name_);
 	nh_mul_ = rhs.nh_mul_;
 	nh_global_ = rhs.nh_global_;
+	pos_ = rhs.pos_;
+	sum_sp_ = rhs.sum_sp_;
+	err_ = rhs.err_;
+	setpoint_pos_ = rhs.setpoint_pos_;
+
 	vehicleInit();
 	return *this;
 }
@@ -318,8 +333,8 @@ void Vehicle::setLocalTarget(const geometry_msgs::PoseStamped &tar_local)
 		(tar_local_.pose.position.z != tar_local.pose.position.z))
 	{
 		tar_local_ = tar_local;
-		ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info_.vehicle_name_.c_str(),
-				 tar_local_.pose.position.x, tar_local_.pose.position.y, tar_local_.pose.position.z);
+		// ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info_.vehicle_name_.c_str(),
+		// 		 tar_local_.pose.position.x, tar_local_.pose.position.y, tar_local_.pose.position.z);
 	}
 }
 
@@ -334,14 +349,53 @@ void Vehicle::gotoLocal()
 
 void Vehicle::gotoVel()
 {
-	nh_global_.getParam("pid/kp", kp_vel_);
+	double kp;
+	nh_global_.getParam("pid/kp", kp);
 	geometry_msgs::Twist vel;
 
-	vel.linear.x = (tar_local_.pose.position.x - cur_local_.pose.position.x) * kp_vel_;
-	vel.linear.y = (tar_local_.pose.position.y - cur_local_.pose.position.y) * kp_vel_;
-	vel.linear.z = (tar_local_.pose.position.z - cur_local_.pose.position.z) * kp_vel_;
+	vel.linear.x = (setpoint_pos_.getX() - cur_local_.pose.position.x) * kp;
+	vel.linear.y = (setpoint_pos_.getY() - cur_local_.pose.position.y) * kp;
+	vel.linear.z = (setpoint_pos_.getZ() - cur_local_.pose.position.z) * kp;
 
 	setpoint_vel_pub_.publish(vel);
+}
+
+void Vehicle::setPos(const tf2::Vector3 &pos){
+	pos_ = pos;
+}
+
+tf2::Vector3 Vehicle::getPos() const
+{
+	return pos_;
+}
+
+void Vehicle::setSumOfSp(const tf2::Vector3 &sum_sp){
+	sum_sp_ = sum_sp;
+}
+
+tf2::Vector3 Vehicle::getSumOfSp() const 
+{
+	return sum_sp_;	
+}
+
+void Vehicle::setErr(const tf2::Vector3 &err){
+	err_ = err;
+}
+
+tf2::Vector3 Vehicle::getErr() const
+{
+	return err_;
+}
+
+void Vehicle::setSetpointPos(const tf2::Vector3 &setpoint){
+	setpoint_pos_.setX(cur_local_.pose.position.x + setpoint.getX());
+	setpoint_pos_.setY(cur_local_.pose.position.y + setpoint.getY());
+	setpoint_pos_.setZ(cur_local_.pose.position.z + setpoint.getZ());
+}
+
+tf2::Vector3 Vehicle::getSetpointPos() const
+{
+	return setpoint_pos_;
 }
 
 bool Vehicle::setHomeGlobal()
@@ -411,17 +465,24 @@ bool Vehicle::isPublish() const
 	return setpoint_publish_flag_;
 }
 
+double SwarmVehicle::kp_seek_;
+double SwarmVehicle::kp_sp_;
+double SwarmVehicle::range_sp_;
+double SwarmVehicle::max_speed_;
+
 //default value : default name = camila, num_of_vehicle = 1;
 SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_name, const int &num_of_vehicle)
- : swarm_name_(swarm_name),
-																		   num_of_vehicle_(num_of_vehicle),
-																		   nh_(ros::NodeHandle()),
-																		   nh_mul_("multi"),
-																		   nh_global_(nh_global),
-																		   multi_setpoint_publish_flag_(false)
+ 	: swarm_name_(swarm_name),
+	num_of_vehicle_(num_of_vehicle),
+	nh_(ros::NodeHandle()),
+	nh_mul_("multi"),
+	nh_global_(nh_global),
+	swarm_target_local_(tf2::Vector3(0, 0, 0)),
+	multi_setpoint_publish_flag_(false)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
+	offset_.reserve(num_of_vehicle_);
 
 	for (int i = 0; i < num_of_vehicle_; i++)
 	{
@@ -434,14 +495,17 @@ SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_
 }
 
 SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs) 
-: swarm_name_(rhs.swarm_name_),
-													  num_of_vehicle_(rhs.num_of_vehicle_),
-													  nh_(ros::NodeHandle()),
-													  nh_global_(rhs.nh_global_),
-													  multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_)
+	: swarm_name_(rhs.swarm_name_),
+	num_of_vehicle_(rhs.num_of_vehicle_),
+	nh_(rhs.nh_),
+	nh_mul_(rhs.nh_mul_),
+	nh_global_(rhs.nh_global_),
+	swarm_target_local_(tf2::Vector3(0, 0, 0)),
+	multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
+	offset_.reserve(num_of_vehicle_);
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
@@ -466,6 +530,7 @@ const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 
 	std::vector<Vehicle>().swap(camila_);
 	camila_.reserve(num_of_vehicle_);
+	offset_.reserve(num_of_vehicle_);
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
@@ -489,6 +554,7 @@ void SwarmVehicle::swarmServiceInit(){
 void SwarmVehicle::release()
 {
 	std::vector<Vehicle>().swap(camila_);
+	std::vector<tf2::Vector3>().swap(offset_);
 	multi_setpoint_global_server_.shutdown();
 	multi_setpoint_local_server_.shutdown();
 	goto_vehicle_server_.shutdown();
@@ -501,7 +567,7 @@ SwarmVehicle::~SwarmVehicle()
 
 void SwarmVehicle::updateOffset()
 {
-	sensor_msgs::NavSatFix leader = camila_.front().getGlobalPosition();
+	sensor_msgs::NavSatFix leader = camila_.front().getHomeGlobal();
 
 	int i = 0;
 	if (offset_.size() == 0)
@@ -511,28 +577,73 @@ void SwarmVehicle::updateOffset()
 		for (auto &vehicle : camila_)
 		{
 			sensor_msgs::NavSatFix follower = vehicle.getGlobalPosition();
-			geometry_msgs::Vector3 _offset = convertGeoToENU(leader, follower);
+			tf2::Vector3 _offset = convertGeoToENU(leader, follower);
 			offset_.push_back(_offset);
-			ROS_INFO_STREAM("offset_[" << i << "] = " << offset_[i]);
+			ROS_INFO_STREAM("offset_[" << i << "] = " << offset_[i].getX() << ", "<< offset_[i].getY()<<", " <<offset_[i].getZ());
 			i++;
 		}
 	}
 }
 
-bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
-									  swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res)
-{
+void SwarmVehicle::limit(tf2::Vector3 &v, const double& limit){
+	if(v.length() > limit)
+		v = v.normalize() * limit;
+}
+
+void SwarmVehicle::getVehiclePos(){
+	sensor_msgs::NavSatFix origin = camila_.front().getHomeGlobal();
+	for(auto &vehicle : camila_)
+	{
+		tf2::Vector3 vehicle_pos = convertGeoToENU(vehicle.getGlobalPosition(), origin);
+		vehicle.setPos(vehicle_pos);
+	}
+}
+
+void SwarmVehicle::separate(Vehicle& vehicle){
+	tf2::Vector3 sum(0, 0, 0);
+	unsigned int cnt = 0;
+
+	for(auto &another_vehicle : camila_){
+		if(&vehicle != &another_vehicle){
+			tf2::Vector3 diff = vehicle.getPos() - another_vehicle.getPos();
+			double dist = diff.length();
+			if(dist < range_sp_){
+				diff = diff.normalize();
+				diff /= dist;
+				sum += diff;
+				cnt++;
+			}
+		}
+	}
+	if(cnt > 0){
+		sum /= cnt;
+		limit(sum, max_speed_);
+		vehicle.setSumOfSp(sum);
+	}
+}
+
+void SwarmVehicle::seek(Vehicle& vehicle){
+	tf2::Vector3 err(0, 0, 0);
+	geometry_msgs::PoseStamped target_pos = vehicle.getTargetLocal();
+	geometry_msgs::PoseStamped current_pos = vehicle.getLocalPosition();
+	err.setX(target_pos.pose.position.x - current_pos.pose.position.x);
+	err.setY(target_pos.pose.position.y - current_pos.pose.position.y);
+	err.setZ(target_pos.pose.position.z - current_pos.pose.position.z);
+
+	limit(err, max_speed_);
+	vehicle.setErr(err);
+}
+
+void SwarmVehicle::formationGenerator(){
 	geometry_msgs::PoseStamped msg, msg_f;
-	double angle;
+	double m_sec = ros::Time::now().toNSec() / 1000000;
+	double x = 0.0002 * m_sec; // 0.2 rad/s
+	double angle, spacing;
+	nh_global_.getParamCached("spacing", spacing);
 
-	msg.pose.position.x = req.x;
-	msg.pose.position.y = req.y;
-	msg.pose.position.z = req.z;
-
-	updateOffset();
-
-	double spacing;
-	nh_global_.getParam("spacing", spacing);
+	msg.pose.position.x = swarm_target_local_.getX();
+	msg.pose.position.y = swarm_target_local_.getY();
+	msg.pose.position.z = swarm_target_local_.getZ();
 
 	int i = 0;
 	for (auto &vehicle : camila_)
@@ -541,8 +652,8 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 		{
 			angle = i * angle_;
 
-			msg_f.pose.position.x = msg.pose.position.x + offset_[i].x + spacing * cos(angle);
-			msg_f.pose.position.y = msg.pose.position.y + offset_[i].y + spacing * sin(angle);
+			msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
+			msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
 			msg_f.pose.position.z = msg.pose.position.z;
 			vehicle.setLocalTarget(msg_f);
 		}
@@ -550,6 +661,17 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 			vehicle.setLocalTarget(msg);
 		i++;
 	}
+}
+
+bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
+									  swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res)
+{
+	updateOffset();
+
+	swarm_target_local_.setX(req.x);
+	swarm_target_local_.setY(req.y);
+	swarm_target_local_.setZ(req.z);
+
 	res.success = true;
 
 	return res.success;
@@ -572,8 +694,8 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 
 	if (req.num_drone > 0 && req.num_drone <= num_of_vehicle_)
 	{
-		msg.pose.position.x = req.x + offset_[req.num_drone - 1].x;
-		msg.pose.position.y = req.y + offset_[req.num_drone - 1].y;
+		msg.pose.position.x = req.x + offset_[req.num_drone - 1].getX();
+		msg.pose.position.y = req.y + offset_[req.num_drone - 1].getY();
 		msg.pose.position.z = req.z;
 	}
 
@@ -582,8 +704,8 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 	return true;
 }
 
-geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(const sensor_msgs::NavSatFix &coord,
-													 const sensor_msgs::NavSatFix &home)
+tf2::Vector3 SwarmVehicle::convertGeoToENU(const sensor_msgs::NavSatFix &coord,
+										   const sensor_msgs::NavSatFix &home)
 {
 	static const float epsilon = std::numeric_limits<double>::epsilon();
 
@@ -603,11 +725,11 @@ geometry_msgs::Vector3 SwarmVehicle::convertGeoToENU(const sensor_msgs::NavSatFi
 	double c = acos(ref_sin_lat * sin_lat + ref_cos_lat * cos_lat * cos_d_lon);
 	double k = (fabs(c) < epsilon) ? 1.0 : (c / sin(c));
 
-	geometry_msgs::Vector3 offset;
+	tf2::Vector3 offset;
 
-	offset.x = k * cos_lat * sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH;
-	offset.y = k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH;
-	offset.z = coord.altitude - home.altitude;
+	offset.setX( k * cos_lat * sin(lon_rad - ref_lon_rad) * CONSTANTS_RADIUS_OF_EARTH );
+	offset.setY( k * (ref_cos_lat * sin_lat - ref_sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH );
+	offset.setZ( coord.altitude - home.altitude );
 
 	return offset;
 }
@@ -727,14 +849,30 @@ void SwarmVehicle::run()
 {
 	if (isPublish())
 	{
-		bool control_method;
-		nh_global_.getParam("use_vel", control_method);
+		bool control_method, sp;
+		nh_global_.getParamCached("use_vel", control_method);
+		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
+		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
+		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
+		nh_global_.getParamCached("setpoint/max_speed", max_speed_);
+		nh_global_.getParamCached("setpoint/separate", sp);
+		getVehiclePos();
 		for (auto &vehicle : camila_)
 		{
+			tf2::Vector3 setpoint;
+			if(sp){
+				separate(vehicle);
+				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_;
+			}
+			else
+				setpoint = vehicle.getErr() * kp_seek_;
+			seek(vehicle);
+			vehicle.setSetpointPos(setpoint);
 			if (control_method)
 				vehicle.gotoVel();
 			else
 				vehicle.gotoLocal();
 		}
 	}
+	formationGenerator();
 }

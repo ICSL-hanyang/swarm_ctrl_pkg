@@ -16,6 +16,7 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/BatteryState.h>
 #include <mavros_msgs/State.h>
@@ -93,8 +94,12 @@ class Vehicle
 	sensor_msgs::NavSatFix cur_global_;
 	sensor_msgs::NavSatFix tar_global_;
 
+	tf2::Vector3 pos_;
+	tf2::Vector3 sum_sp_;
+	tf2::Vector3 err_;
+	tf2::Vector3 setpoint_pos_;
+
 	bool setpoint_publish_flag_;
-	static double kp_vel_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -136,6 +141,16 @@ class Vehicle
 	void gotoLocal();
 	void gotoVel();
 
+	/* setpoint control method */
+	void setPos(const tf2::Vector3&);
+	tf2::Vector3 getPos() const;
+	void setSumOfSp(const tf2::Vector3&);
+	tf2::Vector3 getSumOfSp() const;
+	void setErr(const tf2::Vector3 &);
+	tf2::Vector3 getErr() const;
+	void setSetpointPos(const tf2::Vector3&);
+	tf2::Vector3 getSetpointPos() const;
+
 	//global position
 	bool setHomeGlobal();
 	sensor_msgs::NavSatFix getHomeGlobal() const;
@@ -160,7 +175,7 @@ class SwarmVehicle
 
 	std::vector<Vehicle> camila_;
 	std::vector<Vehicle>::iterator iter_;
-	std::vector<geometry_msgs::Vector3> offset_;
+	std::vector<tf2::Vector3> offset_;
 
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
@@ -169,16 +184,27 @@ class SwarmVehicle
 	ros::ServiceServer multi_setpoint_global_server_;
 	ros::ServiceServer goto_vehicle_server_;
 
-	geometry_msgs::PoseStamped swarm_position_local_;
-	sensor_msgs::NavSatFix swarm_position_global_;
+	tf2::Vector3 swarm_target_local_;
 
 	std::string formation_;
 	bool multi_setpoint_publish_flag_;
 	double angle_;
 
+	static double kp_seek_;
+	static double kp_sp_;
+	static double range_sp_;
+	static double max_speed_;
+
 	void swarmServiceInit();
 	void release();
 	void updateOffset();
+
+	void limit(tf2::Vector3&, const double &);
+	void getVehiclePos();
+	void separate(Vehicle&);
+	void seek(Vehicle&);
+	void formationGenerator();
+
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
 							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);
 	bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request &req,
@@ -186,10 +212,10 @@ class SwarmVehicle
 	bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 					 swarm_ctrl_pkg::srvGoToVehicle::Response &res);
 
-	static geometry_msgs::Vector3 convertGeoToENU(const sensor_msgs::NavSatFix &,
-										   const sensor_msgs::NavSatFix &);
+	static tf2::Vector3 convertGeoToENU(const sensor_msgs::NavSatFix &,
+										const sensor_msgs::NavSatFix &);
 	static geographic_msgs::GeoPoint convertENUToGeo(const geometry_msgs::PoseStamped &,
-											  const sensor_msgs::NavSatFix &);
+											  		 const sensor_msgs::NavSatFix &);
 	bool isPublish();
 
   public:

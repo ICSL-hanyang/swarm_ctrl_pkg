@@ -9,3 +9,11 @@ pid:
 
 # distance between drones
 spacing: 5.0
+
+# setpoint control params
+setpoint:
+  kp_seek: 1.0
+  kp_sp: 1.0
+  range_sp: 2.0
+  max_speed: 3.0
+  separate: true
