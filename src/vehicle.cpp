@@ -645,22 +645,60 @@ void SwarmVehicle::formationGenerator(){
 	msg.pose.position.y = swarm_target_local_.getY();
 	msg.pose.position.z = swarm_target_local_.getZ();
 
-	int i = 0;
-	for (auto &vehicle : camila_)
-	{
-		if (vehicle.getInfo().vehicle_id_ != 1)
+	if(formation_ == "SCEN1"){
+		int i = 0;
+		for (auto &vehicle : camila_)
 		{
-			angle = i * angle_;
+			if (vehicle.getInfo().vehicle_id_ != 1)
+			{
+				angle = i * angle_;
 
-			msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
-			msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
-			msg_f.pose.position.z = msg.pose.position.z;
-			vehicle.setLocalTarget(msg_f);
+				msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
+				msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
+				msg_f.pose.position.z = msg.pose.position.z;
+				vehicle.setLocalTarget(msg_f);
+			}
+			else
+				vehicle.setLocalTarget(msg);
+			i++;
 		}
-		else
-			vehicle.setLocalTarget(msg);
+	}
+	else if(formation_ == "SCEN2"){
+		scenario2();
+	}
+	else if(formation_ == "SCEN3"){
+
+	}
+}
+
+void SwarmVehicle::scenario2(){
+	geometry_msgs::PoseStamped temp;
+	std::vector<geometry_msgs::PoseStamped> scen;
+	scen.reserve(num_of_vehicle_);
+	
+	ros::Time time = ros::Time::now();
+
+	temp.header.stamp = time;
+	temp.pose.position.x = swarm_target_local_.getX() + 1;
+	temp.pose.position.y = swarm_target_local_.getY() + 1;
+	temp.pose.position.z = swarm_target_local_.getZ() + 1;
+	scen.push_back(temp);
+
+	temp.header.stamp = time;
+	temp.pose.position.x = swarm_target_local_.getX() + 2;
+	temp.pose.position.y = swarm_target_local_.getY() + 2;
+	temp.pose.position.z = swarm_target_local_.getZ() + 2;
+	scen.push_back(temp);
+
+	int i=0;
+	for(auto &vehicle : camila_){
+		scen[i].pose.position.x += offset_[i].getX();
+		scen[i].pose.position.y += offset_[i].getY();
+		scen[i].pose.position.z += offset_[i].getZ();
+		vehicle.setLocalTarget(scen[i]);
 		i++;
 	}
+
 }
 
 bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
@@ -668,6 +706,7 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 {
 	updateOffset();
 
+	formation_ = req.formation;
 	swarm_target_local_.setX(req.x);
 	swarm_target_local_.setY(req.y);
 	swarm_target_local_.setZ(req.z);

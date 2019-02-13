@@ -204,6 +204,7 @@ class SwarmVehicle
 	void separate(Vehicle&);
 	void seek(Vehicle&);
 	void formationGenerator();
+	void scenario2();
 
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
 							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);
