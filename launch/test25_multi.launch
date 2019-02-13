@@ -75,7 +75,7 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="2"/>
 		<!--udp://:"remote port"@localhost:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:13202@localhost:13102"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13202@192.168.0.12:13102"/>
 		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13302"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">

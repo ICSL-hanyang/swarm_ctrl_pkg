@@ -18,6 +18,7 @@
     <arg name="kp_sp" default="3"/>
     <arg name="range_sp" default="5"/>
     <arg name="max_speed" default="4"/>
+	<arg name="scen_scale" default="1.5"/>
 
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -1639,6 +1640,7 @@
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
+		<param name="scen_scale" value="$(arg scen_scale)"/>
 	</node>
 
 </launch>

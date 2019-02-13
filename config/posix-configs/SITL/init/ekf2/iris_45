@@ -87,7 +87,7 @@ mavlink stream -u 13145 -s PING -r 1
 mavlink stream -u 13145 -s SERVO_OUTPUT_RAW_0 -r 5
 mavlink stream -u 13145 -s SYS_STATUS -r 5
 mavlink stream -u 13145 -s SYSTEM_TIME -r 1
-mavlink stream -u 13145 -s TIMESYNC -r 10
+mavlink stream -u 13145 -s TIMESYNC -r 50
 mavlink stream -u 13145 -s TRAJECTORY_REPRESENTATION_WAYPOINTS -r 5
 mavlink stream -u 13145 -s ESTIMATOR_STATUS -r 1
 mavlink stream -u 13145 -s HIGHRES_IMU -r 100

@@ -14,9 +14,9 @@
 
     <!-- setpoint ctrl -->
     <arg name="num_drone" default="30"/>
-    <arg name="kp" default="0.5"/>
+    <arg name="kp" default="0.3"/>
     <arg name="kp_sp" default="3"/>
-    <arg name="range_sp" default="5"/>
+    <arg name="range_sp" default="2"/>
     <arg name="max_speed" default="3"/>
 
     <!-- Gazebo sim -->
@@ -75,7 +75,7 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="2"/>
 		<!--udp://:"remote port"@localhost:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:13202@localhost:13102"/>
+		<arg name="fcu_url" default="udp://192.168.0.3:13202@192.168.0.12:13102"/>
 		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13302"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
