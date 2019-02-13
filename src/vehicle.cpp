@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <vehicle.h>
+#include <scenario.h>
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global) 
 	: vehicle_info_({1, "mavros"}),
@@ -667,7 +668,7 @@ void SwarmVehicle::formationGenerator(){
 		scenario2();
 	}
 	else if(formation_ == "SCEN3"){
-
+		scenario3();
 	}
 }
 
@@ -689,6 +690,34 @@ void SwarmVehicle::scenario2(){
 	temp.pose.position.y = swarm_target_local_.getY() + 2;
 	temp.pose.position.z = swarm_target_local_.getZ() + 2;
 	scen.push_back(temp);
+
+	int i=0;
+	for(auto &vehicle : camila_){
+		scen[i].pose.position.x += offset_[i].getX();
+		scen[i].pose.position.y += offset_[i].getY();
+		scen[i].pose.position.z += offset_[i].getZ();
+		vehicle.setLocalTarget(scen[i]);
+		i++;
+	}
+
+}
+
+void SwarmVehicle::scenario3(){
+	int scen_num;
+	nh_global_.getParamCached("scen_num", scen_num);
+	std::vector<int, int> scen;
+	scen.reserve(num_of_vehicle_);
+	
+	int i= 0;
+	for(auto line : FONT[scen_num]){
+		if(line > 127);
+	}
+	geometry_msgs::PoseStamped temp;
+	scen.reserve(num_of_vehicle_);
+	
+	ros::Time time = ros::Time::now();
+
+	scen.push_back((3, 4));
 
 	int i=0;
 	for(auto &vehicle : camila_){

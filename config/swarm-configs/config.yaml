@@ -10,6 +10,8 @@ pid:
 # distance between drones
 spacing: 5.0
 
+scen_num: 50 # scenario 숫자 1
+
 # setpoint control params
 setpoint:
   kp_seek: 1.0
