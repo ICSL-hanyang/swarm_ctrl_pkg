@@ -5,10 +5,12 @@ takeoff_alt: 3.0
 
 # set velocity control PID gain
 pid:
-  kp: 1.0
+  kp: 0.8
 
 # distance between drones
-spacing: 5.0
+spacing: 13.0
+
+scen_num: 50 # scenario 숫자 1
 
 # setpoint control params
 setpoint:

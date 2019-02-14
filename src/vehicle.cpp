@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <vehicle.h>
+#include <scenario.h>
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	: vehicle_info_({1, "mavros"}),
@@ -655,7 +656,7 @@ void SwarmVehicle::formationGenerator()
 {
 	geometry_msgs::PoseStamped msg, msg_f;
 	double m_sec = ros::Time::now().toNSec() / 1000000;
-	double x = 0.0002 * m_sec; // 0.2 rad/s
+	double x = 0.00006 * m_sec; // 0.2 rad/s
 	double angle, spacing;
 	nh_global_.getParamCached("spacing", spacing);
 
@@ -663,22 +664,369 @@ void SwarmVehicle::formationGenerator()
 	msg.pose.position.y = swarm_target_local_.getY();
 	msg.pose.position.z = swarm_target_local_.getZ();
 
+	if (formation_ == "SCEN1")
+	{
+		int i = 0;
+		for (auto &vehicle : camila_)
+		{
+			if (vehicle.getInfo().vehicle_id_ != 1)
+			{
+				angle = i * angle_;
+
+				msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
+				msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
+				msg_f.pose.position.z = msg.pose.position.z;
+				vehicle.setLocalTarget(msg_f);
+			}
+			else
+				vehicle.setLocalTarget(msg);
+			i++;
+		}
+	}
+	else if (formation_ == "SCEN2")
+	{
+		scenario2();
+	}
+	else if(formation_ == "SCEN3"){
+		scenario3();
+	}
+}
+
+void SwarmVehicle::scenario2()
+{
+	geometry_msgs::PoseStamped temp;
+	std::vector<geometry_msgs::PoseStamped> scen;
+	scen.reserve(num_of_vehicle_);
+
+	double scale = 1;
+	int id = 1;
+	ros::Time time = ros::Time::now();
+	/*
+	for (auto &vehicle : camila_)
+	{
+		int id = vehicle.getInfo().system_id_;
+		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
+
+	}*/
+	if (scen.size() == 0)
+	{
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 3) - 2) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + 6 * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 3) - 2) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + 6 * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 3) - 2) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + 6 * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 3) - 2) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + -6 * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 3) - 2) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + -6 * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 3) - 2) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + -6 * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //7
+		temp.pose.position.x = swarm_target_local_.getX() + -4 * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (3 * (id % 3) - 3) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + -4 * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (3 * (id % 3) - 3) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + -4 * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (3 * (id % 3) - 3) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //10
+		temp.pose.position.x = swarm_target_local_.getX() + 4 * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (3 * (id % 3) - 3) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + 4 * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (3 * (id % 3) - 3) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + 4 * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (3 * (id % 3) - 3) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //13
+		temp.pose.position.x = swarm_target_local_.getX() + (-2 * (id % 2) - 5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) + 7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //14
+		temp.pose.position.x = swarm_target_local_.getX() + (-2 * (id % 2) - 5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) + 7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 2) + 5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) + 7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //16
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 2) + 5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) + 7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 2) - 7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) - 9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //18
+		temp.pose.position.x = swarm_target_local_.getX() + (2 * (id % 2) - 7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) - 9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-2 * (id % 2) + 7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) - 9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //20
+		temp.pose.position.x = swarm_target_local_.getX() + (-2 * (id % 2) + 7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 0;
+		temp.pose.position.z = swarm_target_local_.getZ() + (2 * (id % 2) - 9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-13) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-11) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-9) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (11) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (13) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //25
+		temp.pose.position.x = swarm_target_local_.getX() + (-5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (15) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (13) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (11) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (9) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (11) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (13) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time; //30
+		temp.pose.position.x = swarm_target_local_.getX() + (5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (15) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-13) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-7) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-11) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-9) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-11) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-13) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (-5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-15) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (5) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-15) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (7) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-13) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (9) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-11) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (11) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-9) * scale;
+		scen.push_back(temp);
+		id++;
+
+		temp.header.stamp = time;
+		temp.pose.position.x = swarm_target_local_.getX() + (13) * scale;
+		temp.pose.position.y = swarm_target_local_.getY() + 5;
+		temp.pose.position.z = swarm_target_local_.getZ() + (-7) * scale;
+		scen.push_back(temp);
+		id++;
+	}
 	int i = 0;
 	for (auto &vehicle : camila_)
 	{
-		if (vehicle.getInfo().vehicle_id_ != 1)
-		{
-			angle = i * angle_;
-
-			msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
-			msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
-			msg_f.pose.position.z = msg.pose.position.z;
-			vehicle.setLocalTarget(msg_f);
-		}
-		else
-			vehicle.setLocalTarget(msg);
+		scen[i].pose.position.x += offset_[i].getX();
+		scen[i].pose.position.y += offset_[i].getY();
+		scen[i].pose.position.z += offset_[i].getZ();
+		vehicle.setLocalTarget(scen[i]);
 		i++;
 	}
+}
+
+void SwarmVehicle::scenario3(){
+	int scen_num;
+	nh_global_.getParamCached("scen_num", scen_num);
+	std::vector<int, int> scen;
+	scen.reserve(num_of_vehicle_);
+	
+	int i= 0;
+	for(auto line : FONT[scen_num]){
+		if(line > 127);
+	}
+	geometry_msgs::PoseStamped temp;
+	scen.reserve(num_of_vehicle_);
+	
+	ros::Time time = ros::Time::now();
+
+	scen.push_back((3, 4));
+
+	int i=0;
+	for(auto &vehicle : camila_){
+		scen[i].pose.position.x += offset_[i].getX();
+		scen[i].pose.position.y += offset_[i].getY();
+		scen[i].pose.position.z += offset_[i].getZ();
+		vehicle.setLocalTarget(scen[i]);
+		i++;
+	}
+
 }
 
 bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
@@ -686,6 +1034,7 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 {
 	updateOffset();
 
+	formation_ = req.formation;
 	swarm_target_local_.setX(req.x);
 	swarm_target_local_.setY(req.y);
 	swarm_target_local_.setZ(req.z);
