@@ -51,8 +51,8 @@ class Vehicle
 	VehicleInfo vehicle_info_;
 
 	ros::NodeHandle nh_;
-	ros::NodeHandle& nh_mul_;
-	ros::NodeHandle& nh_global_;
+	ros::NodeHandle &nh_mul_;
+	ros::NodeHandle &nh_global_;
 
 	/*drone state*/
 	mavros_msgs::State cur_state_;
@@ -142,13 +142,13 @@ class Vehicle
 	void gotoVel();
 
 	/* setpoint control method */
-	void setPos(const tf2::Vector3&);
+	void setPos(const tf2::Vector3 &);
 	tf2::Vector3 getPos() const;
-	void setSumOfSp(const tf2::Vector3&);
+	void setSumOfSp(const tf2::Vector3 &);
 	tf2::Vector3 getSumOfSp() const;
 	void setErr(const tf2::Vector3 &);
 	tf2::Vector3 getErr() const;
-	void setSetpointPos(const tf2::Vector3&);
+	void setSetpointPos(const tf2::Vector3 &);
 	tf2::Vector3 getSetpointPos() const;
 
 	//global position
@@ -179,7 +179,7 @@ class SwarmVehicle
 
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
-	ros::NodeHandle& nh_global_;
+	ros::NodeHandle &nh_global_;
 	ros::ServiceServer multi_setpoint_local_server_;
 	ros::ServiceServer multi_setpoint_global_server_;
 	ros::ServiceServer goto_vehicle_server_;
@@ -199,10 +199,10 @@ class SwarmVehicle
 	void release();
 	void updateOffset();
 
-	void limit(tf2::Vector3&, const double &);
+	void limit(tf2::Vector3 &, const double &);
 	void getVehiclePos();
-	void separate(Vehicle&);
-	void seek(Vehicle&);
+	void separate(Vehicle &);
+	void seek(Vehicle &);
 	void formationGenerator();
 
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
@@ -215,7 +215,7 @@ class SwarmVehicle
 	static tf2::Vector3 convertGeoToENU(const sensor_msgs::NavSatFix &,
 										const sensor_msgs::NavSatFix &);
 	static geographic_msgs::GeoPoint convertENUToGeo(const geometry_msgs::PoseStamped &,
-											  		 const sensor_msgs::NavSatFix &);
+													 const sensor_msgs::NavSatFix &);
 	bool isPublish();
 
   public:
