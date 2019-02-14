@@ -206,6 +206,7 @@ class SwarmVehicle
 	void formationGenerator();
 	void scenario2();
 	void scenario3();
+	void hexToCoord(std::vector<std::pair<int,int>> &, const uint8_t &, const int &, const bool &);
 
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
 							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);

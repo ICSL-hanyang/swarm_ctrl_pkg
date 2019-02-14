@@ -1004,29 +1004,76 @@ void SwarmVehicle::scenario2()
 void SwarmVehicle::scenario3(){
 	int scen_num;
 	nh_global_.getParamCached("scen_num", scen_num);
-	std::vector<int, int> scen;
+	std::vector<std::pair<int, int>> scen;
 	scen.reserve(num_of_vehicle_);
-	
+
 	int i= 0;
 	for(auto line : FONT[scen_num]){
-		if(line > 127);
+		uint8_t left_bits, right_bits;
+		left_bits = line >> 4;
+		right_bits = 0x0f & line;
+
+		hexToCoord(scen, left_bits, 7-i, true);
+		hexToCoord(scen, right_bits, 7-i, true);
 	}
+
+	
 	geometry_msgs::PoseStamped temp;
-	scen.reserve(num_of_vehicle_);
+	// scen.reserve(num_of_vehicle_);
 	
 	ros::Time time = ros::Time::now();
 
-	scen.push_back((3, 4));
+	scen.push_back(std::pair<int,int>(3, 4));
 
-	int i=0;
 	for(auto &vehicle : camila_){
-		scen[i].pose.position.x += offset_[i].getX();
-		scen[i].pose.position.y += offset_[i].getY();
-		scen[i].pose.position.z += offset_[i].getZ();
-		vehicle.setLocalTarget(scen[i]);
+		// scen[i].pose.position.x += offset_[i].getX();
+		// scen[i].pose.position.y += offset_[i].getY();
+		// scen[i].pose.position.z += offset_[i].getZ();
+		// vehicle.setLocalTarget(scen[i]);
 		i++;
 	}
 
+}
+
+void SwarmVehicle::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t &hex, const int &x_value, const bool &is_left_bits){
+		
+		switch (hex)
+		{
+			case 0:
+				break;
+				case 1:
+				scen.push_back(std::pair<int, int>(x_value, 1));
+				break;
+				case 2:
+				scen.push_back(std::pair<int, int>(x_value, 2));
+				break;
+				case 3:
+				scen.push_back(std::pair<int, int>(x_value, 1));
+				scen.push_back(std::pair<int, int>(x_value, 2));
+				break;
+				case 4:
+				scen.push_back(std::pair<int, int>(x_value, 3));
+				break;
+				case 5:
+				scen.push_back(std::pair<int, int>(x_value, 1));
+				scen.push_back(std::pair<int, int>(x_value, 3));
+				break;
+				case 6:
+				scen.push_back(std::pair<int, int>(x_value, 2));
+				scen.push_back(std::pair<int, int>(x_value, 4));
+				break;
+				case 7:
+				scen.push_back(std::pair<int, int>(x_value, 1));
+				scen.push_back(std::pair<int, int>(x_value, 2));
+				scen.push_back(std::pair<int, int>(x_value, 3));
+				break;
+				case 8:
+				scen.push_back(std::pair<int, int>(x_value, 4));
+				break;
+		
+			default:
+				break;
+		}
 }
 
 bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
