@@ -28,6 +28,8 @@
         <arg name="paused" value="$(arg paused)"/>
     </include>
 
+	<!--udp-->
+	<arg name="user_ip" default="192.168.0.12"/>
 	
 	<machine name="heromin" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" />	
 	<machine name="kdh" address="192.168.0.12" user="kdh" password="wkfk" env-loader="/home/kdh/catkin_ws/devel/env.sh" default="true" />	
