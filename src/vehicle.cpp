@@ -690,6 +690,9 @@ void SwarmVehicle::formationGenerator()
 	else if(formation_ == "SCEN3"){
 		scenario3();
 	}
+	else if(formation_ == "SCEN4"){
+		scenario4();
+	}
 }
 
 void SwarmVehicle::scenario2()
@@ -699,6 +702,7 @@ void SwarmVehicle::scenario2()
 	scen.reserve(num_of_vehicle_);
 
 	double scale = 1;
+	// nh_global_.getParamCached("scen_scale", scale);
 	int id = 1;
 	ros::Time time = ros::Time::now();
 	/*
@@ -1048,6 +1052,35 @@ void SwarmVehicle::scenario3(){
 			camila_[j].setLocalTarget(temp);
 		}
 	}
+}
+
+void SwarmVehicle::scenario4(){
+	geometry_msgs::PoseStamped msg, msg_f;
+	double m_sec = ros::Time::now().toNSec() / 1000000;
+	double x = 0.00006 * m_sec; // 0.2 rad/s
+	double angle, spacing;
+	nh_global_.getParamCached("spacing", spacing);
+
+	msg.pose.position.x = swarm_target_local_.getX();
+	msg.pose.position.y = swarm_target_local_.getY();
+	msg.pose.position.z = swarm_target_local_.getZ();
+	
+	int i = 0;
+		for (auto &vehicle : camila_)
+		{
+			if (vehicle.getInfo().vehicle_id_ != 1)
+			{
+				angle = i * angle_;
+
+				msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
+				msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
+				msg_f.pose.position.z = msg.pose.position.z + offset_[i].getZ() + spacing * cos(angle + x);
+				vehicle.setLocalTarget(msg_f);
+			}
+			else
+				vehicle.setLocalTarget(msg);
+			i++;
+		}
 }
 
 void SwarmVehicle::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t &hex, const int &x_value, const bool &is_left_bits){

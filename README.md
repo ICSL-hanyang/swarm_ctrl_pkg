@@ -37,7 +37,7 @@ alias land="rostopic pub /multi/set_mode std_msgs/String 'auto.land'"
 alias goto='rosservice call /multi_setpoint_local -- '
 ```
 
-<!--  mark down작성을 위한 예제들
+ <!-- mark down작성을 위한 예제들
 # Heading 1
 ## Heading 2
 ### Heading 3
@@ -97,7 +97,7 @@ alias goto='rosservice call /multi_setpoint_local -- '
 
 * [x] Task 1
 * [x] Task 2
-* [ ] Task 3
+* [ ] Task 3 -->
 
--->
+
   
