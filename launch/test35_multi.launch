@@ -15,7 +15,7 @@
     <!-- setpoint ctrl -->
     <arg name="num_drone" default="35"/>
     <arg name="kp" default="0.5"/>
-    <arg name="kp_sp" default="3"/>
+    <arg name="kp_sp" default="5"/>
     <arg name="range_sp" default="5"/>
     <arg name="max_speed" default="3"/>
 
@@ -28,17 +28,29 @@
         <arg name="paused" value="$(arg paused)"/>
     </include>
 
+	<!-- Multi gazebo -->
+	<arg name="user_hostname" default="kdh"/>
+	<arg name="user_ip" default="192.168.0.12"/>
+	<arg name="user_name" default="kdh"/>
+	<arg name="user_password" default="wkfk"/>
+	<arg name="user_envloader" default="/home/kdh/catkin_ws/devel/env.sh"/>
+
+	<arg name="multi_user_hostname" default="heromin"/>
+	<arg name="multi_user_ip" default="192.168.0.3"/>
+	<arg name="multi_user_name" default="sewoong"/>
+	<arg name="multi_user_password" default="12341234"/>
+	<arg name="multi_user_envloader" default="/home/sewoong/catkin_ws/devel/env.sh"/>
 	
-	<machine name="heromin" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" />	
-	<machine name="kdh" address="192.168.0.12" user="kdh" password="wkfk" env-loader="/home/kdh/catkin_ws/devel/env.sh" default="true" />	
+	<machine name="$(arg multi_user_hostname)" address="$(arg multi_user_ip)" user="$(arg multi_user_name)" password="$(arg multi_user_password)" env-loader="$(arg multi_user_envloader)" default="true" />		
+	<machine name="$(arg user_hostname)" address="$(arg user_ip)" user="$(arg user_name)" password="$(arg user_password)" env-loader="$(arg user_envloader)" default="true" />	
 	
 	<!-- UAV1 -->
 	<group ns="camila1">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="1"/>
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:13201@192.168.0.12:13101"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13301"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13201@$(arg user_ip):13101"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13301"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -53,19 +65,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -74,9 +79,9 @@
 	<group ns="camila2">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="2"/>
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:13202@192.168.0.12:13102"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13302"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13202@$(arg user_ip):13102"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13302"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -91,19 +96,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -112,9 +110,9 @@
 	<group ns="camila3">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="3"/>
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:13203@192.168.0.12:13103"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13303"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13203@$(arg user_ip):13103"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13303"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -129,21 +127,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -151,11 +140,9 @@
 	</group>
 
 	<group ns="camila4">
-		
 		<arg name="ID" value="4"/>
-		
-		<arg name="fcu_url" default="udp://192.168.0.3:13204@192.168.0.12:13104"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13304"/>
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13204@$(arg user_ip):13104"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13304"/>
 		
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -170,32 +157,20 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 	
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
-			
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 	</group>
 	<group ns="camila5">
-		
 		<arg name="ID" value="5"/>
-		
-		<arg name="fcu_url" default="udp://192.168.0.3:13205@192.168.0.12:13105"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13305"/>
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13205@$(arg user_ip):13105"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13305"/>
 
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
@@ -209,30 +184,21 @@
 			<arg name="mavlink_udp_port" value="13005"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 	</group>
 	<group ns="camila6">
 		<arg name="ID" value="6"/>
-		<arg name="fcu_url" default="udp://192.168.0.3:13206@192.168.0.12:13106"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13306"/>
-		<!-- <machine name = "camila" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13206@$(arg user_ip):13106"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13306"/>
+		<!-- <machine name = "camila" address="$(arg user_ip)" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
 			<arg name="y" value="$(arg ID)"/>
@@ -245,30 +211,21 @@
 			<arg name="mavlink_udp_port" value="13006"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 	</group>
 	<group ns="camila7">
 		<arg name="ID" value="7"/>
-		<arg name="fcu_url" default="udp://192.168.0.3:13207@192.168.0.12:13107"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13307"/>
-		<!-- <machine name = "camila" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13207@$(arg user_ip):13107"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13307"/>
+		<!-- <machine name = "camila" address="$(arg user_ip)" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
 			<arg name="y" value="$(arg ID)"/>
@@ -281,30 +238,21 @@
 			<arg name="mavlink_udp_port" value="13007"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 	</group>
 	<group ns="camila8">
 		<arg name="ID" value="8"/>
-		<arg name="fcu_url" default="udp://192.168.0.3:13208@192.168.0.12:13108"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13308"/>
-		<!-- <machine name = "camila" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13208@$(arg user_ip):13108"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13308"/>
+		<!-- <machine name = "camila" address="$(arg user_ip)" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
 			<arg name="y" value="$(arg ID)"/>
@@ -317,30 +265,21 @@
 			<arg name="mavlink_udp_port" value="13008"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
 	</group>
 	<group ns="camila9">
 		<arg name="ID" value="9"/>
-		<arg name="fcu_url" default="udp://192.168.0.3:13209@192.168.0.12:13109"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13309"/>
-		<!-- <machine name = "camila" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13209@$(arg user_ip):13109"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13309"/>
+		<!-- <machine name = "camila" address="$(arg user_ip)" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
 			<arg name="y" value="$(arg ID)"/>
@@ -353,21 +292,12 @@
 			<arg name="mavlink_udp_port" value="13009"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
@@ -375,9 +305,9 @@
 	<group ns="camila10">
 		<arg name="ID" value="10"/>
 		<arg name="pos" value="9"/>
-		<arg name="fcu_url" default="udp://192.168.0.3:13210@192.168.0.12:13110"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:14540@192.168.0.12:13310"/>
-		<!-- <machine name = "camila" address="192.168.0.3" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):13210@$(arg user_ip):13110"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):14540@$(arg user_ip):13310"/>
+		<!-- <machine name = "camila" address="$(arg user_ip)" user="sewoong" password="12341234" env-loader="/home/sewoong/catkin_ws/devel/env.sh" default="true" /> -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
 			<arg name="y" value="$(eval arg('ID') - arg('pos'))"/>
@@ -391,21 +321,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
 		</node>
@@ -415,9 +336,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="11"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -432,21 +353,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -456,9 +368,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="12"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -473,21 +385,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -497,9 +400,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="13"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -514,21 +417,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -538,9 +432,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="14"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -555,21 +449,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -579,9 +464,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="15"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -596,21 +481,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -620,9 +496,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="16"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -637,21 +513,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -661,9 +528,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="17"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -678,21 +545,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -702,9 +560,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="18"/>
 		<arg name="pos" value="9"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="1"/>
@@ -719,21 +577,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -743,9 +592,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="19"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -760,21 +609,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -784,9 +624,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="20"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -801,21 +641,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -825,9 +656,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="21"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -842,21 +673,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -866,9 +688,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="22"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -883,21 +705,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -907,9 +720,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="23"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -924,21 +737,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -948,9 +752,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="24"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -965,21 +769,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -989,9 +784,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="25"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -1006,21 +801,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1030,9 +816,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="26"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -1047,21 +833,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1071,9 +848,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="27"/>
 		<arg name="pos" value="18"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="2"/>
@@ -1088,21 +865,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1112,9 +880,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="28"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1129,21 +897,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1153,9 +912,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="29"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1170,21 +929,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1194,9 +944,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="30"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1211,21 +961,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1235,9 +976,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="31"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1252,21 +993,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1276,9 +1008,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="32"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1293,21 +1025,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1317,9 +1040,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="33"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1334,21 +1057,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1358,9 +1072,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="34"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1375,21 +1089,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1399,9 +1104,9 @@
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="35"/>
 		<arg name="pos" value="27"/> 
-		<!--udp://:"remote port"@192.168.0.12:"udp port" -->
-		<arg name="fcu_url" default="udp://192.168.0.3:132$(arg ID)@192.168.0.12:131$(arg ID)"/>
-		<arg name="gcs_url" default="udp://192.168.0.3:134$(arg ID)@192.168.0.12:133$(arg ID)"/>
+		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
+		<arg name="fcu_url" default="udp://$(arg multi_user_ip):132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
+		<arg name="gcs_url" default="udp://$(arg multi_user_ip):134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
 		<!-- PX4 SITL and vehicle spawn -->
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="3"/>
@@ -1416,21 +1121,12 @@
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
 		<!-- MAVROS -->
-		<node machine ="heromin" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -1444,10 +1140,3 @@
 	</node>
 
 </launch>
-
-
-
-   
-
-
-  	
