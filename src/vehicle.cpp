@@ -1016,7 +1016,7 @@ void SwarmVehicle::scenario3(){
 		right_bits = 0x0f & line;
 
 		hexToCoord(scen, left_bits, 7-i, true);
-		hexToCoord(scen, right_bits, 7-i, true);
+		hexToCoord(scen, right_bits, 7-i, false);
 		i++;
 	}
 	
