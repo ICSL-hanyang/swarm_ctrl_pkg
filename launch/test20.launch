@@ -28,7 +28,8 @@
         <arg name="paused" value="$(arg paused)"/>
     </include>
 
-	<arg name="user_ip" default="192.168.0.12"/>
+	<arg name="user_ip" default="localhost"/>
+	<param name="/use_sim_time" value="true"/>
 
 	<!-- UAV1 -->
 	<group ns="camila1">
@@ -643,7 +644,6 @@
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
-		<param name="/use_sim_time" value="true"/>
 	</node>
 
 </launch>

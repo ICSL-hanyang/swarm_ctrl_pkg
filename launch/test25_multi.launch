@@ -19,6 +19,8 @@
     <arg name="range_sp" default="5"/>
     <arg name="max_speed" default="3"/>
 
+	<param name="/use_sim_time" value="true"/>
+
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -29,17 +31,17 @@
     </include>
 
 	<!-- Multi gazebo -->
-	<arg name="user_hostname" default="kdh"/>
-	<arg name="user_ip" default="192.168.0.12"/>
-	<arg name="user_name" default="kdh"/>
-	<arg name="user_password" default="wkfk"/>
-	<arg name="user_envloader" default="/home/kdh/catkin_ws/devel/env.sh"/>
+	<arg name="user_hostname" default="brontes"/>
+	<arg name="user_ip" default="192.168.0.7"/>
+	<arg name="user_name" default="heromin"/>
+	<arg name="user_password" default="12341234"/>
+	<arg name="user_envloader" default="~/catkin_ws/devel/env.sh"/>
 
-	<arg name="multi_user_hostname" default="heromin"/>
-	<arg name="multi_user_ip" default="192.168.0.3"/>
-	<arg name="multi_user_name" default="sewoong"/>
-	<arg name="multi_user_password" default="12341234"/>
-	<arg name="multi_user_envloader" default="/home/sewoong/catkin_ws/devel/env.sh"/>
+	<arg name="multi_user_hostname" default="woody"/>
+	<arg name="multi_user_ip" default="192.168.0.12"/>
+	<arg name="multi_user_name" default="kdh"/>
+	<arg name="multi_user_password" default="wkfk"/>
+	<arg name="multi_user_envloader" default="~/catkin_ws/devel/env.sh"/>
 	
 	<machine name="$(arg multi_user_hostname)" address="$(arg multi_user_ip)" user="$(arg multi_user_name)" password="$(arg multi_user_password)" env-loader="$(arg multi_user_envloader)" default="true" />		
 	<machine name="$(arg user_hostname)" address="$(arg user_ip)" user="$(arg user_name)" password="$(arg user_password)" env-loader="$(arg user_envloader)" default="true" />	
@@ -817,7 +819,6 @@
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
-		<param name="/use_sim_time" value="true"/>
 	</node>
 
 </launch>
