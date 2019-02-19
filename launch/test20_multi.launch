@@ -29,7 +29,7 @@
     </include>
 
 	<!-- Multi gazebo -->
-	<arg name="user_hostname" default="kdh"/>
+	<arg name="user_hostname" default="woody"/>
 	<arg name="user_ip" default="192.168.0.12"/>
 	<arg name="user_name" default="kdh"/>
 	<arg name="user_password" default="wkfk"/>
@@ -459,15 +459,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -500,15 +491,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -541,15 +523,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -582,15 +555,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -623,15 +587,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -664,15 +619,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
@@ -705,15 +651,6 @@
 			<param name="target_system_id" value="$(arg ID)"/>
 			<param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
-
-			 
-			 
-			
-			
-			
-			
-
-
 			<!-- load blacklist, config -->
 			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
 			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
