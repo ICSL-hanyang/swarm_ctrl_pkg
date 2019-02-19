@@ -98,6 +98,7 @@ class Vehicle
 	tf2::Vector3 sum_sp_;
 	tf2::Vector3 err_;
 	tf2::Vector3 setpoint_pos_;
+	std::pair<int, int> scen_pos_;
 
 	bool setpoint_publish_flag_;
 
@@ -150,6 +151,8 @@ class Vehicle
 	tf2::Vector3 getErr() const;
 	void setSetpointPos(const tf2::Vector3 &);
 	tf2::Vector3 getSetpointPos() const;
+	void setScenPos(const std::pair<int, int> &);
+	std::pair<int,int> getScenPos() const;
 
 	//global position
 	bool setHomeGlobal();
@@ -188,12 +191,14 @@ class SwarmVehicle
 
 	std::string formation_;
 	bool multi_setpoint_publish_flag_;
+	bool target_changed_flag_;
 	double angle_;
 
 	static double kp_seek_;
 	static double kp_sp_;
 	static double range_sp_;
 	static double max_speed_;
+	static int scen_num_;
 
 	void swarmServiceInit();
 	void release();
