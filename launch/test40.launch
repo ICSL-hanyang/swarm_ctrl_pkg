@@ -20,6 +20,7 @@
     <arg name="max_speed" default="3"/>
 
     <!-- Gazebo sim -->
+	<param name="/use_sim_time" value="true"/>
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
         <arg name="world_name" value="$(arg world)"/>
@@ -1283,7 +1284,6 @@
 	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
-		<param name="/use_sim_time" value="true"/>
 	</node>
 
 </launch>
