@@ -67,7 +67,7 @@ mixer load /dev/pwm_output0 ROMFS/px4fmu_common/mixers/quad_w.main.mix
 mavlink start -x -u 13331 -r 4000000
 mavlink start -x -u 13131 -r 4000000 -m onboard -o 13231
 
-mavlink stream -u 13131 -s ADSB_VEHICLE -r 20
+mavlink stream -u 13131 -s ADSB_VEHICLE -r 0
 mavlink stream -u 13131 -s ACTUATOR_CONTROL_TARGET0 -r 5
 mavlink stream -u 13131 -s ALTITUDE -r 1
 mavlink stream -u 13131 -s ATTITUDE -r 5
@@ -77,20 +77,20 @@ mavlink stream -u 13131 -s DEBUG_VECT -r 5
 mavlink stream -u 13131 -s ESTIMATOR_STATUS -r 5
 mavlink stream -u 13131 -s EXTENDED_SYS_STATE -r 5
 mavlink stream -u 13131 -s GLOBAL_POSITION_INT -r 10
-mavlink stream -u 13131 -s GPS_RAW_INT -r 50
-mavlink stream -u 13131 -s GPS2_RAW -r 50
+mavlink stream -u 13131 -s GPS_RAW_INT -r 15
+mavlink stream -u 13131 -s GPS2_RAW -r 15
 mavlink stream -u 13131 -s HOME_POSITION -r 1
 mavlink stream -u 13131 -s LOCAL_POSITION_NED -r 10
 mavlink stream -u 13131 -s POSITION_TARGET_LOCAL_NED -r 10
 mavlink stream -u 13131 -s POSITION_TARGET_GLOBAL_INT -r 10
 mavlink stream -u 13131 -s PING -r 1
-mavlink stream -u 13131 -s SERVO_OUTPUT_RAW_0 -r 5
+mavlink stream -u 13131 -s SERVO_OUTPUT_RAW_0 -r 0
 mavlink stream -u 13131 -s SYS_STATUS -r 5
 mavlink stream -u 13131 -s SYSTEM_TIME -r 1
-mavlink stream -u 13131 -s TIMESYNC -r 50
+mavlink stream -u 13131 -s TIMESYNC -r 10
 mavlink stream -u 13131 -s TRAJECTORY_REPRESENTATION_WAYPOINTS -r 5
 mavlink stream -u 13131 -s ESTIMATOR_STATUS -r 1
-mavlink stream -u 13131 -s HIGHRES_IMU -r 100
+mavlink stream -u 13131 -s HIGHRES_IMU -r 10
 
 mavlink stream -r 50 -s POSITION_TARGET_LOCAL_NED -u 13331
 mavlink stream -r 50 -s LOCAL_POSITION_NED -u 13331
@@ -98,7 +98,7 @@ mavlink stream -r 50 -s GLOBAL_POSITION_INT -u 13331
 mavlink stream -r 50 -s ATTITUDE -u 13331
 mavlink stream -r 50 -s ATTITUDE_QUATERNION -u 13331
 mavlink stream -r 50 -s ATTITUDE_TARGET -u 13331
-mavlink stream -r 1 -s SERVO_OUTPUT_RAW_0 -u 13331
+mavlink stream -r 0 -s SERVO_OUTPUT_RAW_0 -u 13331
 mavlink stream -r 1 -s RC_CHANNELS -u 13331
 mavlink stream -r 125 -s HIGHRES_IMU -u 13331
 mavlink stream -r 1 -s OPTICAL_FLOW_RAD -u 13331
