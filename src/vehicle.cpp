@@ -340,11 +340,7 @@ void Vehicle::setLocalTarget(const geometry_msgs::PoseStamped &tar_local)
 	if ((tar_local_.pose.position.x != tar_local.pose.position.x) ||
 		(tar_local_.pose.position.y != tar_local.pose.position.y) ||
 		(tar_local_.pose.position.z != tar_local.pose.position.z))
-	{
 		tar_local_ = tar_local;
-		// ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info_.vehicle_name_.c_str(),
-		// 		 tar_local_.pose.position.x, tar_local_.pose.position.y, tar_local_.pose.position.z);
-	}
 }
 
 void Vehicle::gotoLocal()
@@ -641,24 +637,10 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 			double dist = diff.length();
 			if (dist < range_sp_)
 			{
-				double a, b, c, k;
-				tf2::Vector3 setpoint = vehicle.getSetpointPos();
-				geometry_msgs::PoseStamped pos = vehicle.getLocalPosition();
-				tf2::Vector3 othogonal;
-				a = setpoint.getX() - pos.pose.position.x;
-				b = setpoint.getY() - pos.pose.position.y;
-				c = setpoint.getZ() - pos.pose.position.z;
-				k = (diff.getX() * a + diff.getY() * b + diff.getZ() * c) / (diff.getZ() * diff.getZ() + diff.getY() * diff.getY() + diff.getX() * diff.getX());
-				othogonal.setX(a - k * diff.getX());
-				othogonal.setX(b - k * diff.getY());
-				othogonal.setX(c - k * diff.getZ());
-				if (othogonal.length() != 0)
-					othogonal = othogonal.normalize() * dist;
-				// diff = diff.cross(vehicle.getSetpointPos());
-				// if (diff.length() != 0)
-				// 	diff = diff.normalize();
-				// diff /= dist;
-				sum += othogonal;
+				if (diff.length() != 0)
+					diff = diff.normalize();
+				diff *= (range_sp_ / dist);
+				sum += diff;
 				cnt++;
 			}
 		}
@@ -666,7 +648,6 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	if (cnt > 0)
 	{
 		sum /= cnt;
-		sum *= 2.5;
 		limit(sum, max_speed_);
 		vehicle.setSumOfSp(sum);
 	}
@@ -742,16 +723,9 @@ void SwarmVehicle::scenario2()
 	scen.reserve(num_of_vehicle_);
 
 	double scale = 1;
-	// nh_global_.getParamCached("scen_scale", scale);
 	int id = 1;
 	ros::Time time = ros::Time::now();
-	/*
-	for (auto &vehicle : camila_)
-	{
-		int id = vehicle.getInfo().system_id_;
-		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
 
-	}*/
 	if (scen.size() == 0)
 	{
 		temp.header.stamp = time;
@@ -1094,23 +1068,13 @@ void SwarmVehicle::scenario3()
 			iter = scen.begin() + min_num;
 			temp.header.stamp = ros::Time::now();
 			temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
-			// if(i%2 ==0)
 			temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
-			// else
-			// 	temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY() - spacing;
 			temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
 			vehicle.setScenPos(*iter);
 			vehicle.setLocalTarget(temp);
 			scen.erase(iter);
 			i++;
 		}
-		// for(int j=0; j<num_of_vehicle_ ; j++){
-		// 	temp.header.stamp = ros::Time::now();
-		// 	temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + scen[j].first*spacing;
-		// 	temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY();
-		// 	temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() + scen[j].second*spacing;
-		// 	camila_[j].setLocalTarget(temp);
-		// }
 	}
 	else
 	{
@@ -1139,23 +1103,13 @@ void SwarmVehicle::scenario3()
 			iter = scen.begin() + min_num;
 			temp.header.stamp = ros::Time::now();
 			temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
-			// if(i%2 ==0)
 			temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
-			// else
-			// temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY() - spacing;
 			temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
 			vehicle.setScenPos(*iter);
 			vehicle.setLocalTarget(temp);
 			scen.erase(iter);
 			i++;
 		}
-		// for(int j=0; j<scen_size;j++){
-		// 	temp.header.stamp = ros::Time::now();
-		// 	temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + scen[j].first*spacing;
-		// 	temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY();
-		// 	temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() + scen[j].second*spacing;
-		// 	camila_[j].setLocalTarget(temp);
-		// }
 		for (int j = scen_size; j < num_of_vehicle_; j++)
 		{
 			temp.header.stamp = ros::Time::now();
@@ -1191,7 +1145,8 @@ void SwarmVehicle::scenario4()
 			msg_f.pose.position.z = msg.pose.position.z + offset_[i].getZ() + spacing * cos(angle + x);
 			vehicle.setLocalTarget(msg_f);
 		}
-		else{
+		else
+		{
 			msg.header.stamp = ros::Time::now();
 			vehicle.setLocalTarget(msg);
 		}
