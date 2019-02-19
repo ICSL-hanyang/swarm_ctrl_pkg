@@ -11,6 +11,7 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	  sum_sp_(tf2::Vector3(0, 0, 0)),
 	  err_(tf2::Vector3(0, 0, 0)),
 	  setpoint_pos_(tf2::Vector3(0, 0, 0)),
+	  scen_pos_(std::pair<int, int>(0, 0)),
 	  setpoint_publish_flag_(false)
 {
 	vehicleInit();
@@ -25,6 +26,7 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global, const Vehi
 	  sum_sp_(tf2::Vector3(0, 0, 0)),
 	  err_(tf2::Vector3(0, 0, 0)),
 	  setpoint_pos_(tf2::Vector3(0, 0, 0)),
+	  scen_pos_(std::pair<int, int>(0, 0)),
 	  setpoint_publish_flag_(false)
 {
 	vehicleInit();
@@ -39,6 +41,7 @@ Vehicle::Vehicle(const Vehicle &rhs)
 	  sum_sp_(rhs.sum_sp_),
 	  err_(rhs.err_),
 	  setpoint_pos_(rhs.setpoint_pos_),
+	  scen_pos_(std::pair<int, int>(0, 0)),
 	  setpoint_publish_flag_(rhs.setpoint_publish_flag_)
 {
 	vehicleInit();
@@ -60,6 +63,7 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 	sum_sp_ = rhs.sum_sp_;
 	err_ = rhs.err_;
 	setpoint_pos_ = rhs.setpoint_pos_;
+	scen_pos_ = rhs.scen_pos_;
 
 	vehicleInit();
 	return *this;
@@ -336,11 +340,7 @@ void Vehicle::setLocalTarget(const geometry_msgs::PoseStamped &tar_local)
 	if ((tar_local_.pose.position.x != tar_local.pose.position.x) ||
 		(tar_local_.pose.position.y != tar_local.pose.position.y) ||
 		(tar_local_.pose.position.z != tar_local.pose.position.z))
-	{
 		tar_local_ = tar_local;
-		// ROS_INFO("%s set target_local_pos(x : %lf, y : %lf, z : %lf)", vehicle_info_.vehicle_name_.c_str(),
-		// 		 tar_local_.pose.position.x, tar_local_.pose.position.y, tar_local_.pose.position.z);
-	}
 }
 
 void Vehicle::gotoLocal()
@@ -405,6 +405,16 @@ void Vehicle::setSetpointPos(const tf2::Vector3 &setpoint)
 tf2::Vector3 Vehicle::getSetpointPos() const
 {
 	return setpoint_pos_;
+}
+
+void Vehicle::setScenPos(const std::pair<int, int> &scen_pos)
+{
+	scen_pos_ = scen_pos;
+}
+
+std::pair<int, int> Vehicle::getScenPos() const
+{
+	return scen_pos_;
 }
 
 bool Vehicle::setHomeGlobal()
@@ -478,6 +488,7 @@ double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
 double SwarmVehicle::range_sp_;
 double SwarmVehicle::max_speed_;
+int SwarmVehicle::scen_num_;
 
 //default value : default name = camila, num_of_vehicle = 1;
 SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_name, const int &num_of_vehicle)
@@ -487,7 +498,8 @@ SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_
 	  nh_mul_("multi"),
 	  nh_global_(nh_global),
 	  swarm_target_local_(tf2::Vector3(0, 0, 0)),
-	  multi_setpoint_publish_flag_(false)
+	  multi_setpoint_publish_flag_(false),
+	  target_changed_flag_(false)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
@@ -510,7 +522,8 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
 	  nh_mul_(rhs.nh_mul_),
 	  nh_global_(rhs.nh_global_),
 	  swarm_target_local_(tf2::Vector3(0, 0, 0)),
-	  multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_)
+	  multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_),
+	  target_changed_flag_(rhs.target_changed_flag_)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
@@ -624,8 +637,9 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 			double dist = diff.length();
 			if (dist < range_sp_)
 			{
-				diff = diff.normalize();
-				diff /= dist;
+				if (diff.length() != 0)
+					diff = diff.normalize();
+				diff *= (range_sp_ / dist);
 				sum += diff;
 				cnt++;
 			}
@@ -635,6 +649,11 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	{
 		sum /= cnt;
 		limit(sum, max_speed_);
+		vehicle.setSumOfSp(sum);
+	}
+	else
+	{
+		sum.setZero();
 		vehicle.setSumOfSp(sum);
 	}
 }
@@ -687,10 +706,12 @@ void SwarmVehicle::formationGenerator()
 	{
 		scenario2();
 	}
-	else if(formation_ == "SCEN3"){
+	else if (formation_ == "SCEN3")
+	{
 		scenario3();
 	}
-	else if(formation_ == "SCEN4"){
+	else if (formation_ == "SCEN4")
+	{
 		scenario4();
 	}
 }
@@ -702,16 +723,9 @@ void SwarmVehicle::scenario2()
 	scen.reserve(num_of_vehicle_);
 
 	double scale = 1;
-	// nh_global_.getParamCached("scen_scale", scale);
 	int id = 1;
 	ros::Time time = ros::Time::now();
-	/*
-	for (auto &vehicle : camila_)
-	{
-		int id = vehicle.getInfo().system_id_;
-		std::string vehicle_target = "camila" + std::to_string(id) + "_target";
 
-	}*/
 	if (scen.size() == 0)
 	{
 		temp.header.stamp = time;
@@ -1005,56 +1019,110 @@ void SwarmVehicle::scenario2()
 	}
 }
 
-void SwarmVehicle::scenario3(){
+void SwarmVehicle::scenario3()
+{
 	int scen_num;
 	double spacing;
 	nh_global_.getParamCached("scen_num", scen_num);
 	nh_global_.getParamCached("spacing", spacing);
 	std::vector<std::pair<int, int>> scen;
+	std::vector<std::pair<int, int>>::iterator iter;
 	scen.reserve(num_of_vehicle_);
 
-	int i= 0;
-	for(auto line : FONT[scen_num]){
+	int i = 0;
+	for (auto line : FONT[scen_num])
+	{
 		uint8_t left_bits, right_bits;
 		left_bits = line >> 4;
 		right_bits = 0x0f & line;
 
-		hexToCoord(scen, left_bits, 7-i, true);
-		hexToCoord(scen, right_bits, 7-i, false);
+		hexToCoord(scen, left_bits, 7 - i, true);
+		hexToCoord(scen, right_bits, 7 - i, false);
 		i++;
 	}
-	
+
 	geometry_msgs::PoseStamped temp;
-	ros::Time time = ros::Time::now();
-
-	temp.header.stamp = time;
-
 	int scen_size = scen.size();
-	if(scen_size > num_of_vehicle_){
-		for(int j=0; j<num_of_vehicle_ ; j++){
-			temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + scen[j].first*spacing;
-			temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY();
-			temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() + scen[j].second*spacing;
-			camila_[j].setLocalTarget(temp);
+	if (scen_size > num_of_vehicle_)
+	{
+		int i = 0;
+		for (auto &vehicle : camila_)
+		{
+			int min_num = 0;
+			int min_dist = 150;
+			int k = 0;
+			std::pair<int, int> prev_scen = vehicle.getScenPos();
+			for (iter = scen.begin(); iter != scen.end(); iter++)
+			{
+				int a, b, length;
+				a = prev_scen.first - iter->first;
+				b = prev_scen.second - iter->second;
+				length = a * a + b * b;
+				if (length < min_dist)
+				{
+					min_dist = length;
+					min_num = k;
+				}
+				k++;
+			}
+			iter = scen.begin() + min_num;
+			temp.header.stamp = ros::Time::now();
+			temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
+			temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
+			temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
+			vehicle.setScenPos(*iter);
+			vehicle.setLocalTarget(temp);
+			scen.erase(iter);
+			i++;
 		}
 	}
-	else{
-		for(int j=0; j<scen_size;j++){
-			temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + scen[j].first*spacing;
-			temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY();
-			temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() + scen[j].second*spacing;
-			camila_[j].setLocalTarget(temp);
+	else
+	{
+		int i = 0;
+		for (auto &vehicle : camila_)
+		{
+			if (scen.size() == 0)
+				break;
+			int min_num = 0;
+			int min_dist = 150;
+			int k = 0;
+			std::pair<int, int> prev_scen = vehicle.getScenPos();
+			for (iter = scen.begin(); iter != scen.end(); iter++)
+			{
+				int a, b, length;
+				a = prev_scen.first - iter->first;
+				b = prev_scen.second - iter->second;
+				length = a * a + b * b;
+				if (length < min_dist)
+				{
+					min_dist = length;
+					min_num = k;
+				}
+				k++;
+			}
+			iter = scen.begin() + min_num;
+			temp.header.stamp = ros::Time::now();
+			temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
+			temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
+			temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
+			vehicle.setScenPos(*iter);
+			vehicle.setLocalTarget(temp);
+			scen.erase(iter);
+			i++;
 		}
-		for(int j=scen_size; j< num_of_vehicle_;j++){
-			temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + j*spacing;
-			temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() -10;
-			temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ();
+		for (int j = scen_size; j < num_of_vehicle_; j++)
+		{
+			temp.header.stamp = ros::Time::now();
+			temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + (j - scen_size) * spacing;
+			temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() - 10;
+			temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() - 2;
 			camila_[j].setLocalTarget(temp);
 		}
 	}
 }
 
-void SwarmVehicle::scenario4(){
+void SwarmVehicle::scenario4()
+{
 	geometry_msgs::PoseStamped msg, msg_f;
 	double m_sec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.00006 * m_sec; // 0.2 rad/s
@@ -1064,99 +1132,103 @@ void SwarmVehicle::scenario4(){
 	msg.pose.position.x = swarm_target_local_.getX();
 	msg.pose.position.y = swarm_target_local_.getY();
 	msg.pose.position.z = swarm_target_local_.getZ();
-	
-	int i = 0;
-		for (auto &vehicle : camila_)
-		{
-			if (vehicle.getInfo().vehicle_id_ != 1)
-			{
-				angle = i * angle_;
 
-				msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
-				msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
-				msg_f.pose.position.z = msg.pose.position.z + offset_[i].getZ() + spacing * cos(angle + x);
-				vehicle.setLocalTarget(msg_f);
-			}
-			else
-				vehicle.setLocalTarget(msg);
-			i++;
+	int i = 0;
+	for (auto &vehicle : camila_)
+	{
+		if (vehicle.getInfo().vehicle_id_ != 1)
+		{
+			angle = i * angle_;
+			msg_f.header.stamp = ros::Time::now();
+			msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
+			msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
+			msg_f.pose.position.z = msg.pose.position.z + offset_[i].getZ() + spacing * cos(angle + x);
+			vehicle.setLocalTarget(msg_f);
 		}
+		else
+		{
+			msg.header.stamp = ros::Time::now();
+			vehicle.setLocalTarget(msg);
+		}
+		i++;
+	}
 }
 
-void SwarmVehicle::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t &hex, const int &x_value, const bool &is_left_bits){
+void SwarmVehicle::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t &hex, const int &x_value, const bool &is_left_bits)
+{
 	int offset;
 	if (is_left_bits)
 		offset = 0;
 	else
 		offset = 4;
-	
+
 	switch (hex)
 	{
-		case 1:
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 2:
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			break;
-		case 3:
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 4:
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			break;
-		case 5:
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 6:
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			break;
-		case 7:
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 8:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			break;
-		case 9:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 10:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			break;
-		case 11:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 12:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			break;
-		case 13:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-		case 14:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			break;
-		case 15:
-			scen.push_back(std::pair<int, int>(x_value, offset));
-			scen.push_back(std::pair<int, int>(x_value, 1+offset));
-			scen.push_back(std::pair<int, int>(x_value, 2+offset));
-			scen.push_back(std::pair<int, int>(x_value, 3+offset));
-			break;
-	
-		default:
-			break;
+	case 1:
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 2:
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		break;
+	case 3:
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 4:
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		break;
+	case 5:
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 6:
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		break;
+	case 7:
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 8:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		break;
+	case 9:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 10:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		break;
+	case 11:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 12:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		break;
+	case 13:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+	case 14:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		break;
+	case 15:
+		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		break;
+
+	default:
+		break;
 	}
 }
 
@@ -1170,8 +1242,9 @@ bool SwarmVehicle::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Req
 	swarm_target_local_.setY(req.y);
 	swarm_target_local_.setZ(req.z);
 
-	res.success = true;
+	target_changed_flag_ = true;
 
+	res.success = true;
 	return res.success;
 }
 
@@ -1192,6 +1265,7 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 
 	if (req.num_drone > 0 && req.num_drone <= num_of_vehicle_)
 	{
+		msg.header.stamp = ros::Time::now();
 		msg.pose.position.x = req.x + offset_[req.num_drone - 1].getX();
 		msg.pose.position.y = req.y + offset_[req.num_drone - 1].getY();
 		msg.pose.position.z = req.z;
@@ -1358,6 +1432,7 @@ void SwarmVehicle::run()
 		for (auto &vehicle : camila_)
 		{
 			tf2::Vector3 setpoint;
+			seek(vehicle);
 			if (sp)
 			{
 				separate(vehicle);
@@ -1365,7 +1440,6 @@ void SwarmVehicle::run()
 			}
 			else
 				setpoint = vehicle.getErr() * kp_seek_;
-			seek(vehicle);
 			vehicle.setSetpointPos(setpoint);
 			if (control_method)
 				vehicle.gotoVel();
@@ -1373,5 +1447,13 @@ void SwarmVehicle::run()
 				vehicle.gotoLocal();
 		}
 	}
-	formationGenerator();
+
+	int num;
+	nh_global_.getParamCached("scen_num", num);
+	if (target_changed_flag_ || (num != scen_num_))
+	{
+		target_changed_flag_ = false;
+		scen_num_ = num;
+		formationGenerator();
+	}
 }
