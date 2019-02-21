@@ -703,7 +703,7 @@ void SwarmVehicle::formationGenerator()
 			}
 			else
 				vehicle.setLocalTarget(msg);
-			i++;t
+			i++;
 		}
 	}
 	else if (formation_ == "IDLE")
