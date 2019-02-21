@@ -179,6 +179,7 @@ class SwarmVehicle
 	std::vector<Vehicle> camila_;
 	std::vector<Vehicle>::iterator iter_;
 	std::vector<tf2::Vector3> offset_;
+	std::vector<uint8_t> scen_hex_;
 
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
@@ -193,12 +194,14 @@ class SwarmVehicle
 	bool multi_setpoint_publish_flag_;
 	bool target_changed_flag_;
 	double angle_;
+	ros::Time prev_;
 
 	static double kp_seek_;
 	static double kp_sp_;
 	static double range_sp_;
 	static double max_speed_;
 	static int scen_num_;
+	static std::string scen_str_;
 
 	void swarmServiceInit();
 	void release();
@@ -212,6 +215,7 @@ class SwarmVehicle
 	void scenario2();
 	void scenario3();
 	void scenario4();
+	void scenario5();
 	void hexToCoord(std::vector<std::pair<int,int>> &, const uint8_t &, const int &, const bool &);
 
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,

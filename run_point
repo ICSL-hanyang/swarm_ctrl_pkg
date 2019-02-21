@@ -1,0 +1,3 @@
+rosservice call /multi_setpoint_local -- POINT 0 0 5
+rostopic pub /multi/set_mode std_msgs/String "offboard"
+rostopic pub /multi/arming std_msgs/Bool 1

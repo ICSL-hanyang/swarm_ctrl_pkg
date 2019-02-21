@@ -10,7 +10,8 @@ pid:
 # distance between drones
 spacing: 3.0
 
-scen_num: 51 # scenario 숫자 3
+scen_num: 57 # scenario 숫자 3
+scen: '987'
 
 # setpoint control params
 setpoint:

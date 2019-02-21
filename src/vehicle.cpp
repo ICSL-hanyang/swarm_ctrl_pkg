@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 #include <scenario.h>
+#include <scenario2.h>
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	: vehicle_info_({1, "mavros"}),
@@ -489,6 +490,7 @@ double SwarmVehicle::kp_sp_;
 double SwarmVehicle::range_sp_;
 double SwarmVehicle::max_speed_;
 int SwarmVehicle::scen_num_;
+std::string SwarmVehicle::scen_str_ = "";
 
 //default value : default name = camila, num_of_vehicle = 1;
 SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_name, const int &num_of_vehicle)
@@ -504,6 +506,7 @@ SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
 	offset_.reserve(num_of_vehicle_);
+	scen_hex_.reserve(num_of_vehicle_);
 
 	for (int i = 0; i < num_of_vehicle_; i++)
 	{
@@ -528,6 +531,7 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
 	offset_.reserve(num_of_vehicle_);
+	scen_hex_.reserve(num_of_vehicle_);
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
@@ -553,6 +557,7 @@ const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 	std::vector<Vehicle>().swap(camila_);
 	camila_.reserve(num_of_vehicle_);
 	offset_.reserve(num_of_vehicle_);
+	scen_hex_.reserve(num_of_vehicle_);
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
@@ -578,6 +583,7 @@ void SwarmVehicle::release()
 {
 	std::vector<Vehicle>().swap(camila_);
 	std::vector<tf2::Vector3>().swap(offset_);
+	std::vector<uint8_t>().swap(scen_hex_);
 	multi_setpoint_global_server_.shutdown();
 	multi_setpoint_local_server_.shutdown();
 	goto_vehicle_server_.shutdown();
@@ -683,7 +689,43 @@ void SwarmVehicle::formationGenerator()
 	msg.pose.position.y = swarm_target_local_.getY();
 	msg.pose.position.z = swarm_target_local_.getZ();
 
-	if (formation_ == "SCEN1")
+	if (formation_ == "POINT")
+	{
+		int i = 0;
+		for (auto &vehicle : camila_)
+		{
+			if (vehicle.getInfo().vehicle_id_ != 1)
+			{
+				msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX();
+				msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY();
+				msg_f.pose.position.z = msg.pose.position.z;
+				vehicle.setLocalTarget(msg_f);
+			}
+			else
+				vehicle.setLocalTarget(msg);
+			i++;t
+		}
+	}
+	else if (formation_ == "IDLE")
+	{
+		int i = 0;
+		int x = 0 , y = 0;
+		for (auto &vehicle : camila_)
+		{
+			if(y < 16)
+				y += 3;
+			else{
+				x += 3;
+				y = 0;
+			}
+			msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + x;
+			msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + y;
+			msg_f.pose.position.z = msg.pose.position.z;
+			vehicle.setLocalTarget(msg_f);
+			i++;
+		}
+	}
+	else if (formation_ == "SCEN1")
 	{
 		int i = 0;
 		for (auto &vehicle : camila_)
@@ -713,6 +755,10 @@ void SwarmVehicle::formationGenerator()
 	else if (formation_ == "SCEN4")
 	{
 		scenario4();
+	}
+	else if (formation_ == "SCEN5")
+	{
+		scenario5();
 	}
 }
 
@@ -1021,16 +1067,14 @@ void SwarmVehicle::scenario2()
 
 void SwarmVehicle::scenario3()
 {
-	int scen_num;
 	double spacing;
-	nh_global_.getParamCached("scen_num", scen_num);
 	nh_global_.getParamCached("spacing", spacing);
 	std::vector<std::pair<int, int>> scen;
 	std::vector<std::pair<int, int>>::iterator iter;
 	scen.reserve(num_of_vehicle_);
 
 	int i = 0;
-	for (auto line : FONT[scen_num])
+	for (auto line : FONT[scen_num_])
 	{
 		uint8_t left_bits, right_bits;
 		left_bits = line >> 4;
@@ -1039,7 +1083,11 @@ void SwarmVehicle::scenario3()
 		hexToCoord(scen, left_bits, 7 - i, true);
 		hexToCoord(scen, right_bits, 7 - i, false);
 		i++;
+		if(scen.size() > num_of_vehicle_)
+			break;
 	}
+	while(scen.size() > num_of_vehicle_)
+		scen.pop_back();
 
 	geometry_msgs::PoseStamped temp;
 	int scen_size = scen.size();
@@ -1154,77 +1202,182 @@ void SwarmVehicle::scenario4()
 	}
 }
 
+void SwarmVehicle::scenario5()
+{
+	std::string scen_str;
+	double spacing;
+	nh_global_.getParamCached("scen", scen_str);
+	nh_global_.getParamCached("spacing", spacing);
+	std::vector<std::pair<int, int>> scen;
+	std::vector<std::pair<int, int>>::iterator iter;
+	std::vector<uint8_t>::iterator iter_uint8;
+	scen.reserve(num_of_vehicle_);
+
+	if(scen_hex_.size() == 0 || scen_str_ != scen_str)
+	{
+		scen_hex_.clear();
+		scen_str_ = scen_str;
+		for(auto &character : scen_str_){
+			int scen_num = static_cast<int>(character);
+			for(auto &line : FONT2[scen_num]){
+				scen_hex_.push_back(line);
+			}
+		}
+		prev_ = ros::Time::now();
+	}
+	else{
+		if(ros::Time::now() > prev_ + ros::Duration(20.0)){
+			prev_ = ros::Time::now();
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+		}
+	}
+	int t = 0;
+	for (auto & hex : scen_hex_)
+	{
+		uint8_t left_bits, right_bits;
+		left_bits = hex >> 4;
+		right_bits = 0x0f & hex;
+
+		hexToCoord(scen, left_bits, 5 - t, false);
+		hexToCoord(scen, right_bits, 5 - t, true);
+		t++;
+	}
+
+	while(scen.size() > num_of_vehicle_)
+		scen.pop_back();
+
+	geometry_msgs::PoseStamped temp;
+	int scen_size = scen.size();
+	int i = 0, j=0;
+	for (auto &vehicle : camila_)
+	{
+		if (scen.size() == 0){
+			hexToCoord(scen, 0x0f, -3-j, true);
+			hexToCoord(scen, 0x0f, -3-j, false);
+			j++;
+		}
+		int min_num = 0;
+		int min_dist = 350;
+		int k = 0;
+		std::pair<int, int> prev_scen = vehicle.getScenPos();
+		for (iter = scen.begin(); iter != scen.end(); iter++)
+		{
+			int a, b, length;
+			a = prev_scen.first - iter->first;
+			b = prev_scen.second - iter->second;
+			length = a * a + b * b;
+			if (length < min_dist)
+			{
+				min_dist = length;
+				min_num = k;
+			}
+			k++;
+		}
+		iter = scen.begin() + min_num;
+		temp.header.stamp = ros::Time::now();
+		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
+		temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
+		temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
+		vehicle.setScenPos(*iter);
+		vehicle.setLocalTarget(temp);
+		scen.erase(iter);
+		i++;
+	}
+}
+
 void SwarmVehicle::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t &hex, const int &x_value, const bool &is_left_bits)
 {
-	int offset;
+	int offset, a, b, c, d;
 	if (is_left_bits)
 		offset = 0;
 	else
 		offset = 4;
 
+	if(formation_ == "SCEN3"){
+		a=3;
+		b=2;
+		c=1;
+		d=0;
+	}
+	else if(formation_ == "SCEN5"){
+		a=0;
+		b=1;
+		c=2;
+		d=3;
+	}
+
 	switch (hex)
 	{
 	case 1:
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 2:
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
 		break;
 	case 3:
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 4:
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
 		break;
 	case 5:
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 6:
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
 		break;
 	case 7:
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 8:
-		scen.push_back(std::pair<int, int>(x_value, offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
 		break;
 	case 9:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 10:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
 		break;
 	case 11:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 12:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
 		break;
 	case 13:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 	case 14:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
 		break;
 	case 15:
-		scen.push_back(std::pair<int, int>(x_value, offset));
-		scen.push_back(std::pair<int, int>(x_value, 1 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 2 + offset));
-		scen.push_back(std::pair<int, int>(x_value, 3 + offset));
+		scen.push_back(std::pair<int, int>(x_value, d + offset));
+		scen.push_back(std::pair<int, int>(x_value, c + offset));
+		scen.push_back(std::pair<int, int>(x_value, b + offset));
+		scen.push_back(std::pair<int, int>(x_value, a + offset));
 		break;
 
 	default:
@@ -1447,13 +1600,5 @@ void SwarmVehicle::run()
 				vehicle.gotoLocal();
 		}
 	}
-
-	int num;
-	nh_global_.getParamCached("scen_num", num);
-	if (target_changed_flag_ || (num != scen_num_))
-	{
-		target_changed_flag_ = false;
-		scen_num_ = num;
-		formationGenerator();
-	}
+	formationGenerator();
 }
