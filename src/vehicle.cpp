@@ -1177,12 +1177,37 @@ void SwarmVehicle::scenario3()
 	std::vector<uint8_t>::iterator iter_uint8;
 	scen.reserve(num_of_vehicle_);
 
-	scen_hex_.clear();
-	scen_str_ = scen_str;
-	for(auto &character : scen_str_){
-		int scen_num = static_cast<int>(character);
-		for(auto &line : FONT[scen_num]){
-			scen_hex_.push_back(line);
+	if(scen_hex_.size() == 0 || scen_str_ != scen_str)
+	{
+		scen_hex_.clear();
+		scen_str_ = scen_str;
+		for(auto &character : scen_str_){
+			int scen_num = static_cast<int>(character);
+			for(auto &line : FONT[scen_num]){
+				scen_hex_.push_back(line);
+			}
+		}
+		prev_ = ros::Time::now();
+	}
+	else{
+		if(ros::Time::now() > prev_ + ros::Duration(35.0)){
+			prev_ = ros::Time::now();
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
+			iter_uint8 = scen_hex_.begin();
+			scen_hex_.erase(iter_uint8);
 		}
 	}
 	

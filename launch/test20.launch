@@ -6,7 +6,8 @@
 	<arg name="vehicle" default="iris"/>
 	<!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
 
-	<arg name="world" default="$(find swarm_ctrl_pkg)/config/posix-configs/worlds/empty_sky.world"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+	<!-- <arg name="world" default="$(find swarm_ctrl_pkg)/config/posix-configs/worlds/empty_sky.world"/> -->
 
 	<!-- gazebo configs -->
 	<arg name="gui" default="true"/>
