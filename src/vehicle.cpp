@@ -760,6 +760,10 @@ void SwarmVehicle::formationGenerator()
 	{
 		scenario5();
 	}
+	else if (formation_ == "SCEN6")
+	{
+		scenario6();
+	}
 }
 
 void SwarmVehicle::scenario2()
@@ -1190,7 +1194,7 @@ void SwarmVehicle::scenario4()
 			msg_f.header.stamp = ros::Time::now();
 			msg_f.pose.position.x = msg.pose.position.x + offset_[i].getX() + spacing * cos(angle + x);
 			msg_f.pose.position.y = msg.pose.position.y + offset_[i].getY() + spacing * sin(angle + x);
-			msg_f.pose.position.z = msg.pose.position.z + offset_[i].getZ() + spacing * cos(angle + x);
+			msg_f.pose.position.z = msg.pose.position.z + offset_[i].getZ() + spacing * cos(angle + x) * x;
 			vehicle.setLocalTarget(msg_f);
 		}
 		else
@@ -1291,6 +1295,48 @@ void SwarmVehicle::scenario5()
 		vehicle.setLocalTarget(temp);
 		scen.erase(iter);
 		i++;
+	}
+}
+
+void SwarmVehicle::scenario6()
+{
+	geometry_msgs::PoseStamped msg, msg_f;
+	double sec = ros::Time::now().toSec();
+	double spacing, distance_x, distance_y;
+	bool start;
+	nh_global_.getParamCached("spacing", spacing);
+	nh_global_.getParamCached("distance_x", distance_x);
+	nh_global_.getParamCached("distance_y", distance_y);
+	nh_global_.getParamCached("scen6", start);
+	msg.pose.position.x = swarm_target_local_.getX();
+	msg.pose.position.y = swarm_target_local_.getY();
+	msg.pose.position.z = swarm_target_local_.getZ();
+	int j = 0;
+	for (auto &vehicle : camila_)
+	{
+		if (vehicle.getInfo().vehicle_id_ != 1)
+		{
+			int i = vehicle.getInfo().vehicle_id_;
+			
+			msg_f.header.stamp = ros::Time::now();
+			msg_f.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + (i%2 - 0.5) * distance_x;
+			msg_f.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() + int(i/2) * distance_y;
+			msg_f.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ();
+			vehicle.setLocalTarget(msg_f);
+		}
+		else
+		{
+			msg.header.stamp = ros::Time::now();
+			if(start == true){
+				if(msg.pose.position.y <= 20)
+					msg.pose.position.y += int(sec) * 3;
+				else{
+					msg.pose.position.y -= int(sec) * 3;
+				}
+			}
+			vehicle.setLocalTarget(msg);
+		}
+		j++;
 	}
 }
 
