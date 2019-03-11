@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="default">
-    <scene>
+    <!-- <scene>
       <sky>
         <clouds>
-          <speed>12</speed>
+          <speed>0</speed>
         </clouds>
       </sky>
-    </scene>
+    </scene> -->
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
@@ -16,11 +16,7 @@
     <!-- <include>
       <uri>model://ground_plane</uri>
     </include> -->
-
-    <include>
-      <uri>model://my_ground_plane</uri>
-    </include>
-    <!-- 
+<!-- 
        <visual name="visual">
         <material>
           <script>

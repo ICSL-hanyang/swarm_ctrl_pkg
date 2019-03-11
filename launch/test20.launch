@@ -1,33 +1,36 @@
 <launch>
-    <!-- MAVROS posix SITL environment launch script -->
-    <!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
-    <!-- vehicle model and world -->
-    <arg name="est" default="ekf2"/>
-    <arg name="vehicle" default="iris"/>
-    <arg name="world" default="$(find swarm_ctrl_pkg)/config/posix-configs/worlds/empty.world"/>
+	<!-- MAVROS posix SITL environment launch script -->
+	<!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
+	<!-- vehicle model and world -->
+	<arg name="est" default="ekf2"/>
+	<arg name="vehicle" default="iris"/>
+	<!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
 
-    <!-- gazebo configs -->
-    <arg name="gui" default="true"/>
-    <arg name="debug" default="false"/>
-    <arg name="verbose" default="false"/>
-    <arg name="paused" default="false"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+	<!-- <arg name="world" default="$(find swarm_ctrl_pkg)/config/posix-configs/worlds/empty_sky.world"/> -->
 
-    <!-- setpoint ctrl -->
-    <arg name="num_drone" default="20"/>
-    <arg name="kp" default="0.5"/>
-    <arg name="kp_sp" default="5"/>
-    <arg name="range_sp" default="5"/>
-    <arg name="max_speed" default="3"/>
+	<!-- gazebo configs -->
+	<arg name="gui" default="true"/>
+	<arg name="debug" default="false"/>
+	<arg name="verbose" default="false"/>
+	<arg name="paused" default="false"/>
 
-    <!-- Gazebo sim -->
+	<!-- setpoint ctrl -->
+	<arg name="num_drone" default="20"/>
+	<arg name="kp" default="0.5"/>
+	<arg name="kp_sp" default="5"/>
+	<arg name="range_sp" default="5"/>
+	<arg name="max_speed" default="3"/>
+
+	<!-- Gazebo sim -->
 	<param name="/use_sim_time" value="true"/>
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="gui" value="$(arg gui)"/>
-        <arg name="world_name" value="$(arg world)"/>
-        <arg name="debug" value="$(arg debug)"/>
-        <arg name="verbose" value="$(arg verbose)"/>
-        <arg name="paused" value="$(arg paused)"/>
-    </include>
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="world_name" value="$(arg world)"/>
+		<arg name="debug" value="$(arg debug)"/>
+		<arg name="verbose" value="$(arg verbose)"/>
+		<arg name="paused" value="$(arg paused)"/>
+	</include>
 
 	<arg name="user_ip" default="localhost"/>
 	<param name="/use_sim_time" value="true"/>
@@ -131,7 +134,7 @@
 		<arg name="ID" value="4"/>
 		<arg name="fcu_url" default="udp://:13204@$(arg user_ip):13104"/>
 		<arg name="gcs_url" default="udp://:14540@$(arg user_ip):13304"/>
-		
+
 		<include file="$(find px4)/launch/single_vehicle_spawn.launch">
 			<arg name="x" value="0"/>
 			<arg name="y" value="$(arg ID)"/>
@@ -144,7 +147,7 @@
 			<arg name="mavlink_udp_port" value="13004"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-	
+
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
@@ -308,7 +311,7 @@
 			<arg name="mavlink_udp_port" value="13010"/>
 			<arg name="ID" value="$(arg ID)"/>
 		</include>
-		
+
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
@@ -320,10 +323,10 @@
 		</node>
 		<!-- </machine> -->
 	</group>
-    <group ns="camila11">
+	<group ns="camila11">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="11"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -355,7 +358,7 @@
 	<group ns="camila12">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="12"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -387,7 +390,7 @@
 	<group ns="camila13">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="13"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -419,7 +422,7 @@
 	<group ns="camila14">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="14"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -451,7 +454,7 @@
 	<group ns="camila15">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="15"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -483,7 +486,7 @@
 	<group ns="camila16">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="16"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -515,7 +518,7 @@
 	<group ns="camila17">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="17"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -547,7 +550,7 @@
 	<group ns="camila18">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="18"/>
-		<arg name="pos" value="9"/> 
+		<arg name="pos" value="9"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -579,7 +582,7 @@
 	<group ns="camila19">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="19"/>
-		<arg name="pos" value="18"/> 
+		<arg name="pos" value="18"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
@@ -611,7 +614,7 @@
 	<group ns="camila20">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="20"/>
-		<arg name="pos" value="18"/> 
+		<arg name="pos" value="18"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
 		<arg name="fcu_url" default="udp://:132$(arg ID)@$(arg user_ip):131$(arg ID)"/>
 		<arg name="gcs_url" default="udp://:134$(arg ID)@$(arg user_ip):133$(arg ID)"/>
