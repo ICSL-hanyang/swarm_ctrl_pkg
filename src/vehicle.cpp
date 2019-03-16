@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <vehicle.h>
-#include <scenario.h>
-#include <scenario2.h>
+#include <Font7x5.h>
+#include <Font8x8.h>
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	: vehicle_info_({1, "mavros"}),
