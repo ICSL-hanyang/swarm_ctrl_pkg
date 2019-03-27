@@ -29,7 +29,7 @@
         <arg name="paused" value="$(arg paused)"/>
     </include>
 
-	<arg name="user_ip" default="192.168.0.12"/>
+	<arg name="user_ip" default="localhost"/>
 
 	<!-- UAV1 -->
 	<group ns="camila1">
