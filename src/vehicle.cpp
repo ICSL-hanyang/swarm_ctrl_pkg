@@ -709,12 +709,13 @@ void SwarmVehicle::formationGenerator()
 	else if (formation_ == "IDLE")
 	{
 		int i = 0;
-		int x = 0 , y = -3;
+		int x = 0, y = -3;
 		for (auto &vehicle : camila_)
 		{
-			if(y < 16)
+			if (y < 16)
 				y += 3;
-			else{
+			else
+			{
 				x += 3;
 				y = 0;
 			}
@@ -1181,20 +1182,24 @@ void SwarmVehicle::scenario3()
 	std::vector<uint8_t>::iterator iter_uint8;
 	scen.reserve(num_of_vehicle_);
 
-	if(scen_hex_.size() == 0 || scen_str_ != scen_str)
+	if (scen_hex_.size() == 0 || scen_str_ != scen_str)
 	{
 		scen_hex_.clear();
 		scen_str_ = scen_str;
-		for(auto &character : scen_str_){
+		for (auto &character : scen_str_)
+		{
 			int scen_num = static_cast<int>(character);
-			for(auto &line : FONT[scen_num]){
+			for (auto &line : FONT[scen_num])
+			{
 				scen_hex_.push_back(line);
 			}
 		}
 		prev_ = ros::Time::now();
 	}
-	else{
-		if(ros::Time::now() > prev_ + ros::Duration(35.0)){
+	else
+	{
+		if (ros::Time::now() > prev_ + ros::Duration(35.0))
+		{
 			prev_ = ros::Time::now();
 			iter_uint8 = scen_hex_.begin();
 			scen_hex_.erase(iter_uint8);
@@ -1214,9 +1219,9 @@ void SwarmVehicle::scenario3()
 			scen_hex_.erase(iter_uint8);
 		}
 	}
-	
+
 	int t = 0;
-	for (auto & hex : scen_hex_)
+	for (auto &hex : scen_hex_)
 	{
 		uint8_t left_bits, right_bits;
 		left_bits = hex >> 4;
@@ -1227,17 +1232,18 @@ void SwarmVehicle::scenario3()
 		t++;
 	}
 
-	while(scen.size() > num_of_vehicle_)
+	while (scen.size() > num_of_vehicle_)
 		scen.pop_back();
 
 	geometry_msgs::PoseStamped temp;
 	int scen_size = scen.size();
-	int i = 0, j=0;
+	int i = 0, j = 0;
 	for (auto &vehicle : camila_)
 	{
-		if (scen.size() == 0){
-			hexToCoord(scen, 0x0f, -3-j, true);
-			hexToCoord(scen, 0x0f, -3-j, false);
+		if (scen.size() == 0)
+		{
+			hexToCoord(scen, 0x0f, -3 - j, true);
+			hexToCoord(scen, 0x0f, -3 - j, false);
 			j++;
 		}
 		int min_num = 0;
@@ -1313,20 +1319,24 @@ void SwarmVehicle::scenario5()
 	std::vector<uint8_t>::iterator iter_uint8;
 	scen.reserve(num_of_vehicle_);
 
-	if(scen_hex_.size() == 0 || scen_str_ != scen_str)
+	if (scen_hex_.size() == 0 || scen_str_ != scen_str)
 	{
 		scen_hex_.clear();
 		scen_str_ = scen_str;
-		for(auto &character : scen_str_){
+		for (auto &character : scen_str_)
+		{
 			int scen_num = static_cast<int>(character);
-			for(auto &line : FONT2[scen_num]){
+			for (auto &line : FONT2[scen_num])
+			{
 				scen_hex_.push_back(line);
 			}
 		}
 		prev_ = ros::Time::now();
 	}
-	else{
-		if(ros::Time::now() > prev_ + ros::Duration(20.0)){
+	else
+	{
+		if (ros::Time::now() > prev_ + ros::Duration(20.0))
+		{
 			prev_ = ros::Time::now();
 			iter_uint8 = scen_hex_.begin();
 			scen_hex_.erase(iter_uint8);
@@ -1341,7 +1351,7 @@ void SwarmVehicle::scenario5()
 		}
 	}
 	int t = 0;
-	for (auto & hex : scen_hex_)
+	for (auto &hex : scen_hex_)
 	{
 		uint8_t left_bits, right_bits;
 		left_bits = hex >> 4;
@@ -1352,17 +1362,18 @@ void SwarmVehicle::scenario5()
 		t++;
 	}
 
-	while(scen.size() > num_of_vehicle_)
+	while (scen.size() > num_of_vehicle_)
 		scen.pop_back();
 
 	geometry_msgs::PoseStamped temp;
 	int scen_size = scen.size();
-	int i = 0, j=0;
+	int i = 0, j = 0;
 	for (auto &vehicle : camila_)
 	{
-		if (scen.size() == 0){
-			hexToCoord(scen, 0x0f, -3-j, true);
-			hexToCoord(scen, 0x0f, -3-j, false);
+		if (scen.size() == 0)
+		{
+			hexToCoord(scen, 0x0f, -3 - j, true);
+			hexToCoord(scen, 0x0f, -3 - j, false);
 			j++;
 		}
 		int min_num = 0;
@@ -1413,20 +1424,22 @@ void SwarmVehicle::scenario6()
 		if (vehicle.getInfo().vehicle_id_ != 1)
 		{
 			int i = vehicle.getInfo().vehicle_id_;
-			
+
 			msg_f.header.stamp = ros::Time::now();
-			msg_f.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + (i%2 - 0.5) * distance_x;
-			msg_f.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() + int(i/2) * distance_y;
+			msg_f.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + (i % 2 - 0.5) * distance_x;
+			msg_f.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() + int(i / 2) * distance_y;
 			msg_f.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ();
 			vehicle.setLocalTarget(msg_f);
 		}
 		else
 		{
 			msg.header.stamp = ros::Time::now();
-			if(start == true){
-				if(msg.pose.position.y <= 20)
+			if (start == true)
+			{
+				if (msg.pose.position.y <= 20)
 					msg.pose.position.y += int(sec) * 3;
-				else{
+				else
+				{
 					msg.pose.position.y -= int(sec) * 3;
 				}
 			}
@@ -1444,17 +1457,19 @@ void SwarmVehicle::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint
 	else
 		offset = 4;
 
-	if(formation_ == "SCEN3"){
-		a=3;
-		b=2;
-		c=1;
-		d=0;
+	if (formation_ == "SCEN3")
+	{
+		a = 3;
+		b = 2;
+		c = 1;
+		d = 0;
 	}
-	else if(formation_ == "SCEN5"){
-		a=0;
-		b=1;
-		c=2;
-		d=3;
+	else if (formation_ == "SCEN5")
+	{
+		a = 0;
+		b = 1;
+		c = 2;
+		d = 3;
 	}
 
 	switch (hex)
@@ -1680,6 +1695,26 @@ void SwarmVehicle::setSwarmInfo(const std::string &swarm_name, const int &num_of
 std::string SwarmVehicle::getSwarmInfo() const
 {
 	return swarm_name_;
+}
+
+const std::vector<Vehicle> *SwarmVehicle::getSwarmVehicle() const
+{
+	return &camila_;
+}
+
+const std::vector<tf2::Vector3> *SwarmVehicle::getSwarmOffset() const
+{
+	return &offset_;
+}
+
+const std::string *SwarmVehicle::getCurrentFormation() const
+{
+	return &formation_;
+}
+
+const tf2::Vector3 *SwarmVehicle::getSwarmTargetLocal() const
+{
+	return &swarm_target_local_;
 }
 
 void SwarmVehicle::addVehicle(const VehicleInfo &vehicle_info)

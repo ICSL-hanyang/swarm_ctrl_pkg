@@ -152,7 +152,7 @@ class Vehicle
 	void setSetpointPos(const tf2::Vector3 &);
 	tf2::Vector3 getSetpointPos() const;
 	void setScenPos(const std::pair<int, int> &);
-	std::pair<int,int> getScenPos() const;
+	std::pair<int, int> getScenPos() const;
 
 	//global position
 	bool setHomeGlobal();
@@ -217,7 +217,7 @@ class SwarmVehicle
 	void scenario4();
 	void scenario5();
 	void scenario6();
-	void hexToCoord(std::vector<std::pair<int,int>> &, const uint8_t &, const int &, const bool &);
+	void hexToCoord(std::vector<std::pair<int, int>> &, const uint8_t &, const int &, const bool &);
 
 	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
 							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);
@@ -240,6 +240,10 @@ class SwarmVehicle
 
 	void setSwarmInfo(const std::string &, const int &);
 	std::string getSwarmInfo() const;
+	const std::vector<Vehicle> *getSwarmVehicle() const;
+	const std::vector<tf2::Vector3> *getSwarmOffset() const;
+	const std::string *getCurrentFormation() const;
+	const tf2::Vector3 *getSwarmTargetLocal() const;
 
 	void addVehicle(const VehicleInfo &);
 	void deleteVehicle(const VehicleInfo &);
