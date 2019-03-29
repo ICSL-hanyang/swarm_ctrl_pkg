@@ -2,12 +2,32 @@
 
 Scenario::Scenario(ros::NodeHandle &nh, SwarmVehicle &swarm)
 	: nh_global_(nh),
-	  swarm_(swarm)
+	  swarm_(swarm),
+	  formation_(""),
+	  swarm_target_local_(tf2::Vector3(0, 0, 0))
 {
 	camila_ = swarm_.getSwarmVehicle();
 	offset_ = swarm_.getSwarmOffset();
-	formation_ = swarm_.getCurrentFormation();
-	swarm_target_local_ = swarm_.getSwarmTargetLocal();
+	swarmServiceInit();
+}
+
+Scenario::~Scenario()
+{
+	release();
+}
+
+void Scenario::swarmServiceInit()
+{
+	goto_vehicle_server_ = nh_global_.advertiseService("goto_vehicle", &Scenario::gotoVehicle, this);
+	multi_setpoint_local_server_ = nh_global_.advertiseService("multi_setpoint_local", &Scenario::multiSetpointLocal, this);
+	multi_setpoint_global_server_ = nh_global_.advertiseService("multi_setpoint_global", &Scenario::multiSetpointGlobal, this);
+}
+
+void Scenario::release()
+{
+	multi_setpoint_global_server_.shutdown();
+	multi_setpoint_local_server_.shutdown();
+	goto_vehicle_server_.shutdown();
 }
 
 void Scenario::formationGenerator()
@@ -15,17 +35,17 @@ void Scenario::formationGenerator()
 	double spacing;
 	nh_global_.getParamCached("spacing", spacing);
 
-	if (*formation_ == "POINT")
+	if (formation_ == "POINT")
 		point();
-	else if (*formation_ == "IDLE")
+	else if (formation_ == "IDLE")
 		idle();
-	else if (*formation_ == "SCEN1")
+	else if (formation_ == "SCEN1")
 		makeCircle();
-	else if (*formation_ == "SCEN2")
+	else if (formation_ == "SCEN2")
 		makeEllipse();
-	else if (*formation_ == "SCEN3")
+	else if (formation_ == "SCEN3")
 		drawStringFont7x5();
-	else if (*formation_ == "SCEN4")
+	else if (formation_ == "SCEN4")
 		drawStringFont8x8();
 }
 
@@ -36,7 +56,7 @@ void Scenario::point()
 	double x = 0.00006 * m_sec; // 0.2 rad/s
 	double angle, spacing;
 	int i = 0;
-	for (auto &vehicle : *camila_)
+	for (auto &vehicle : camila_)
 	{
 		if (vehicle.getInfo().vehicle_id_ != 1)
 		{
@@ -59,7 +79,7 @@ void Scenario::idle()
 	double angle, spacing;
 	int i = 0;
 	int x = 0, y = -3;
-	for (auto &vehicle : *camila_)
+	for (auto &vehicle : camila_)
 	{
 		if (y < 16)
 			y += 3;
@@ -83,7 +103,7 @@ void Scenario::makeCircle()
 	double x = 0.00006 * m_sec; // 0.2 rad/s
 	double angle, spacing;
 	int i = 0;
-	for (auto &vehicle : *camila_)
+	for (auto &vehicle : camila_)
 	{
 		if (vehicle.getInfo().vehicle_id_ != 1)
 		{
@@ -108,12 +128,12 @@ void Scenario::makeEllipse()
 	double angle, spacing;
 	nh_global_.getParamCached("spacing", spacing);
 
-	msg.pose.position.x = swarm_.getSwarmTargetLocal.getX();
-	msg.pose.position.y = swarm_.getSwarmTargetLocal.getY();
-	msg.pose.position.z = swarm_.getSwarmTargetLocal.getZ();
+	msg.pose.position.x = swarm_target_local_.getX();
+	msg.pose.position.y = swarm_target_local_.getY();
+	msg.pose.position.z = swarm_target_local_.getZ();
 
 	int i = 0;
-	for (auto &vehicle : *camila_)
+	for (auto &vehicle : camila_)
 	{
 		if (vehicle.getInfo().vehicle_id_ != 1)
 		{
@@ -222,9 +242,9 @@ void Scenario::drawStringFont7x5()
 		}
 		iter = scen.begin() + min_num;
 		temp.header.stamp = ros::Time::now();
-		temp.pose.position.x = swarm_.getSwarmTargetLocal.getX() + offset_[i].getX() + iter->first * spacing;
-		temp.pose.position.y = swarm_.getSwarmTargetLocal.getY() + offset_[i].getY();
-		temp.pose.position.z = swarm_.getSwarmTargetLocal.getZ() + offset_[i].getZ() + iter->second * spacing;
+		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
+		temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
+		temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
 		vehicle.setScenPos(*iter);
 		vehicle.setLocalTarget(temp);
 		scen.erase(iter);
@@ -328,9 +348,9 @@ void Scenario::drawStringFont8x8()
 		}
 		iter = scen.begin() + min_num;
 		temp.header.stamp = ros::Time::now();
-		temp.pose.position.x = swarm_.getSwarmTargetLocal.getX() + offset_[i].getX() + iter->first * spacing;
-		temp.pose.position.y = swarm_.getSwarmTargetLocal.getY() + offset_[i].getY();
-		temp.pose.position.z = swarm_.getSwarmTargetLocal.getZ() + offset_[i].getZ() + iter->second * spacing;
+		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
+		temp.pose.position.y = swarm_target_local_.getX() + offset_[i].getY();
+		temp.pose.position.z = swarm_target_local_.getX() + offset_[i].getZ() + iter->second * spacing;
 		vehicle.setScenPos(*iter);
 		vehicle.setLocalTarget(temp);
 		scen.erase(iter);
@@ -440,4 +460,48 @@ void Scenario::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t 
 	default:
 		break;
 	}
+}
+
+bool Scenario::multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
+									  swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res)
+{
+	updateOffset();
+
+	formation_ = req.formation;
+	swarm_target_local_.setX(req.x);
+	swarm_target_local_.setY(req.y);
+	swarm_target_local_.setZ(req.z);
+
+	target_changed_flag_ = true;
+
+	res.success = true;
+	return res.success;
+}
+
+bool Scenario::multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request &req,
+									   swarm_ctrl_pkg::srvMultiSetpointGlobal::Response &res)
+{
+	res.success = true;
+	return res.success;
+}
+
+bool Scenario::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
+							   swarm_ctrl_pkg::srvGoToVehicle::Response &res)
+{
+	geometry_msgs::PoseStamped msg;
+	iter_ = camila_.begin() + req.num_drone - 1;
+
+	updateOffset();
+
+	if (req.num_drone > 0 && req.num_drone <= num_of_vehicle_)
+	{
+		msg.header.stamp = ros::Time::now();
+		msg.pose.position.x = req.x + offset_[req.num_drone - 1].getX();
+		msg.pose.position.y = req.y + offset_[req.num_drone - 1].getY();
+		msg.pose.position.z = req.z;
+	}
+
+	iter_->setLocalTarget(msg);
+
+	return true;
 }
