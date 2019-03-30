@@ -21,27 +21,36 @@
 class Scenario
 {
 private:
+  /* ros variables */
   ros::NodeHandle &nh_global_;
 	ros::ServiceServer goto_vehicle_server_;
   ros::ServiceServer multi_setpoint_local_server_;
 	ros::ServiceServer multi_setpoint_global_server_;
 
+  /* swarm info */
   SwarmVehicle &swarm_;
-  std::vector<Vehicle> camila_;
-  std::vector<tf2::Vector3> offset_;
+	int num_of_vehicle_;
+  const std::vector<Vehicle> *camila_;
+  const std::vector<tf2::Vector3> *offset_;
   std::string formation_;
   tf2::Vector3 swarm_target_local_;
+
+  /* scenario variables */
+	double angle_;
+	std::vector<uint8_t> scen_hex_;
+	static std::string scen_str_;
+	static int scen_num_;
+	ros::Time prev_;
 
   void swarmServiceInit();
 	void release();
 
   void point();
-  void idle();
-  void makeCircle();
-  void makeEllipse();
-  void drawStringFont7x5();
-  void drawStringFont8x8();
-  geometry_msgs::PoseStamped getSwarmTarget() const;
+  void idle(double);
+  void makeCircle(double);
+  void makeEllipse(double);
+  void drawStringFont7x5(double);
+  void drawStringFont8x8(double);
   void hexToCoord(std::vector<std::pair<int, int>> &, const uint8_t &, const int &, const bool &);
 
   bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,

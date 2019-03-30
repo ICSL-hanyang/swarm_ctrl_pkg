@@ -489,8 +489,6 @@ double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
 double SwarmVehicle::range_sp_;
 double SwarmVehicle::max_speed_;
-int SwarmVehicle::scen_num_;
-std::string SwarmVehicle::scen_str_ = "";
 
 //default value : default name = camila, num_of_vehicle = 1;
 SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_name, const int &num_of_vehicle)
@@ -499,14 +497,11 @@ SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_
 	  nh_(ros::NodeHandle()),
 	  nh_mul_("multi"),
 	  nh_global_(nh_global),
-	  multi_setpoint_publish_flag_(false),
-	  target_changed_flag_(false)
+	  multi_setpoint_publish_flag_(false)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
 	offset_.reserve(num_of_vehicle_);
-	scen_hex_.reserve(num_of_vehicle_);
-
 	for (int i = 0; i < num_of_vehicle_; i++)
 	{
 		vehicle_info_[i].vehicle_id_ = i + 1;
@@ -521,13 +516,11 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
 	  nh_(rhs.nh_),
 	  nh_mul_(rhs.nh_mul_),
 	  nh_global_(rhs.nh_global_),
-	  multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_),
-	  target_changed_flag_(rhs.target_changed_flag_)
+	  multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
 	camila_.reserve(num_of_vehicle_);
 	offset_.reserve(num_of_vehicle_);
-	scen_hex_.reserve(num_of_vehicle_);
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
@@ -551,7 +544,6 @@ const SwarmVehicle &SwarmVehicle::operator=(const SwarmVehicle &rhs)
 	std::vector<Vehicle>().swap(camila_);
 	camila_.reserve(num_of_vehicle_);
 	offset_.reserve(num_of_vehicle_);
-	scen_hex_.reserve(num_of_vehicle_);
 
 	std::vector<Vehicle>::const_iterator it;
 	for (it = rhs.camila_.begin(); it != rhs.camila_.end(); it++)
@@ -568,7 +560,6 @@ void SwarmVehicle::release()
 {
 	std::vector<Vehicle>().swap(camila_);
 	std::vector<tf2::Vector3>().swap(offset_);
-	std::vector<uint8_t>().swap(scen_hex_);
 }
 
 SwarmVehicle::~SwarmVehicle()
@@ -581,15 +572,13 @@ void SwarmVehicle::updateOffset()
 	sensor_msgs::NavSatFix leader = camila_.front().getHomeGlobal();
 
 	int i = 0;
-	if (offset_.size() == 0)
+	if (offset_.empty())
 	{
-		if (num_of_vehicle_ != 1)
-			angle_ = 2.0 * M_PI / (num_of_vehicle_ - 1);
 		for (auto &vehicle : camila_)
 		{
 			sensor_msgs::NavSatFix follower = vehicle.getGlobalPosition();
-			tf2::Vector3 _offset = convertGeoToENU(leader, follower);
-			offset_.push_back(_offset);
+			tf2::Vector3 offset = convertGeoToENU(leader, follower);
+			offset_.push_back(offset);
 			ROS_INFO_STREAM("offset_[" << i << "] = " << offset_[i].getX() << ", " << offset_[i].getY() << ", " << offset_[i].getZ());
 			i++;
 		}
@@ -766,14 +755,14 @@ std::string SwarmVehicle::getSwarmInfo() const
 	return swarm_name_;
 }
 
-const std::vector<Vehicle> &SwarmVehicle::getSwarmVehicle() const
+const std::vector<Vehicle> *SwarmVehicle::getSwarmVehicle() const
 {
-	return camila_;
+	return &camila_;
 }
 
-const std::vector<tf2::Vector3> &SwarmVehicle::getSwarmOffset() const
+const std::vector<tf2::Vector3> *SwarmVehicle::getSwarmOffset() const
 {
-	return offset_;
+	return &offset_;
 }
 
 void SwarmVehicle::addVehicle(const VehicleInfo &vehicle_info)

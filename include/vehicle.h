@@ -178,26 +178,19 @@ class SwarmVehicle
 	std::vector<Vehicle> camila_;
 	std::vector<Vehicle>::iterator iter_;
 	std::vector<tf2::Vector3> offset_;
-	std::vector<uint8_t> scen_hex_;
 
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
 	ros::NodeHandle &nh_global_;
 
 	bool multi_setpoint_publish_flag_;
-	bool target_changed_flag_;
-	double angle_;
-	ros::Time prev_;
 
 	static double kp_seek_;
 	static double kp_sp_;
 	static double range_sp_;
 	static double max_speed_;
-	static int scen_num_;
-	static std::string scen_str_;
 
 	void release();
-	void updateOffset();
 
 	void limit(tf2::Vector3 &, const double &);
 	void getVehiclePos();
@@ -218,12 +211,13 @@ class SwarmVehicle
 
 	void setSwarmInfo(const std::string &, const int &);
 	std::string getSwarmInfo() const;
-	const std::vector<Vehicle> &getSwarmVehicle() const;
-	const std::vector<tf2::Vector3> &getSwarmOffset() const;
+	const std::vector<Vehicle> *getSwarmVehicle() const;
+	const std::vector<tf2::Vector3> *getSwarmOffset() const;
 
 	void addVehicle(const VehicleInfo &);
 	void deleteVehicle(const VehicleInfo &);
 	void showVehicleList() const;
+	void updateOffset();
 
 	void run();
 };
