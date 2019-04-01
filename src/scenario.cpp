@@ -10,12 +10,49 @@ Scenario::Scenario(ros::NodeHandle &nh, SwarmVehicle &swarm)
 	  swarm_target_local_(tf2::Vector3(0, 0, 0))
 {
 	nh_global_.getParam("num_drone", num_of_vehicle_);
+	scens_.reserve(num_of_vehicle_);
 	scen_hex_.reserve(num_of_vehicle_);
-	camila_ = swarm_.getSwarmVehicle();
-	offset_ = swarm_.getSwarmOffset();
 
 	if (num_of_vehicle_ != 1)
 		angle_ = 2.0 * M_PI / (num_of_vehicle_ - 1);
+
+	swarmServiceInit();
+}
+
+Scenario::Scenario(const Scenario &rhs)
+	: nh_global_(rhs.nh_global_),
+	  swarm_(rhs.swarm_),
+	  formation_(rhs.formation_),
+	  swarm_target_local_(rhs.swarm_target_local_)
+{
+	num_of_vehicle_ = rhs.num_of_vehicle_;
+	scens_.reserve(num_of_vehicle_);
+	scen_hex_.reserve(num_of_vehicle_);
+
+	if (num_of_vehicle_ != 1)
+		angle_ = 2.0 * M_PI / (num_of_vehicle_ - 1);
+
+	swarmServiceInit();
+}
+
+const Scenario &Scenario::operator=(const Scenario &rhs)
+{
+	if(this == &rhs)
+		return *this;
+	
+	std::vector<tf2::Vector3>().swap(scens_);
+	std::vector<uint8_t>().swap(scen_hex_);
+	num_of_vehicle_ = rhs.num_of_vehicle_;
+	scens_.reserve(num_of_vehicle_);
+	scen_hex_.reserve(num_of_vehicle_);
+
+	if (num_of_vehicle_ != 1)
+		angle_ = 2.0 * M_PI / (num_of_vehicle_ - 1);
+
+	nh_global_ = rhs.nh_global_;
+	swarm_ = rhs.swarm_;
+	formation_ = rhs.formation_;
+	swarm_target_local_ = rhs.swarm_target_local_;
 
 	swarmServiceInit();
 }
@@ -27,124 +64,80 @@ Scenario::~Scenario()
 
 void Scenario::swarmServiceInit()
 {
-	goto_vehicle_server_ = nh_global_.advertiseService("goto_vehicle", &Scenario::gotoVehicle, this);
 	multi_setpoint_local_server_ = nh_global_.advertiseService("multi_setpoint_local", &Scenario::multiSetpointLocal, this);
 	multi_setpoint_global_server_ = nh_global_.advertiseService("multi_setpoint_global", &Scenario::multiSetpointGlobal, this);
 }
 
 void Scenario::release()
 {
+	std::vector<tf2::Vector3>().swap(scens_);
 	std::vector<uint8_t>().swap(scen_hex_);
 	multi_setpoint_global_server_.shutdown();
 	multi_setpoint_local_server_.shutdown();
-	goto_vehicle_server_.shutdown();
-}
-
-void Scenario::formationGenerator()
-{
-	double spacing, radius;
-	nh_global_.getParamCached("spacing", spacing);
-	nh_global_.getParamCached("radius", radius);
-
-	if (formation_ == "POINT")
-		point();
-	else if (formation_ == "IDLE")
-		idle(spacing);
-	else if (formation_ == "SCEN1")
-		makeCircle(radius);
-	else if (formation_ == "SCEN2")
-		makeEllipse(radius);
-	else if (formation_ == "SCEN3")
-		drawStringFont7x5(spacing);
-	else if (formation_ == "SCEN4")
-		drawStringFont8x8(spacing);
 }
 
 void Scenario::point()
 {
-	geometry_msgs::PoseStamped msg;
-	int i = 0;
-	for (auto vehicle : *camila_)
-	{
-		msg.pose.position.x = msg.pose.position.x + (*offset_)[i].getX();
-		msg.pose.position.y = msg.pose.position.y + (*offset_)[i].getY();
-		msg.pose.position.z = msg.pose.position.z;
-		vehicle.setLocalTarget(msg);
-		i++;
-	}
+	scens_.clear();
+	swarm_.setScenario(swarm_target_local_, scens_);
 }
 
 void Scenario::idle(double spacing)
 {
-	geometry_msgs::PoseStamped msg;
-	nh_global_.getParamCached("spacing", spacing);
-	int i = 0;
+	scens_.clear();
 	double x = 0, y = -spacing;
-	for (auto vehicle : *camila_)
+	for (int i = 0; i < num_of_vehicle_; i++)
 	{
-		if (y < 16)
+		if (y < 20)
 			y += spacing;
 		else
 		{
 			x += spacing;
 			y = 0;
 		}
-		msg.pose.position.x = msg.pose.position.x + (*offset_)[i].getX() + x;
-		msg.pose.position.y = msg.pose.position.y + (*offset_)[i].getY() + y;
-		msg.pose.position.z = msg.pose.position.z;
-		vehicle.setLocalTarget(msg);
-		i++;
+		scens_.push_back(tf2::Vector3(x, y, 0));
 	}
+	swarm_.setScenario(swarm_target_local_, scens_);
 }
 
 void Scenario::makeCircle(double radius)
 {
-	geometry_msgs::PoseStamped msg;
+	scens_.clear();
 	double m_sec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.00006 * m_sec; // 0.06 rad/s
 	double angle;
-	int i = 0;
-	for (auto vehicle : *camila_)
+	for (int i = 0; i < num_of_vehicle_; i++)
 	{
 		angle = i * angle_;
-
-		msg.pose.position.x = msg.pose.position.x + (*offset_)[i].getX() + radius * cos(angle + x);
-		msg.pose.position.y = msg.pose.position.y + (*offset_)[i].getY() + radius * sin(angle + x);
-		msg.pose.position.z = msg.pose.position.z;
-		vehicle.setLocalTarget(msg);
-		i++;
+		scens_.push_back(tf2::Vector3(radius * cos(angle + x), radius * sin(angle + x), 0));
 	}
+	swarm_.setScenario(swarm_target_local_, scens_);
 }
 
 void Scenario::makeEllipse(double radius)
 {
-	geometry_msgs::PoseStamped msg;
+	scens_.clear();
 	double m_sec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.00006 * m_sec; // 0.06 rad/s
 	double angle;
-	int i = 0;
-	for (auto vehicle : *camila_)
+	for (int i = 0; i < num_of_vehicle_; i++)
 	{
 		angle = i * angle_;
-		msg.header.stamp = ros::Time::now();
-		msg.pose.position.x = msg.pose.position.x + (*offset_)[i].getX() + radius * cos(angle + x);
-		msg.pose.position.y = msg.pose.position.y + (*offset_)[i].getY() + radius * sin(angle + x);
-		msg.pose.position.z = msg.pose.position.z + (*offset_)[i].getZ() + radius * cos(angle + x) * x;
-		vehicle.setLocalTarget(msg);
-		i++;
+		scens_.push_back(tf2::Vector3(radius * cos(angle + x), radius * sin(angle + x), radius * cos(angle + x) * x));
 	}
+	swarm_.setScenario(swarm_target_local_, scens_);
 }
 
 void Scenario::drawStringFont7x5(double spacing)
 {
 	std::string scen_str;
 	nh_global_.getParamCached("scen", scen_str);
-	std::vector<std::pair<int, int>> scen;
+	std::vector<std::pair<int, int>> dots;
 	std::vector<std::pair<int, int>>::iterator iter;
 	std::vector<uint8_t>::iterator iter_uint8;
-	scen.reserve(num_of_vehicle_);
+	dots.reserve(num_of_vehicle_);
 
-	if (scen_hex_.size() == 0 || scen_str_ != scen_str)
+	if (scen_hex_.empty() || scen_str_ != scen_str)
 	{
 		scen_hex_.clear();
 		scen_str_ = scen_str;
@@ -182,62 +175,61 @@ void Scenario::drawStringFont7x5(double spacing)
 		left_bits = hex >> 4;
 		right_bits = 0x0f & hex;
 
-		hexToCoord(scen, left_bits, 5 - t, false);
-		hexToCoord(scen, right_bits, 5 - t, true);
+		hexToCoord(dots, left_bits, 5 - t, false);
+		hexToCoord(dots, right_bits, 5 - t, true);
 		t++;
 	}
 
-	while (scen.size() > num_of_vehicle_)
-		scen.pop_back();
+	while (dots.size() > num_of_vehicle_)
+		dots.pop_back();
 
-	geometry_msgs::PoseStamped temp;
-	int scen_size = scen.size();
-	int i = 0, j = 0;
-	for (auto vehicle : *camila_)
+	scens_.clear();
+	int scen_size = dots.size();
+	int j = 0;
+	for (int i = 0; i < num_of_vehicle_; i++)
 	{
-		if (scen.size() == 0)
+		if (dots.empty())
 		{
-			hexToCoord(scen, 0x0f, -3 - j, true);
-			hexToCoord(scen, 0x0f, -3 - j, false);
+			hexToCoord(dots, 0x0f, -3 - j, true);
+			hexToCoord(dots, 0x0f, -3 - j, false);
 			j++;
 		}
-		int min_num = 0;
-		int min_dist = 350;
-		int k = 0;
-		std::pair<int, int> prev_scen = vehicle.getScenPos();
-		for (iter = scen.begin(); iter != scen.end(); iter++)
-		{
-			int a, b, length;
-			a = prev_scen.first - iter->first;
-			b = prev_scen.second - iter->second;
-			length = a * a + b * b;
-			if (length < min_dist)
-			{
-				min_dist = length;
-				min_num = k;
-			}
-			k++;
-		}
-		iter = scen.begin() + min_num;
-		temp.header.stamp = ros::Time::now();
-		temp.pose.position.x = swarm_target_local_.getX() + (*offset_)[i].getX() + iter->first * spacing;
-		temp.pose.position.y = swarm_target_local_.getY() + (*offset_)[i].getY();
-		temp.pose.position.z = swarm_target_local_.getZ() + (*offset_)[i].getZ() + iter->second * spacing;
-		vehicle.setScenPos(*iter);
-		vehicle.setLocalTarget(temp);
-		scen.erase(iter);
+		// int min_num = 0;
+		// int min_dist = 350;
+		// int k = 0;
+		// std::pair<int, int> prev_scen = vehicle.getScenPos();
+		// for (iter = dots.begin(); iter != dots.end(); iter++)
+		// {
+		// 	int a, b, length;
+		// 	a = prev_scen.first - iter->first;
+		// 	b = prev_scen.second - iter->second;
+		// 	length = a * a + b * b;
+		// 	if (length < min_dist)
+		// 	{
+		// 		min_dist = length;
+		// 		min_num = k;
+		// 	}
+		// 	k++;
+		// }
+		// iter = dots.begin() + min_num;
+
+		scens_.push_back(tf2::Vector3(iter->first * spacing, 0, iter->second * spacing));
+
+		// vehicle.setScenPos(*iter);
+		// dots.erase(iter);
 		i++;
 	}
+	swarm_.setScenario(swarm_target_local_, scens_);
 }
 
 void Scenario::drawStringFont8x8(double spacing)
 {
 	std::string scen_str;
 	nh_global_.getParamCached("scen", scen_str);
-	std::vector<std::pair<int, int>> scen;
+	std::vector<std::pair<int, int>> dots;
 	std::vector<std::pair<int, int>>::iterator iter;
 	std::vector<uint8_t>::iterator iter_uint8;
-	scen.reserve(num_of_vehicle_);
+	dots.reserve(num_of_vehicle_);
 
 	if (scen_hex_.size() == 0 || scen_str_ != scen_str)
 	{
@@ -284,52 +276,51 @@ void Scenario::drawStringFont8x8(double spacing)
 		left_bits = hex >> 4;
 		right_bits = 0x0f & hex;
 
-		hexToCoord(scen, left_bits, 8 - t, true);
-		hexToCoord(scen, right_bits, 8 - t, false);
+		hexToCoord(dots, left_bits, 8 - t, true);
+		hexToCoord(dots, right_bits, 8 - t, false);
 		t++;
 	}
 
-	while (scen.size() > num_of_vehicle_)
-		scen.pop_back();
+	while (dots.size() > num_of_vehicle_)
+		dots.pop_back();
 
-	geometry_msgs::PoseStamped temp;
-	int scen_size = scen.size();
-	int i = 0, j = 0;
-	for (auto vehicle : *camila_)
+	scens_.clear();
+	int scen_size = dots.size();
+	int j = 0;
+	for (int i = 0; i < num_of_vehicle_; i++)
 	{
-		if (scen.size() == 0)
+		if (dots.empty())
 		{
-			hexToCoord(scen, 0x0f, -3 - j, true);
-			hexToCoord(scen, 0x0f, -3 - j, false);
+			hexToCoord(dots, 0x0f, -3 - j, true);
+			hexToCoord(dots, 0x0f, -3 - j, false);
 			j++;
 		}
-		int min_num = 0;
-		int min_dist = 350;
-		int k = 0;
-		std::pair<int, int> prev_scen = vehicle.getScenPos();
-		for (iter = scen.begin(); iter != scen.end(); iter++)
-		{
-			int a, b, length;
-			a = prev_scen.first - iter->first;
-			b = prev_scen.second - iter->second;
-			length = a * a + b * b;
-			if (length < min_dist)
-			{
-				min_dist = length;
-				min_num = k;
-			}
-			k++;
-		}
-		iter = scen.begin() + min_num;
-		temp.header.stamp = ros::Time::now();
-		temp.pose.position.x = swarm_target_local_.getX() + (*offset_)[i].getX() + iter->first * spacing;
-		temp.pose.position.y = swarm_target_local_.getX() + (*offset_)[i].getY();
-		temp.pose.position.z = swarm_target_local_.getX() + (*offset_)[i].getZ() + iter->second * spacing;
-		vehicle.setScenPos(*iter);
-		vehicle.setLocalTarget(temp);
-		scen.erase(iter);
+		// int min_num = 0;
+		// int min_dist = 350;
+		// int k = 0;
+		// std::pair<int, int> prev_scen = vehicle.getScenPos();
+		// for (iter = dots.begin(); iter != dots.end(); iter++)
+		// {
+		// 	int a, b, length;
+		// 	a = prev_scen.first - iter->first;
+		// 	b = prev_scen.second - iter->second;
+		// 	length = a * a + b * b;
+		// 	if (length < min_dist)
+		// 	{
+		// 		min_dist = length;
+		// 		min_num = k;
+		// 	}
+		// 	k++;
+		// }
+		// iter = dots.begin() + min_num;
+
+		scens_.push_back(tf2::Vector3(iter->first * spacing, 0, iter->second * spacing));
+
+		// vehicle.setScenPos(*iter);
+		dots.erase(iter);
 		i++;
 	}
+	swarm_.setScenario(swarm_target_local_, scens_);
 }
 
 void Scenario::hexToCoord(std::vector<std::pair<int, int>> &scen, const uint8_t &hex, const int &x_value, const bool &is_left_bits)
@@ -446,22 +437,22 @@ bool Scenario::multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Reque
 	return res.success;
 }
 
-bool Scenario::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
-						   swarm_ctrl_pkg::srvGoToVehicle::Response &res)
+void Scenario::formationGenerator()
 {
-	geometry_msgs::PoseStamped msg;
-	auto vehicle = (*camila_)[req.num_drone - 1];
+	double spacing, radius;
+	nh_global_.getParamCached("spacing", spacing);
+	nh_global_.getParamCached("radius", radius);
 
-	swarm_.updateOffset();
-
-	if (req.num_drone > 0 && req.num_drone <= num_of_vehicle_)
-	{
-		msg.header.stamp = ros::Time::now();
-		msg.pose.position.x = req.x + (*offset_)[req.num_drone - 1].getX();
-		msg.pose.position.y = req.y + (*offset_)[req.num_drone - 1].getY();
-		msg.pose.position.z = req.z;
-	}
-	vehicle.setLocalTarget(msg);
-
-	return true;
+	if (formation_ == "POINT")
+		point();
+	else if (formation_ == "IDLE")
+		idle(spacing);
+	else if (formation_ == "SCEN1")
+		makeCircle(radius);
+	else if (formation_ == "SCEN2")
+		makeEllipse(radius);
+	else if (formation_ == "SCEN3")
+		drawStringFont7x5(spacing);
+	else if (formation_ == "SCEN4")
+		drawStringFont8x8(spacing);
 }

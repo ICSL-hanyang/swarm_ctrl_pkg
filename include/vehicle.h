@@ -28,6 +28,7 @@
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
 #include <mavros_msgs/GlobalPositionTarget.h>
+#include <swarm_ctrl_pkg/srvGoToVehicle.h>
 
 #define CONSTANTS_RADIUS_OF_EARTH 6371000 /* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
@@ -182,6 +183,7 @@ class SwarmVehicle
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
 	ros::NodeHandle &nh_global_;
+	ros::ServiceServer goto_vehicle_server_;
 
 	bool multi_setpoint_publish_flag_;
 
@@ -195,7 +197,10 @@ class SwarmVehicle
 	void limit(tf2::Vector3 &, const double &);
 	void getVehiclePos();
 	void separate(Vehicle &);
-	void seek(Vehicle &);	
+	void seek(Vehicle &);
+
+	bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
+					 swarm_ctrl_pkg::srvGoToVehicle::Response &res);
 
 	static tf2::Vector3 convertGeoToENU(const sensor_msgs::NavSatFix &,
 										const sensor_msgs::NavSatFix &);
@@ -218,6 +223,7 @@ class SwarmVehicle
 	void deleteVehicle(const VehicleInfo &);
 	void showVehicleList() const;
 	void updateOffset();
+	void setScenario(const tf2::Vector3 &, const std::vector<tf2::Vector3> &);
 
 	void run();
 };

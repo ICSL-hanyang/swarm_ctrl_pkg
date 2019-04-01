@@ -9,7 +9,6 @@
 /* ros header */
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
 
@@ -23,20 +22,18 @@ class Scenario
 private:
   /* ros variables */
   ros::NodeHandle &nh_global_;
-	ros::ServiceServer goto_vehicle_server_;
   ros::ServiceServer multi_setpoint_local_server_;
 	ros::ServiceServer multi_setpoint_global_server_;
 
   /* swarm info */
   SwarmVehicle &swarm_;
 	int num_of_vehicle_;
-  const std::vector<Vehicle> *camila_;
-  const std::vector<tf2::Vector3> *offset_;
   std::string formation_;
   tf2::Vector3 swarm_target_local_;
 
   /* scenario variables */
 	double angle_;
+  std::vector<tf2::Vector3> scens_;
 	std::vector<uint8_t> scen_hex_;
 	static std::string scen_str_;
 	static int scen_num_;
@@ -53,8 +50,6 @@ private:
   void drawStringFont8x8(double);
   void hexToCoord(std::vector<std::pair<int, int>> &, const uint8_t &, const int &, const bool &);
 
-  bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
-                   swarm_ctrl_pkg::srvGoToVehicle::Response &res);
   bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
                           swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);
   bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request &req,
@@ -63,6 +58,8 @@ private:
 public:
   void formationGenerator();
   Scenario(ros::NodeHandle &, SwarmVehicle &);
+  Scenario(const Scenario &);
+  const Scenario &operator=(const Scenario &);
   ~Scenario();
 };
 
