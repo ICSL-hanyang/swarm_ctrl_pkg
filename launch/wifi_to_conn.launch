@@ -6,16 +6,31 @@
     <arg name="range_sp" default="5"/>
     <arg name="max_speed" default="3"/>
 
+	<arg name="user_hostname" default="brontes"/>
+	<arg name="user_ip" default="192.168.0.7"/>
+	<arg name="user_name" default="heromin"/>
+	<arg name="user_password" default="eh2xhtm!88"/>
+	<arg name="user_envloader" default="~/catkin_ws/devel/env.sh"/>
+
+	<arg name="multi_user_hostname" default="camila1"/>
+	<arg name="multi_user_ip" default="192.168.0.21"/>
+	<arg name="multi_user_name" default="icsl-pi"/>
+	<arg name="multi_user_password" default="icsl5293"/>
+	<arg name="multi_user_envloader" default="~/catkin_ws/devel/env.sh"/>
+
+	<machine name="$(arg multi_user_hostname)" address="$(arg multi_user_ip)" user="$(arg multi_user_name)" password="$(arg multi_user_password)" env-loader="$(arg multi_user_envloader)" default="true" />		
+	<machine name="$(arg user_hostname)" address="$(arg user_ip)" user="$(arg user_name)" password="$(arg user_password)" env-loader="$(arg user_envloader)" default="true" />	
 	<!-- UAV1 -->
 	<group ns="camila1">
 		<!-- MAVROS and vehicle configs -->
 		<arg name="ID" value="1"/>
 		<!--udp://:"remote port"@$(arg user_ip):"udp port" -->
-		<arg name="fcu_url" default="/dev/ttyUSB0:57600"/>
+		<!-- <arg name="fcu_url" default="udp://:14540@localhost:14557"/> -->
+		<arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
 		<!-- <arg name="gcs_url" default="udp://:14540@$(arg user_ip):13301"/> -->
 		
 		<!-- MAVROS -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
+		<node machine="$(arg multi_user_hostname)" pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">
 			<param name="fcu_url" value="$(arg fcu_url)"/>
 			<param name="gcs_url" value=""/>
 			<param name="target_system_id" value="$(arg ID)"/>
