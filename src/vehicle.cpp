@@ -367,10 +367,20 @@ void Vehicle::gotoVel()
 	nh_global_.getParam("pid/kp", kp);
 	geometry_msgs::Twist vel;
 
+	tf::Quaternion q(
+		cur_local_.pose.orientation.w,
+		cur_local_.pose.orientation.x,
+		cur_local_.pose.orientation.y,
+		cur_local_.pose.orientation.z
+	);
+	tf::Matrix3x3 m(q);
+	m.getRPY( roll, pitch, yaw );
+	
+	//vel.angular.z = (arming_yaw-yaw);
 	vel.linear.x = (setpoint_pos_.getX() - cur_local_.pose.position.x) * kp;
 	vel.linear.y = (setpoint_pos_.getY() - cur_local_.pose.position.y) * kp;
 	vel.linear.z = (setpoint_pos_.getZ() - cur_local_.pose.position.z) * kp;
-
+	
 	setpoint_vel_pub_.publish(vel);
 }
 

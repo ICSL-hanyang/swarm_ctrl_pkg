@@ -104,6 +104,7 @@ class Vehicle
 	bool setpoint_publish_flag_;
 	/* yaw direction when arming */
 	double arming_roll,arming_pitch,arming_yaw;
+	double roll,pitch,yaw;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
