@@ -240,6 +240,14 @@ bool Vehicle::arming(const bool &arm_state)
 {
 	mavros_msgs::CommandBool msg;
 	msg.request.value = arm_state;
+	tf::Quaternion q(
+		cur_local_.pose.orientation.w,
+		cur_local_.pose.orientation.x,
+		cur_local_.pose.orientation.y,
+		cur_local_.pose.orientation.z
+	);
+	tf::Matrix3x3 m(q);
+	m.getRPY( arming_roll, arming_pitch, arming_yaw );
 
 	if (arming_client_.call(msg) && msg.response.success)
 		ROS_INFO_STREAM(msg.response.result);

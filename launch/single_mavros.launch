@@ -1,0 +1,24 @@
+<launch>
+  <arg name="gcs_url" default=""/>
+  <arg name="pluginlists_yaml" default="$(find mavros)/launch/px4_pluginlists.yaml" />
+  <arg name="config_yaml" default="$(find mavros)/launch/px4_config.yaml" />
+
+  <group ns = "camila1">
+    <arg name="ID" value="1"/>
+    <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
+    <node machine="camila$(arg ID)" name="mavros" pkg="mavros" type="mavros_node" output="log" respawn="true">
+      <param name="fcu_url" value="/dev/ttyUSB0:921600"/>
+      <param name="gcs_url" value="$(arg gcs_url)" />
+      <param name="target_system_id" value="1" />
+      <param name="target_component_id" value="1" />
+      <rosparam command="load" file="$(arg pluginlists_yaml)" />
+      <rosparam command="load" file="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
+
+    </node>
+  </group>
+    <machine name = "camila$(arg ID)" address="192.168.0.2$(arg ID)" user="icsl-pi" password="icsl5293" env-loader="/home/icsl-pi/catkin_ws/devel/env.sh" default="true" />
+    
+    <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen">
+    </node>
+
+</launch>

@@ -3,8 +3,8 @@
     <!-- launches Gazebo environment and 2x: MAVROS, PX4 SITL, and spawns vehicle -->
     <!-- vehicle model and world -->
     <arg name="est" default="ekf2"/>
-    <!-- <arg name="vehicle" default="iris"/> -->
     <arg name="vehicle" default="iris"/>
+    <!-- <arg name="vehicle" default="iitp_drone"/> -->
     <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/>
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
@@ -40,16 +40,21 @@
 		<arg name="gcs_url" default="udp://:14540@$(arg user_ip):13301"/>
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+        <!-- <include file="$(find px4)/launch/mavros_posix_sitl.launch"> -->
             <arg name="x" value="-12.792"/>
             <arg name="y" value="5.15"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
             <arg name="Y" value="0"/>
-            <arg name="vehicle" value="$(arg vehicle)"/>
-            <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
+            <!-- <arg name="vehicle" value="$(arg vehicle)"/> -->
+            <arg name="vehicle" value="iris"/>
+            <!-- <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)"/> -->
+            <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/iris_1"/>
             <arg name="mavlink_udp_port" value="13001"/>
             <arg name="ID" value="$(arg ID)"/>
+            <!-- <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value="$(arg gcs_url)"/> -->
         </include>
         <!-- MAVROS -->
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" respawn="true">

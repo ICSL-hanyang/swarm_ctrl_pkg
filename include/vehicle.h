@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
@@ -101,6 +102,8 @@ class Vehicle
 	std::pair<int, int> scen_pos_;
 
 	bool setpoint_publish_flag_;
+	/* yaw direction when arming */
+	double arming_roll,arming_pitch,arming_yaw;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
