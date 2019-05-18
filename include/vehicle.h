@@ -170,6 +170,8 @@ class Vehicle
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
 
+	double getArmingYaw(){return arming_yaw;}
+
 	bool isPublish() const;
 };
 

@@ -47,7 +47,7 @@
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
-            <arg name="Y" value="0"/>
+            <arg name="Y" value="1.2"/>
             <arg name="vehicle" value="$(arg vehicle)"/>
             <arg name="rcS" value="$(find swarm_ctrl_pkg)/config/posix-configs/SITL/init/$(arg est)/$(arg vehicle)_$(arg ID)"/>
             <arg name="mavlink_udp_port" value="13001"/>

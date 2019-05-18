@@ -241,13 +241,15 @@ bool Vehicle::arming(const bool &arm_state)
 	mavros_msgs::CommandBool msg;
 	msg.request.value = arm_state;
 	tf::Quaternion q(
-		cur_local_.pose.orientation.w,
 		cur_local_.pose.orientation.x,
 		cur_local_.pose.orientation.y,
-		cur_local_.pose.orientation.z
+		cur_local_.pose.orientation.z,
+		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 m(q);
 	m.getRPY( arming_roll, arming_pitch, arming_yaw );
+
+	std::cout << "set arming yaw: "<<arming_yaw<<std::endl;
 
 	if (arming_client_.call(msg) && msg.response.success)
 		ROS_INFO_STREAM(msg.response.result);
@@ -357,6 +359,27 @@ void Vehicle::gotoLocal()
 	tar_local_.header.seq += 1;
 	tar_local_.header.stamp = ros::Time::now();
 	tar_local_.header.frame_id = vehicle_info_.vehicle_name_;
+	//현재 로컬포지션값의 쿼터니언을 받아와서 RPY로 변환
+	tf::Quaternion cur_q(
+		cur_local_.pose.orientation.x,
+		cur_local_.pose.orientation.y,
+		cur_local_.pose.orientation.z,
+		cur_local_.pose.orientation.w
+	);
+	tf::Matrix3x3 cur_m(cur_q);
+	cur_m.getRPY( roll, pitch, yaw );
+	
+	//yaw값만 arming걸때 값으로 돌려주면 됨.
+	tf::Matrix3x3 tar_m;
+	tar_m.setEulerYPR( arming_yaw, pitch, roll );
+	// std::cout << "arming yaw: "<<arming_yaw*180/M_PI<<std::endl;
+	// std::cout << "cur yaw: "<<yaw*180/M_PI<<std::endl;
+	tf::Quaternion tar_q;
+	tar_m.getRotation(tar_q);
+	tar_local_.pose.orientation.w = tar_q.getW();
+	tar_local_.pose.orientation.x = tar_q.getX();
+	tar_local_.pose.orientation.y = tar_q.getY();
+	tar_local_.pose.orientation.z = tar_q.getZ();
 
 	setpoint_local_pub_.publish(tar_local_);
 }
@@ -367,16 +390,16 @@ void Vehicle::gotoVel()
 	nh_global_.getParam("pid/kp", kp);
 	geometry_msgs::Twist vel;
 
-	tf::Quaternion q(
-		cur_local_.pose.orientation.w,
-		cur_local_.pose.orientation.x,
-		cur_local_.pose.orientation.y,
-		cur_local_.pose.orientation.z
-	);
-	tf::Matrix3x3 m(q);
-	m.getRPY( roll, pitch, yaw );
+	// tf::Quaternion q(
+	// 	cur_local_.pose.orientation.w,
+	// 	cur_local_.pose.orientation.x,
+	// 	cur_local_.pose.orientation.y,
+	// 	cur_local_.pose.orientation.z
+	// );
+	// tf::Matrix3x3 m(q);
+	// m.getRPY( roll, pitch, yaw );
 	
-	//vel.angular.z = (arming_yaw-yaw);
+	//vel.angular.z = arming_yaw;
 	vel.linear.x = (setpoint_pos_.getX() - cur_local_.pose.position.x) * kp;
 	vel.linear.y = (setpoint_pos_.getY() - cur_local_.pose.position.y) * kp;
 	vel.linear.z = (setpoint_pos_.getZ() - cur_local_.pose.position.z) * kp;
@@ -703,9 +726,18 @@ void SwarmVehicle::formationGenerator()
 	double angle, spacing;
 	nh_global_.getParamCached("spacing", spacing);
 
-	msg.pose.position.x = swarm_target_local_.getX();
-	msg.pose.position.y = swarm_target_local_.getY();
-	msg.pose.position.z = swarm_target_local_.getZ();
+	int i = 0;
+	for (auto &vehicle : camila_)
+	{
+		msg.pose.position.x = swarm_target_local_.getX()*cos(vehicle.getArmingYaw()) - swarm_target_local_.getY()*sin(vehicle.getArmingYaw());
+		msg.pose.position.y = swarm_target_local_.getX()*sin(vehicle.getArmingYaw()) + swarm_target_local_.getY()*cos(vehicle.getArmingYaw());
+		msg.pose.position.z = swarm_target_local_.getZ();
+		i++;
+	}
+
+	// msg.pose.position.x = swarm_target_local_.getX()*sin();
+	// msg.pose.position.y = swarm_target_local_.getY();
+	// msg.pose.position.z = swarm_target_local_.getZ();
 
 	if (formation_ == "POINT")
 	{
