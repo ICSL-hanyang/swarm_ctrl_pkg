@@ -27,6 +27,8 @@
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
 #include <mavros_msgs/GlobalPositionTarget.h>
+#include <obstacle_detect/Pair.h>
+#include <obstacle_detect/VectorPair.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
@@ -65,6 +67,7 @@ class Vehicle
 	ros::Subscriber home_sub_;
 	ros::Subscriber local_pos_sub_;
 	ros::Subscriber global_pos_sub_;
+	ros::Subscriber obstacle_pos_sub_;
 
 	/* ros publisher*/
 	ros::Publisher setpoint_vel_pub_;
@@ -115,6 +118,7 @@ class Vehicle
 	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
+	void obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &);
 
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);

@@ -86,6 +86,7 @@ void Vehicle::vehicleInit()
 	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &Vehicle::homeCB, this);
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
+	obstacle_pos_sub_ = nh_.subscribe("/obstacle_detect_node/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
@@ -173,6 +174,31 @@ void Vehicle::globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg)
 void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
 	cur_local_ = *msg;
+}
+
+void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &msg)
+{
+	tf2::Vector3 sum(0, 0, 0);
+	uint8_t cnt = 0;
+
+	for(auto &obs_pos : msg->data){
+		tf2::Vector3 obs(0, 0, 0);
+		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
+		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
+		obs *= (-2.0 / obs_pos.distance);
+		sum += obs;
+		cnt++;
+	}
+	if(cnt > 0){
+		sum /= cnt;
+		if(sum.length() > 3.0)
+			sum = sum.normalize() * 3.0;
+		setSumOfSp(sum);
+	}
+	else{
+		sum.setZero();
+		setSumOfSp(sum);
+	}
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
