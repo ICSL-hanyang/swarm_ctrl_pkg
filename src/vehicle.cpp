@@ -87,6 +87,7 @@ void Vehicle::vehicleInit()
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
 	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
+	longest_pos_sub_ = nh_.subscribe("/longest", 10, &Vehicle::longestPositionCB, this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
@@ -185,20 +186,28 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		tf2::Vector3 obs(0, 0, 0);
 		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
 		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
-		obs *= (-2.0 / obs_pos.distance);
+		obs *= (-2.0 / obs_pos.distance); // 이거 장애물 인식 거리 파라미터 값으로 바꿔야 함 
 		sum += obs;
 		cnt++;
 	}
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > 3.0)
-			sum = sum.normalize() * 3.0;
+		if(sum.length() > 3.0)   // 맥스스피드 파라미터로 변경해야함 
+			sum = sum.normalize() * 3.0; // 맥스스피드 파라미터로 변경해야함 
 		setSumOfSp(sum);
 	}
 	else{
 		sum.setZero();
 		setSumOfSp(sum);
 	}
+}
+
+void Vehicle::longestPositionCB(const obstacle_detect::Pair::ConstPtr &msg)
+{
+	tf2::Vector3 longest(0, 0, 0);
+	longest.setX(cos((msg->angle + 90) * M_DEG_TO_RAD) * msg->distance);
+	longest.setY(sin((msg->angle + 90) * M_DEG_TO_RAD) * msg->distance);
+	setLongestPos(longest);
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
@@ -451,6 +460,16 @@ void Vehicle::setSumOfSp(const tf2::Vector3 &sum_sp)
 tf2::Vector3 Vehicle::getSumOfSp() const
 {
 	return sum_sp_;
+}
+
+void Vehicle::setLongestPos(const tf2::Vector3 &longest_pos)
+{
+	longest_pos_ = longest_pos;
+}
+
+tf2::Vector3 Vehicle::getLongestPos() const
+{
+	return longest_pos_;
 }
 
 void Vehicle::setErr(const tf2::Vector3 &err)
@@ -1796,6 +1815,7 @@ void SwarmVehicle::run()
 		nh_global_.getParamCached("use_vel", control_method);
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
+		nh_global_.getParamCached("setpoint/kp_longest", kp_longest_);
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
 		nh_global_.getParamCached("setpoint/max_speed", max_speed_);
 		nh_global_.getParamCached("setpoint/separate", sp);
@@ -1806,8 +1826,8 @@ void SwarmVehicle::run()
 			seek(vehicle);
 			if (sp)
 			{
-				//`separate(vehicle);
-				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_;
+				// separate(vehicle);
+				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_ + vehicle.getLongestPos() * kp_longest_;
 			}
 			else
 				setpoint = vehicle.getErr() * kp_seek_;
