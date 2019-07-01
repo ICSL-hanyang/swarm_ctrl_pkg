@@ -1,5 +1,5 @@
 # set velocity control
-use_vel: false
+use_vel: true
 
 takeoff_alt: 3.0
 
@@ -18,8 +18,8 @@ scen: '987'
 
 # setpoint control params
 setpoint:
-  kp_seek: 1.0
-  kp_sp: 1.5
+  kp_seek: 3.0
+  kp_sp: 0.7
   range_sp: 2.5
-  max_speed: 3.0
+  max_speed: 0.3
   separate: true
