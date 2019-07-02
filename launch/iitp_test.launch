@@ -7,7 +7,7 @@
     <arg name="vehicle" default="iitp_drone"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/> -->
     <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v3.world"/>
-    <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty_world.world"/> -->
+    <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>
@@ -91,8 +91,10 @@
             <param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
 			<!-- load blacklist, config -->
-			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
-			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
+			<!-- <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
+			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" /> -->
+            <rosparam command="load" file="$(find swarm_ctrl_pkg)/launch/px4_pluginlists_iitp.yaml"/>
+			<rosparam command="load" file="$(find swarm_ctrl_pkg)/launch/px4_config_iitp.yaml" />
 		</node>
 	</group>
     <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
