@@ -573,6 +573,7 @@ bool Vehicle::isPublish() const
 
 double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
+double SwarmVehicle::kp_longest_;
 double SwarmVehicle::range_sp_;
 double SwarmVehicle::max_speed_;
 int SwarmVehicle::scen_num_;
