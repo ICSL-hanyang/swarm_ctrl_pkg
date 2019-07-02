@@ -205,8 +205,11 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 void Vehicle::longestPositionCB(const obstacle_detect::Pair::ConstPtr &msg)
 {
 	tf2::Vector3 longest(0, 0, 0);
-	longest.setX(cos((msg->angle + 90) * M_DEG_TO_RAD) * msg->distance);
-	longest.setY(sin((msg->angle + 90) * M_DEG_TO_RAD) * msg->distance);
+	double dist = msg->distance;
+	if(dist == std::numeric_limits<double>::infinity())
+		dist = 10;
+	longest.setX(cos((msg->angle + 90) * M_DEG_TO_RAD) * dist);
+	longest.setY(sin((msg->angle + 90) * M_DEG_TO_RAD) * dist);
 	setLongestPos(longest);
 }
 
