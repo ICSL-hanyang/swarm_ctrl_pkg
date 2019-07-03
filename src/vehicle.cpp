@@ -101,6 +101,8 @@ void Vehicle::vehicleInit()
 	multi_takeoff_sub_ = nh_mul_.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
 
+	pid_velocity_.setDt(0.1);
+
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
 }
 
@@ -285,9 +287,9 @@ bool Vehicle::arming(const bool &arm_state)
 		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 m(q);
-	m.getRPY( arming_roll, arming_pitch, arming_yaw );
+	m.getRPY( arming_roll_, arming_pitch_, arming_yaw_ );
 
-	std::cout << "set arming yaw: "<<arming_yaw<<std::endl;
+	std::cout << "set arming yaw: "<<arming_yaw_<<std::endl;
 
 	if (arming_client_.call(msg) && msg.response.success)
 		ROS_INFO_STREAM(msg.response.result);
@@ -405,11 +407,11 @@ void Vehicle::gotoLocal()
 		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 cur_m(cur_q);
-	cur_m.getRPY( roll, pitch, yaw );
+	cur_m.getRPY( roll_, pitch_, yaw_ );
 	
 	//yaw값만 arming걸때 값으로 돌려주면 됨.
 	tf::Matrix3x3 tar_m;
-	tar_m.setEulerYPR( arming_yaw, pitch, roll );
+	tar_m.setEulerYPR( arming_yaw_, pitch_, roll_ );
 	// std::cout << "arming yaw: "<<arming_yaw*180/M_PI<<std::endl;
 	// std::cout << "cur yaw: "<<yaw*180/M_PI<<std::endl;
 	tf::Quaternion tar_q;
@@ -424,23 +426,27 @@ void Vehicle::gotoLocal()
 
 void Vehicle::gotoVel()
 {
-	double kp;
+	double kp, kd, ki;
 	nh_global_.getParam("pid/kp", kp);
+	nh_global_.getParam("pid/ki", ki);
+	nh_global_.getParam("pid/kd", kd);
+	pid_velocity_.setKp(kp);
+	pid_velocity_.setKi(ki);
+	pid_velocity_.setKd(kd);
+	
+	tf2::Vector3 cur_pos(
+		cur_local_.pose.position.x,
+		cur_local_.pose.position.y,
+		cur_local_.pose.position.z
+	);
+	tf2::Vector3 control_value(0, 0, 0);
+	control_value = pid_velocity_.calculate(setpoint_pos_, cur_pos);
+
 	geometry_msgs::Twist vel;
 
-	// tf::Quaternion q(
-	// 	cur_local_.pose.orientation.w,
-	// 	cur_local_.pose.orientation.x,
-	// 	cur_local_.pose.orientation.y,
-	// 	cur_local_.pose.orientation.z
-	// );
-	// tf::Matrix3x3 m(q);
-	// m.getRPY( roll, pitch, yaw );
-	
-	//vel.angular.z = arming_yaw;
-	vel.linear.x = (setpoint_pos_.getX() - cur_local_.pose.position.x) * kp;
-	vel.linear.y = (setpoint_pos_.getY() - cur_local_.pose.position.y) * kp;
-	vel.linear.z = (setpoint_pos_.getZ() - cur_local_.pose.position.z) * kp;
+	vel.linear.x = control_value.getX();
+	vel.linear.y = control_value.getY();
+	vel.linear.z = control_value.getZ();
 	
 	setpoint_vel_pub_.publish(vel);
 }

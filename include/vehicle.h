@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <pid.h>
 
 #include <ros/ros.h>
 #include <tf/tf.h>
@@ -108,8 +109,10 @@ class Vehicle
 
 	bool setpoint_publish_flag_;
 	/* yaw direction when arming */
-	double arming_roll,arming_pitch,arming_yaw;
-	double roll,pitch,yaw;
+	double arming_roll_, arming_pitch_, arming_yaw_;
+	double roll_, pitch_, yaw_;
+
+	PIDController<tf2::Vector3> pid_velocity_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -179,7 +182,7 @@ class Vehicle
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
 
-	double getArmingYaw(){return arming_yaw;}
+	double getArmingYaw(){return arming_yaw_;}
 
 	bool isPublish() const;
 };
