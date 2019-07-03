@@ -20,6 +20,7 @@ scen: '987'
 setpoint:
   kp_seek: 1.0
   kp_sp: 1.5
+  kp_longest: 1.0
   range_sp: 2.5
   max_speed: 3.0
   separate: true
