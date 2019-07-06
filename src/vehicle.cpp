@@ -1695,7 +1695,8 @@ void SwarmVehicle::run()
 {
 	if (isPublish())
 	{
-		bool control_method, sp, final_speed_limit;
+		bool control_method, sp;
+		double final_speed_limit;
 		nh_global_.getParamCached("use_vel", control_method);
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
