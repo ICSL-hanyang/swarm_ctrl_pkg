@@ -179,8 +179,8 @@ void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
 void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &msg)
 {
 	double separation_range, vector_speed_limit;
-	nh_global_.getParamCached("/setpoint/range_sp", separation_range);
-	nh_global_.getParamCached("/setpoint/vector_speed_limit", vector_speed_limit);
+	nh_global_.getParamCached("setpoint/range_sp", separation_range);
+	nh_global_.getParamCached("setpoint/vector_speed_limit", vector_speed_limit);
 
 	tf2::Vector3 sum(0, 0, 0);
 	uint8_t cnt = 0;
