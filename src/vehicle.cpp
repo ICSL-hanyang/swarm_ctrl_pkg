@@ -87,7 +87,6 @@ void Vehicle::vehicleInit()
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
 	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
-	longest_pos_sub_ = nh_.subscribe("/longest", 10, &Vehicle::longestPositionCB, this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
@@ -100,6 +99,8 @@ void Vehicle::vehicleInit()
 	multi_set_home_sub_ = nh_mul_.subscribe("set_home", 10, &Vehicle::multiSetHome, this);
 	multi_takeoff_sub_ = nh_mul_.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
+
+	pid_velocity_.setDt(0.1);
 
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
 }
@@ -179,6 +180,10 @@ void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &msg)
 {
+	double separation_range, vector_speed_limit;
+	nh_global_.getParamCached("/setpoint/range_sp", separation_range);
+	nh_global_.getParamCached("/setpoint/vector_speed_limit", vector_speed_limit);
+
 	tf2::Vector3 sum(0, 0, 0);
 	uint8_t cnt = 0;
 
@@ -186,31 +191,20 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		tf2::Vector3 obs(0, 0, 0);
 		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
 		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
-		obs *= (-2.0 / obs_pos.distance); // 이거 장애물 인식 거리 파라미터 값으로 바꿔야 함 
+		obs *= (-separation_range / obs_pos.distance); 
 		sum += obs;
 		cnt++;
 	}
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > 3.0)   // 맥스스피드 파라미터로 변경해야함 
-			sum = sum.normalize() * 3.0; // 맥스스피드 파라미터로 변경해야함 
+		if(sum.length() > vector_speed_limit) 
+			sum = sum.normalize() * vector_speed_limit; 
 		setSumOfSp(sum);
 	}
 	else{
 		sum.setZero();
 		setSumOfSp(sum);
 	}
-}
-
-void Vehicle::longestPositionCB(const obstacle_detect::Pair::ConstPtr &msg)
-{
-	tf2::Vector3 longest(0, 0, 0);
-	double dist = msg->distance;
-	if(dist == std::numeric_limits<double>::infinity())
-		dist = 10;
-	longest.setX(cos((msg->angle + 90) * M_DEG_TO_RAD) * dist);
-	longest.setY(sin((msg->angle + 90) * M_DEG_TO_RAD) * dist);
-	setLongestPos(longest);
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
@@ -285,9 +279,9 @@ bool Vehicle::arming(const bool &arm_state)
 		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 m(q);
-	m.getRPY( arming_roll, arming_pitch, arming_yaw );
+	m.getRPY( arming_roll_, arming_pitch_, arming_yaw_ );
 
-	std::cout << "set arming yaw: "<<arming_yaw<<std::endl;
+	std::cout << "set arming yaw: "<<arming_yaw_<<std::endl;
 
 	if (arming_client_.call(msg) && msg.response.success)
 		ROS_INFO_STREAM(msg.response.result);
@@ -405,11 +399,11 @@ void Vehicle::gotoLocal()
 		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 cur_m(cur_q);
-	cur_m.getRPY( roll, pitch, yaw );
+	cur_m.getRPY( roll_, pitch_, yaw_ );
 	
 	//yaw값만 arming걸때 값으로 돌려주면 됨.
 	tf::Matrix3x3 tar_m;
-	tar_m.setEulerYPR( arming_yaw, pitch, roll );
+	tar_m.setEulerYPR( arming_yaw_, pitch_, roll_ );
 	// std::cout << "arming yaw: "<<arming_yaw*180/M_PI<<std::endl;
 	// std::cout << "cur yaw: "<<yaw*180/M_PI<<std::endl;
 	tf::Quaternion tar_q;
@@ -424,23 +418,27 @@ void Vehicle::gotoLocal()
 
 void Vehicle::gotoVel()
 {
-	double kp;
+	double kp, kd, ki;
 	nh_global_.getParam("pid/kp", kp);
+	nh_global_.getParam("pid/ki", ki);
+	nh_global_.getParam("pid/kd", kd);
+	pid_velocity_.setKp(kp);
+	pid_velocity_.setKi(ki);
+	pid_velocity_.setKd(kd);
+	
+	tf2::Vector3 cur_pos(
+		cur_local_.pose.position.x,
+		cur_local_.pose.position.y,
+		cur_local_.pose.position.z
+	);
+	tf2::Vector3 control_value(0, 0, 0);
+	control_value = pid_velocity_.calculate(setpoint_pos_, cur_pos);
+
 	geometry_msgs::Twist vel;
 
-	// tf::Quaternion q(
-	// 	cur_local_.pose.orientation.w,
-	// 	cur_local_.pose.orientation.x,
-	// 	cur_local_.pose.orientation.y,
-	// 	cur_local_.pose.orientation.z
-	// );
-	// tf::Matrix3x3 m(q);
-	// m.getRPY( roll, pitch, yaw );
-	
-	//vel.angular.z = arming_yaw;
-	vel.linear.x = (setpoint_pos_.getX() - cur_local_.pose.position.x) * kp;
-	vel.linear.y = (setpoint_pos_.getY() - cur_local_.pose.position.y) * kp;
-	vel.linear.z = (setpoint_pos_.getZ() - cur_local_.pose.position.z) * kp;
+	vel.linear.x = control_value.getX();
+	vel.linear.y = control_value.getY();
+	vel.linear.z = control_value.getZ();
 	
 	setpoint_vel_pub_.publish(vel);
 }
@@ -463,16 +461,6 @@ void Vehicle::setSumOfSp(const tf2::Vector3 &sum_sp)
 tf2::Vector3 Vehicle::getSumOfSp() const
 {
 	return sum_sp_;
-}
-
-void Vehicle::setLongestPos(const tf2::Vector3 &longest_pos)
-{
-	longest_pos_ = longest_pos;
-}
-
-tf2::Vector3 Vehicle::getLongestPos() const
-{
-	return longest_pos_;
 }
 
 void Vehicle::setErr(const tf2::Vector3 &err)
@@ -576,9 +564,8 @@ bool Vehicle::isPublish() const
 
 double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
-double SwarmVehicle::kp_longest_;
 double SwarmVehicle::range_sp_;
-double SwarmVehicle::max_speed_;
+double SwarmVehicle::vector_speed_limit_;
 int SwarmVehicle::scen_num_;
 std::string SwarmVehicle::scen_str_ = "";
 
@@ -744,7 +731,7 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	if (cnt > 0)
 	{
 		sum /= cnt;
-		limit(sum, max_speed_);
+		limit(sum, vector_speed_limit_);
 		vehicle.setSumOfSp(sum);
 	}
 	else
@@ -763,7 +750,7 @@ void SwarmVehicle::seek(Vehicle &vehicle)
 	err.setY(target_pos.pose.position.y - current_pos.pose.position.y);
 	err.setZ(target_pos.pose.position.z - current_pos.pose.position.z);
 
-	limit(err, max_speed_);
+	limit(err, vector_speed_limit_);
 	vehicle.setErr(err);
 }
 
@@ -1170,107 +1157,6 @@ void SwarmVehicle::scenario2()
 
 void SwarmVehicle::scenario3()
 {
-	// double spacing;
-	// nh_global_.getParamCached("spacing", spacing);
-	// nh_global_.getParamCached("scen_num", scen_num_);
-	// std::vector<std::pair<int, int>> scen;
-	// std::vector<std::pair<int, int>>::iterator iter;
-	// scen.reserve(num_of_vehicle_);
-
-	// int i = 0;
-	// for (auto line : FONT[scen_num_])
-	// {
-	// 	uint8_t left_bits, right_bits;
-	// 	left_bits = line >> 4;
-	// 	right_bits = 0x0f & line;
-
-	// 	hexToCoord(scen, left_bits, 7 - i, true);
-	// 	hexToCoord(scen, right_bits, 7 - i, false);
-	// 	i++;
-	// 	if(scen.size() > num_of_vehicle_)
-	// 		break;
-	// }
-	// while(scen.size() > num_of_vehicle_)
-	// 	scen.pop_back();
-
-	// geometry_msgs::PoseStamped temp;
-	// int scen_size = scen.size();
-	// if (scen_size > num_of_vehicle_)
-	// {
-	// 	int i = 0;
-	// 	for (auto &vehicle : camila_)
-	// 	{
-	// 		int min_num = 0;
-	// 		int min_dist = 150;
-	// 		int k = 0;
-	// 		std::pair<int, int> prev_scen = vehicle.getScenPos();
-	// 		for (iter = scen.begin(); iter != scen.end(); iter++)
-	// 		{
-	// 			int a, b, length;
-	// 			a = prev_scen.first - iter->first;
-	// 			b = prev_scen.second - iter->second;
-	// 			length = a * a + b * b;
-	// 			if (length < min_dist)
-	// 			{
-	// 				min_dist = length;
-	// 				min_num = k;
-	// 			}
-	// 			k++;
-	// 		}
-	// 		iter = scen.begin() + min_num;
-	// 		temp.header.stamp = ros::Time::now();
-	// 		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
-	// 		temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
-	// 		temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
-	// 		vehicle.setScenPos(*iter);
-	// 		vehicle.setLocalTarget(temp);
-	// 		scen.erase(iter);
-	// 		i++;
-	// 	}
-	// }
-	// else
-	// {
-	// 	int i = 0;
-	// 	for (auto &vehicle : camila_)
-	// 	{
-	// 		if (scen.size() == 0)
-	// 			break;
-	// 		int min_num = 0;
-	// 		int min_dist = 150;
-	// 		int k = 0;
-	// 		std::pair<int, int> prev_scen = vehicle.getScenPos();
-	// 		for (iter = scen.begin(); iter != scen.end(); iter++)
-	// 		{
-	// 			int a, b, length;
-	// 			a = prev_scen.first - iter->first;
-	// 			b = prev_scen.second - iter->second;
-	// 			length = a * a + b * b;
-	// 			if (length < min_dist)
-	// 			{
-	// 				min_dist = length;
-	// 				min_num = k;
-	// 			}
-	// 			k++;
-	// 		}
-	// 		iter = scen.begin() + min_num;
-	// 		temp.header.stamp = ros::Time::now();
-	// 		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
-	// 		temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
-	// 		temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
-	// 		vehicle.setScenPos(*iter);
-	// 		vehicle.setLocalTarget(temp);
-	// 		scen.erase(iter);
-	// 		i++;
-	// 	}
-	// 	for (int j = scen_size; j < num_of_vehicle_; j++)
-	// 	{
-	// 		temp.header.stamp = ros::Time::now();
-	// 		temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + (j - scen_size) * spacing;
-	// 		temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() - 10;
-	// 		temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() - 2;
-	// 		camila_[j].setLocalTarget(temp);
-	// 	}
-	// }
 	std::string scen_str;
 	double spacing;
 	nh_global_.getParamCached("scen", scen_str);
@@ -1815,13 +1701,12 @@ void SwarmVehicle::run()
 {
 	if (isPublish())
 	{
-		bool control_method, sp;
+		bool control_method, sp, final_speed_limit;
 		nh_global_.getParamCached("use_vel", control_method);
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
-		nh_global_.getParamCached("setpoint/kp_longest", kp_longest_);
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
-		nh_global_.getParamCached("setpoint/max_speed", max_speed_);
+		nh_global_.getParamCached("setpoint/final_speed_limit", final_speed_limit);
 		nh_global_.getParamCached("setpoint/separate", sp);
 		getVehiclePos();
 		for (auto &vehicle : camila_)
@@ -1831,10 +1716,11 @@ void SwarmVehicle::run()
 			if (sp)
 			{
 				// separate(vehicle);
-				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_ + vehicle.getLongestPos() * kp_longest_;
+				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_;
 			}
 			else
 				setpoint = vehicle.getErr() * kp_seek_;
+			limit(setpoint, final_speed_limit);
 			vehicle.setSetpointPos(setpoint);
 			if (control_method)
 				vehicle.gotoVel();

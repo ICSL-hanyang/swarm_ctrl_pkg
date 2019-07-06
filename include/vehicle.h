@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <pid.h>
 
 #include <ros/ros.h>
 #include <tf/tf.h>
@@ -68,7 +69,6 @@ class Vehicle
 	ros::Subscriber local_pos_sub_;
 	ros::Subscriber global_pos_sub_;
 	ros::Subscriber obstacle_pos_sub_;
-	ros::Subscriber longest_pos_sub_;
 
 	/* ros publisher*/
 	ros::Publisher setpoint_vel_pub_;
@@ -103,13 +103,14 @@ class Vehicle
 	tf2::Vector3 sum_sp_;
 	tf2::Vector3 err_;
 	tf2::Vector3 setpoint_pos_;
-	tf2::Vector3 longest_pos_;
 	std::pair<int, int> scen_pos_;
 
 	bool setpoint_publish_flag_;
 	/* yaw direction when arming */
-	double arming_roll,arming_pitch,arming_yaw;
-	double roll,pitch,yaw;
+	double arming_roll_, arming_pitch_, arming_yaw_;
+	double roll_, pitch_, yaw_;
+
+	PIDController<tf2::Vector3> pid_velocity_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -121,7 +122,6 @@ class Vehicle
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
 	void obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &);
-	void longestPositionCB(const obstacle_detect::Pair::ConstPtr &);
 
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);
@@ -158,8 +158,6 @@ class Vehicle
 	tf2::Vector3 getPos() const;
 	void setSumOfSp(const tf2::Vector3 &);
 	tf2::Vector3 getSumOfSp() const;
-	void setLongestPos(const tf2::Vector3 &);
-	tf2::Vector3 getLongestPos() const;
 	void setErr(const tf2::Vector3 &);
 	tf2::Vector3 getErr() const;
 	void setSetpointPos(const tf2::Vector3 &);
@@ -179,7 +177,7 @@ class Vehicle
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
 
-	double getArmingYaw(){return arming_yaw;}
+	double getArmingYaw(){return arming_yaw_;}
 
 	bool isPublish() const;
 };
@@ -212,10 +210,9 @@ class SwarmVehicle
 	ros::Time prev_;
 
 	static double kp_seek_;
-	static double kp_longest_;
 	static double kp_sp_;
 	static double range_sp_;
-	static double max_speed_;
+	static double vector_speed_limit_;
 	static int scen_num_;
 	static std::string scen_str_;
 
