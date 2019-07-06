@@ -6,6 +6,8 @@ takeoff_alt: 3.0
 # set velocity control PID gain
 pid:
   kp: 0.8
+  ki: 0.0
+  kd: 0.2
 
 # distance between drones
 spacing: 3.0

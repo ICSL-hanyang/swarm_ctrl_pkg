@@ -86,8 +86,7 @@ void Vehicle::vehicleInit()
 	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &Vehicle::homeCB, this);
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
-	obstacle_pos_sub_ = nh_.subscribe("/obstacle_detect_node/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
-	longest_pos_sub_ = nh_.subscribe("/obstacle_detect_node/longest", 10, &Vehicle::longestPositionCB, this);
+	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
@@ -200,17 +199,6 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		sum.setZero();
 		setSumOfSp(sum);
 	}
-}
-
-void Vehicle::longestPositionCB(const obstacle_detect::Pair::ConstPtr &msg)
-{
-	tf2::Vector3 longest(0, 0, 0);
-	double dist = msg->distance;
-	if(dist == std::numeric_limits<double>::infinity())
-		dist = 10;
-	longest.setX(cos((msg->angle + 90) * M_DEG_TO_RAD) * dist);
-	longest.setY(sin((msg->angle + 90) * M_DEG_TO_RAD) * dist);
-	setLongestPos(longest);
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
@@ -463,16 +451,6 @@ void Vehicle::setSumOfSp(const tf2::Vector3 &sum_sp)
 tf2::Vector3 Vehicle::getSumOfSp() const
 {
 	return sum_sp_;
-}
-
-void Vehicle::setLongestPos(const tf2::Vector3 &longest_pos)
-{
-	longest_pos_ = longest_pos;
-}
-
-tf2::Vector3 Vehicle::getLongestPos() const
-{
-	return longest_pos_;
 }
 
 void Vehicle::setErr(const tf2::Vector3 &err)
@@ -1170,107 +1148,6 @@ void SwarmVehicle::scenario2()
 
 void SwarmVehicle::scenario3()
 {
-	// double spacing;
-	// nh_global_.getParamCached("spacing", spacing);
-	// nh_global_.getParamCached("scen_num", scen_num_);
-	// std::vector<std::pair<int, int>> scen;
-	// std::vector<std::pair<int, int>>::iterator iter;
-	// scen.reserve(num_of_vehicle_);
-
-	// int i = 0;
-	// for (auto line : FONT[scen_num_])
-	// {
-	// 	uint8_t left_bits, right_bits;
-	// 	left_bits = line >> 4;
-	// 	right_bits = 0x0f & line;
-
-	// 	hexToCoord(scen, left_bits, 7 - i, true);
-	// 	hexToCoord(scen, right_bits, 7 - i, false);
-	// 	i++;
-	// 	if(scen.size() > num_of_vehicle_)
-	// 		break;
-	// }
-	// while(scen.size() > num_of_vehicle_)
-	// 	scen.pop_back();
-
-	// geometry_msgs::PoseStamped temp;
-	// int scen_size = scen.size();
-	// if (scen_size > num_of_vehicle_)
-	// {
-	// 	int i = 0;
-	// 	for (auto &vehicle : camila_)
-	// 	{
-	// 		int min_num = 0;
-	// 		int min_dist = 150;
-	// 		int k = 0;
-	// 		std::pair<int, int> prev_scen = vehicle.getScenPos();
-	// 		for (iter = scen.begin(); iter != scen.end(); iter++)
-	// 		{
-	// 			int a, b, length;
-	// 			a = prev_scen.first - iter->first;
-	// 			b = prev_scen.second - iter->second;
-	// 			length = a * a + b * b;
-	// 			if (length < min_dist)
-	// 			{
-	// 				min_dist = length;
-	// 				min_num = k;
-	// 			}
-	// 			k++;
-	// 		}
-	// 		iter = scen.begin() + min_num;
-	// 		temp.header.stamp = ros::Time::now();
-	// 		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
-	// 		temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
-	// 		temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
-	// 		vehicle.setScenPos(*iter);
-	// 		vehicle.setLocalTarget(temp);
-	// 		scen.erase(iter);
-	// 		i++;
-	// 	}
-	// }
-	// else
-	// {
-	// 	int i = 0;
-	// 	for (auto &vehicle : camila_)
-	// 	{
-	// 		if (scen.size() == 0)
-	// 			break;
-	// 		int min_num = 0;
-	// 		int min_dist = 150;
-	// 		int k = 0;
-	// 		std::pair<int, int> prev_scen = vehicle.getScenPos();
-	// 		for (iter = scen.begin(); iter != scen.end(); iter++)
-	// 		{
-	// 			int a, b, length;
-	// 			a = prev_scen.first - iter->first;
-	// 			b = prev_scen.second - iter->second;
-	// 			length = a * a + b * b;
-	// 			if (length < min_dist)
-	// 			{
-	// 				min_dist = length;
-	// 				min_num = k;
-	// 			}
-	// 			k++;
-	// 		}
-	// 		iter = scen.begin() + min_num;
-	// 		temp.header.stamp = ros::Time::now();
-	// 		temp.pose.position.x = swarm_target_local_.getX() + offset_[i].getX() + iter->first * spacing;
-	// 		temp.pose.position.y = swarm_target_local_.getY() + offset_[i].getY();
-	// 		temp.pose.position.z = swarm_target_local_.getZ() + offset_[i].getZ() + iter->second * spacing;
-	// 		vehicle.setScenPos(*iter);
-	// 		vehicle.setLocalTarget(temp);
-	// 		scen.erase(iter);
-	// 		i++;
-	// 	}
-	// 	for (int j = scen_size; j < num_of_vehicle_; j++)
-	// 	{
-	// 		temp.header.stamp = ros::Time::now();
-	// 		temp.pose.position.x = swarm_target_local_.getX() + offset_[j].getX() + (j - scen_size) * spacing;
-	// 		temp.pose.position.y = swarm_target_local_.getY() + offset_[j].getY() - 10;
-	// 		temp.pose.position.z = swarm_target_local_.getZ() + offset_[j].getZ() - 2;
-	// 		camila_[j].setLocalTarget(temp);
-	// 	}
-	// }
 	std::string scen_str;
 	double spacing;
 	nh_global_.getParamCached("scen", scen_str);
@@ -1831,7 +1708,7 @@ void SwarmVehicle::run()
 			if (sp)
 			{
 				// separate(vehicle);
-				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_ + vehicle.getLongestPos() * kp_longest_;
+				setpoint = vehicle.getSumOfSp() * kp_sp_ + vehicle.getErr() * kp_seek_;
 			}
 			else
 				setpoint = vehicle.getErr() * kp_seek_;
