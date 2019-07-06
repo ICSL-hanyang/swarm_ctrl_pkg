@@ -23,6 +23,5 @@ setpoint:
   kp_seek: 1.7
   kp_sp: 2
   range_sp: 2
+  max_speed: 1.5
   separate: true
-  vector_speed_limit: 1.5
-  final_speed_limit: 1
