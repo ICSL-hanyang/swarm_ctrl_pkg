@@ -210,7 +210,6 @@ class SwarmVehicle
 	ros::Time prev_;
 
 	static double kp_seek_;
-	static double kp_longest_;
 	static double kp_sp_;
 	static double range_sp_;
 	static double max_speed_;

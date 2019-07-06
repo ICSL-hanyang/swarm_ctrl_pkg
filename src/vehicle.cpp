@@ -560,7 +560,6 @@ bool Vehicle::isPublish() const
 
 double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
-double SwarmVehicle::kp_longest_;
 double SwarmVehicle::range_sp_;
 double SwarmVehicle::max_speed_;
 int SwarmVehicle::scen_num_;
@@ -1702,7 +1701,6 @@ void SwarmVehicle::run()
 		nh_global_.getParamCached("use_vel", control_method);
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
-		nh_global_.getParamCached("setpoint/kp_longest", kp_longest_);
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
 		nh_global_.getParamCached("setpoint/max_speed", max_speed_);
 		nh_global_.getParamCached("setpoint/separate", sp);
