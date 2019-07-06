@@ -180,6 +180,10 @@ void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &msg)
 {
+	double separation_range, vector_speed_limit;
+	nh_global_.getParamCached("/setpoint/range_sp", separation_range);
+	nh_global_.getParamCached("/setpoint/vector_speed_limit", vector_speed_limit);
+
 	tf2::Vector3 sum(0, 0, 0);
 	uint8_t cnt = 0;
 
@@ -187,14 +191,14 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		tf2::Vector3 obs(0, 0, 0);
 		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
 		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
-		obs *= (-2.0 / obs_pos.distance); // 이거 장애물 인식 거리 파라미터 값으로 바꿔야 함 
+		obs *= (-separation_range / obs_pos.distance); 
 		sum += obs;
 		cnt++;
 	}
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > 3.0)   // 맥스스피드 파라미터로 변경해야함 
-			sum = sum.normalize() * 3.0; // 맥스스피드 파라미터로 변경해야함 
+		if(sum.length() > vector_speed_limit) 
+			sum = sum.normalize() * vector_speed_limit; 
 		setSumOfSp(sum);
 	}
 	else{
@@ -560,9 +564,8 @@ bool Vehicle::isPublish() const
 
 double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
-double SwarmVehicle::kp_longest_;
 double SwarmVehicle::range_sp_;
-double SwarmVehicle::max_speed_;
+double SwarmVehicle::vector_speed_limit_;
 int SwarmVehicle::scen_num_;
 std::string SwarmVehicle::scen_str_ = "";
 
@@ -728,7 +731,7 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	if (cnt > 0)
 	{
 		sum /= cnt;
-		limit(sum, max_speed_);
+		limit(sum, vector_speed_limit_);
 		vehicle.setSumOfSp(sum);
 	}
 	else
@@ -747,7 +750,7 @@ void SwarmVehicle::seek(Vehicle &vehicle)
 	err.setY(target_pos.pose.position.y - current_pos.pose.position.y);
 	err.setZ(target_pos.pose.position.z - current_pos.pose.position.z);
 
-	limit(err, max_speed_);
+	limit(err, vector_speed_limit_);
 	vehicle.setErr(err);
 }
 
@@ -1698,13 +1701,12 @@ void SwarmVehicle::run()
 {
 	if (isPublish())
 	{
-		bool control_method, sp;
+		bool control_method, sp, final_speed_limit;
 		nh_global_.getParamCached("use_vel", control_method);
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
-		nh_global_.getParamCached("setpoint/kp_longest", kp_longest_);
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
-		nh_global_.getParamCached("setpoint/max_speed", max_speed_);
+		nh_global_.getParamCached("setpoint/final_speed_limit", final_speed_limit);
 		nh_global_.getParamCached("setpoint/separate", sp);
 		getVehiclePos();
 		for (auto &vehicle : camila_)
@@ -1718,6 +1720,7 @@ void SwarmVehicle::run()
 			}
 			else
 				setpoint = vehicle.getErr() * kp_seek_;
+			limit(setpoint, final_speed_limit);
 			vehicle.setSetpointPos(setpoint);
 			if (control_method)
 				vehicle.gotoVel();
