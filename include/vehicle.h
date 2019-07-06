@@ -212,7 +212,7 @@ class SwarmVehicle
 	static double kp_seek_;
 	static double kp_sp_;
 	static double range_sp_;
-	static double max_speed_;
+	static double vector_speed_limit_;
 	static int scen_num_;
 	static std::string scen_str_;
 

@@ -561,7 +561,7 @@ bool Vehicle::isPublish() const
 double SwarmVehicle::kp_seek_;
 double SwarmVehicle::kp_sp_;
 double SwarmVehicle::range_sp_;
-double SwarmVehicle::max_speed_;
+double SwarmVehicle::vector_speed_limit_;
 int SwarmVehicle::scen_num_;
 std::string SwarmVehicle::scen_str_ = "";
 
@@ -727,7 +727,7 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	if (cnt > 0)
 	{
 		sum /= cnt;
-		limit(sum, max_speed_);
+		limit(sum, vector_speed_limit_);
 		vehicle.setSumOfSp(sum);
 	}
 	else
@@ -746,7 +746,7 @@ void SwarmVehicle::seek(Vehicle &vehicle)
 	err.setY(target_pos.pose.position.y - current_pos.pose.position.y);
 	err.setZ(target_pos.pose.position.z - current_pos.pose.position.z);
 
-	limit(err, max_speed_);
+	limit(err, vector_speed_limit_);
 	vehicle.setErr(err);
 }
 
@@ -1698,11 +1698,13 @@ void SwarmVehicle::run()
 	if (isPublish())
 	{
 		bool control_method, sp;
+		double final_speed_limit;
 		nh_global_.getParamCached("use_vel", control_method);
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
-		nh_global_.getParamCached("setpoint/max_speed", max_speed_);
+		nh_global_.getParamCached("setpoint/vector_speed_limit", vector_speed_limit_);
+		nh_global_.getParamCached("setpoint/final_speed_limit", final_speed_limit);
 		nh_global_.getParamCached("setpoint/separate", sp);
 		getVehiclePos();
 		for (auto &vehicle : camila_)
@@ -1716,6 +1718,7 @@ void SwarmVehicle::run()
 			}
 			else
 				setpoint = vehicle.getErr() * kp_seek_;
+			limit(setpoint, final_speed_limit);
 			vehicle.setSetpointPos(setpoint);
 			if (control_method)
 				vehicle.gotoVel();
