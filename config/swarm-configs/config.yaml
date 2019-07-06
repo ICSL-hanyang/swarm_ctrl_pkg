@@ -20,9 +20,9 @@ scen: '987'
 
 # setpoint control params
 setpoint:
-  kp_seek: 1.0
-  kp_sp: 1.5
-  kp_longest: 1.0
-  range_sp: 2.5
-  max_speed: 3.0
+  kp_seek: 1.7
+  kp_sp: 2
+  range_sp: 2
   separate: true
+  vector_speed_limit: 1.5
+  final_speed_limit: 1

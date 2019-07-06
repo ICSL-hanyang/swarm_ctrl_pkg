@@ -1,10 +1,6 @@
 <launch>
     <!-- setpoint ctrl -->
     <arg name="num_drone" default="1"/>
-    <arg name="kp" default="0.5"/>
-    <arg name="kp_sp" default="5"/>
-    <arg name="range_sp" default="5"/>
-    <arg name="max_speed" default="3"/>
 
 	<arg name="user_hostname" default="brontes"/>
 	<arg name="user_ip" default="192.168.0.7"/>
