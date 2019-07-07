@@ -1,8 +1,10 @@
 <launch>
-    <arg name="num_drone" default="20"/>
+    <arg name="num_drone" default="1"/>
     <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
     <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
         <rosparam command="load" file="$(arg swarm_config_yaml)"/>
         <param name="num_drone" value="$(arg num_drone)"/>
     </node>
+
+    
 </launch>
