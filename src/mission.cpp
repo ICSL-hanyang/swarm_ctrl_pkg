@@ -79,4 +79,8 @@ void Mission::run()
         else
             ROS_INFO("Can not call next setpoint!");
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> b3d025d... turn, trigger

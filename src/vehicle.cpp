@@ -216,6 +216,10 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 	}
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b3d025d... turn, trigger
 void Vehicle::turnCB(const std_msgs::Bool::ConstPtr &msg)
 {
 	//this->turn_flag_ = msg->data;
@@ -451,10 +455,13 @@ void Vehicle::gotoVel()
 
 	geometry_msgs::Twist vel;
 
+<<<<<<< HEAD
 	vel.linear.x = control_value.getX();
 	vel.linear.y = control_value.getY();
 	vel.linear.z = control_value.getZ();
 
+=======
+>>>>>>> b3d025d... turn, trigger
 	//현재 로컬포지션값의 쿼터니언을 받아와서 RPY로 변환
 	tf::Quaternion cur_q(
 		cur_local_.pose.orientation.x,
@@ -1679,6 +1686,28 @@ bool SwarmVehicle::isPublish()
 	return multi_setpoint_publish_flag_;
 }
 
+<<<<<<< HEAD
+=======
+
+void SwarmVehicle::triggerCB(const std_msgs::Empty::ConstPtr &trigger)
+{
+	std_msgs::Bool arm;
+	std_msgs::String mode;
+
+	trigger_arm_ = nh_.advertise<std_msgs::Bool>("/multi/arming", 10);
+	trigger_mode_ = nh_.advertise<std_msgs::String>("/multi/set_mode", 10);
+
+	arm.data = true;
+	// mode.data = "auto.takeoff";
+	mode.data = "offboard";
+
+	trigger_arm_.publish(arm);
+	trigger_mode_.publish(mode);
+
+}
+
+
+>>>>>>> b3d025d... turn, trigger
 void SwarmVehicle::setSwarmInfo(const std::string &swarm_name, const int &num_of_vehicle)
 {
 	swarm_name_ = swarm_name;
