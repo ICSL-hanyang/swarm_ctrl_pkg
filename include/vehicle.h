@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <pid.h>
 
 #include <ros/ros.h>
 #include <tf/tf.h>
@@ -36,6 +37,7 @@
 #define CONSTANTS_RADIUS_OF_EARTH 6371000 /* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
 #define M_RAD_TO_DEG (180.0 / M_PI)
+
 typedef struct vehicle_info
 {
 	int vehicle_id_;
@@ -55,8 +57,6 @@ class Vehicle
 	ros::NodeHandle nh_;
 	ros::NodeHandle &nh_mul_;
 	ros::NodeHandle &nh_global_;
-
-	ros::NodeHandle nh_trigger_;
 
 	/*drone state*/
 	mavros_msgs::State cur_state_;
@@ -111,6 +111,8 @@ class Vehicle
 	double arming_roll_, arming_pitch_, arming_yaw_;
 	double turned_yaw_;
 	double roll_, pitch_, yaw_;
+
+	PIDController<tf2::Vector3> pid_velocity_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 

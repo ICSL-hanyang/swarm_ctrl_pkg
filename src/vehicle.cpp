@@ -13,7 +13,8 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	  err_(tf2::Vector3(0, 0, 0)),
 	  setpoint_pos_(tf2::Vector3(0, 0, 0)),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(false)
+	  setpoint_publish_flag_(false),
+	  turned_yaw_(0)
 {
 	vehicleInit();
 }
@@ -28,7 +29,8 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global, const Vehi
 	  err_(tf2::Vector3(0, 0, 0)),
 	  setpoint_pos_(tf2::Vector3(0, 0, 0)),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(false)
+	  setpoint_publish_flag_(false),
+	  turned_yaw_(0)
 {
 	vehicleInit();
 }
@@ -43,7 +45,8 @@ Vehicle::Vehicle(const Vehicle &rhs)
 	  err_(rhs.err_),
 	  setpoint_pos_(rhs.setpoint_pos_),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(rhs.setpoint_publish_flag_)
+	  setpoint_publish_flag_(rhs.setpoint_publish_flag_),
+	  turned_yaw_(rhs.turned_yaw_)
 {
 	vehicleInit();
 	*this = rhs;
@@ -94,11 +97,14 @@ void Vehicle::vehicleInit()
 	set_home_client_ = nh_.serviceClient<mavros_msgs::CommandHome>("mavros/cmd/set_home");
 	takeoff_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/takeoff");
 	land_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/land");
+
 	multi_arming_sub_ = nh_mul_.subscribe("arming", 10, &Vehicle::multiArming, this);
 	multi_set_mode_sub_ = nh_mul_.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
 	multi_set_home_sub_ = nh_mul_.subscribe("set_home", 10, &Vehicle::multiSetHome, this);
 	multi_takeoff_sub_ = nh_mul_.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
+
+	pid_velocity_.setDt(0.1);
 
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
 }
@@ -204,7 +210,6 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		setSumOfSp(sum);
 	}
 }
-
 
 void Vehicle::turnCB(const std_msgs::Bool::ConstPtr &msg)
 {
@@ -423,9 +428,27 @@ void Vehicle::gotoLocal()
 
 void Vehicle::gotoVel()
 {
-	double kp;
+	double kp, ki, kd;
 	nh_global_.getParam("pid/kp", kp);
+	nh_global_.getParam("pid/ki", ki);
+	nh_global_.getParam("pid/kd", kd);
+	pid_velocity_.setKp(kp);
+	pid_velocity_.setKi(ki);
+	pid_velocity_.setKd(kd);
+
+	tf2::Vector3 cur_pos(
+		cur_local_.pose.position.x,
+		cur_local_.pose.position.y,
+		cur_local_.pose.position.z
+	);
+	tf2::Vector3 control_value(0, 0, 0);
+	control_value = pid_velocity_.calculate(setpoint_pos_, cur_pos);
+
 	geometry_msgs::Twist vel;
+
+	vel.linear.x = control_value.getX();
+	vel.linear.y = control_value.getY();
+	vel.linear.z = control_value.getZ();
 
 	//현재 로컬포지션값의 쿼터니언을 받아와서 RPY로 변환
 	tf::Quaternion cur_q(
@@ -744,7 +767,7 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	if (cnt > 0)
 	{
 		sum /= cnt;
-		limit(sum, vector_speed_limit_ + 1);
+		limit(sum, vector_speed_limit_);
 		vehicle.setSumOfSp(sum);
 	}
 	else
