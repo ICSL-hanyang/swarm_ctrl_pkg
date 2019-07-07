@@ -6,7 +6,7 @@
     <!-- <arg name="vehicle" default="iris"/> -->
     <arg name="vehicle" default="iitp_drone"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/> -->
-    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v5.world"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v6.world"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
@@ -18,7 +18,7 @@
 	<arg name="num_drone" default="1"/>
 	
     <!-- Gazebo sim -->
-    \
+    
     <param name="/use_sim_time" value="true"/>
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -52,8 +52,8 @@
         </include> -->
         <include file="$(find swarm_ctrl_pkg)/launch/iitp_drone.launch">
             <!-- <arg name="x" value="-12.792"/> -->
-            <arg name="x" value="-12"/>
-            <arg name="y" value="5.25"/>
+            <arg name="x" value="-12.2927"/>
+            <arg name="y" value="5.1"/>
             <arg name="z" value="0.08869"/>
             <!-- <arg name="x" value="0"/>
             <arg name="y" value="0"/>
