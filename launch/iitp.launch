@@ -35,7 +35,8 @@
 		<arg name="fcu_url" default="udp://:13201@$(arg user_ip):13101"/>
 		<arg name="gcs_url" default="udp://:14540@$(arg user_ip):13301"/>
         <!-- PX4 SITL and vehicle spawn -->
-        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+        <!-- <include file="$(find px4)/launch/single_vehicle_spawn.launch"> -->
+        <include file="$(find swarm_ctrl_pkg)/launch/iitp_drone.launch">
         <!-- <include file="$(find px4)/launch/mavros_posix_sitl.launch"> -->
             <arg name="x" value="-12.792"/>
             <arg name="y" value="5.15"/>

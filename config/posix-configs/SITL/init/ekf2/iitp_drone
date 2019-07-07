@@ -21,10 +21,8 @@ param set COM_OBL_ACT 2
 param set COM_OBL_RC_ACT 0
 param set COM_OF_LOSS_T 5
 param set COM_RC_IN_MODE 1
-param set EKF2_AID_MASK 1
 param set EKF2_ANGERR_INIT 0.01
 param set EKF2_GBIAS_INIT 0.01
-param set EKF2_HGT_MODE 0
 param set EKF2_MAG_TYPE 1
 param set MAV_TYPE 2
 param set MC_PITCH_P 6
@@ -37,7 +35,6 @@ param set MPC_Z_VEL_I 0.15
 param set MPC_Z_VEL_P 0.6
 param set NAV_ACC_RAD 2.0
 param set NAV_DLL_ACT 0
-param set NAV_RCL_ACT 0
 param set RTL_DESCEND_ALT 5.0
 param set RTL_LAND_DELAY 5
 param set RTL_RETURN_ALT 30.0
@@ -48,6 +45,9 @@ param set SITL_UDP_PRT 13001
 param set SYS_AUTOSTART 4010
 param set SYS_MC_EST_GROUP 2
 param set SYS_RESTART_TYPE 2
+param set EKF2_HGT_MODE 2
+param set EKF2_AID_MASK 1
+
 replay tryapplyparams
 simulator start -s
 tone_alarm start
@@ -67,31 +67,6 @@ mixer load /dev/pwm_output0 ROMFS/px4fmu_common/mixers/quad_w.main.mix
 mavlink start -x -u 13301 -r 4000000
 mavlink start -x -u 13101 -r 4000000 -m onboard -o 13201
 
-mavlink stream -u 13101 -s ADSB_VEHICLE -r 0
-mavlink stream -u 13101 -s ACTUATOR_CONTROL_TARGET0 -r 5
-mavlink stream -u 13101 -s ALTITUDE -r 1
-mavlink stream -u 13101 -s ATTITUDE -r 5
-mavlink stream -u 13101 -s COLLISION -r 1
-mavlink stream -u 13101 -s DEBUG -r 5
-mavlink stream -u 13101 -s DEBUG_VECT -r 5
-mavlink stream -u 13101 -s ESTIMATOR_STATUS -r 5
-mavlink stream -u 13101 -s EXTENDED_SYS_STATE -r 5
-mavlink stream -u 13101 -s GLOBAL_POSITION_INT -r 10
-mavlink stream -u 13101 -s GPS_RAW_INT -r 15
-mavlink stream -u 13101 -s GPS2_RAW -r 15
-mavlink stream -u 13101 -s HOME_POSITION -r 1
-mavlink stream -u 13101 -s LOCAL_POSITION_NED -r 10
-mavlink stream -u 13101 -s POSITION_TARGET_LOCAL_NED -r 10
-mavlink stream -u 13101 -s POSITION_TARGET_GLOBAL_INT -r 10
-mavlink stream -u 13101 -s PING -r 1
-mavlink stream -u 13101 -s SERVO_OUTPUT_RAW_0 -r 0
-mavlink stream -u 13101 -s SYS_STATUS -r 5
-mavlink stream -u 13101 -s SYSTEM_TIME -r 1
-mavlink stream -u 13101 -s TIMESYNC -r 10
-mavlink stream -u 13101 -s TRAJECTORY_REPRESENTATION_WAYPOINTS -r 5
-mavlink stream -u 13101 -s ESTIMATOR_STATUS -r 1
-mavlink stream -u 13101 -s HIGHRES_IMU -r 10
-
 mavlink stream -r 10 -s POSITION_TARGET_LOCAL_NED -u 13301
 mavlink stream -r 10 -s LOCAL_POSITION_NED -u 13301
 mavlink stream -r 10 -s GLOBAL_POSITION_INT -u 13301
@@ -101,7 +76,11 @@ mavlink stream -r 10 -s ATTITUDE_TARGET -u 13301
 mavlink stream -r 0 -s SERVO_OUTPUT_RAW_0 -u 13301
 mavlink stream -r 1 -s RC_CHANNELS -u 13301
 mavlink stream -r 125 -s HIGHRES_IMU -u 13301
-mavlink stream -r 1 -s OPTICAL_FLOW_RAD -u 13301
+mavlink stream -r 10 -s DISTANCE_SENSOR -u 13301
+mavlink stream -r 10 -s OPTICAL_FLOW_RAD -u 13301
+mavlink stream -r 10 -s VISION_POSITION_ESTIMATE -u 13301
+
+
 logger start -e -t
 mavlink boot_complete
 replay trystart
