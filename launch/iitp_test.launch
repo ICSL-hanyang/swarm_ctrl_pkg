@@ -6,7 +6,7 @@
     <!-- <arg name="vehicle" default="iris"/> -->
     <arg name="vehicle" default="iitp_drone"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/> -->
-    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v3.world"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v5.world"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty_world.world"/> -->
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>

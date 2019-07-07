@@ -31,7 +31,7 @@ param set MC_PITCH_P 6
 param set MC_PITCHRATE_P 0.2
 param set MC_ROLL_P 6
 param set MC_ROLLRATE_P 0.2
-param set MIS_TAKEOFF_ALT 2.5
+param set MIS_TAKEOFF_ALT 1.5
 param set MPC_HOLD_MAX_Z 2.0
 param set MPC_Z_VEL_I 0.15
 param set MPC_Z_VEL_P 0.6
@@ -46,7 +46,6 @@ param set SENS_BOARD_ROT 0
 param set SENS_BOARD_X_OFF 0.000001
 param set SITL_UDP_PRT 13001
 param set SYS_AUTOSTART 4010
-param set SYS_MC_EST_GROUP 2
 param set SYS_RESTART_TYPE 2
 replay tryapplyparams
 simulator start -s

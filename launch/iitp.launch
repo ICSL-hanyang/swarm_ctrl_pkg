@@ -5,7 +5,7 @@
     <arg name="est" default="ekf2"/>
     <!-- <arg name="vehicle" default="iris"/> -->
     <arg name="vehicle" default="iris"/>
-    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v5.world.world"/>
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>
