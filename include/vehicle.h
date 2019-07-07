@@ -69,6 +69,7 @@ class Vehicle
 	ros::Subscriber local_pos_sub_;
 	ros::Subscriber global_pos_sub_;
 	ros::Subscriber obstacle_pos_sub_;
+	ros::Subscriber turn_yaw;
 
 	/* ros publisher*/
 	ros::Publisher setpoint_vel_pub_;
@@ -107,8 +108,9 @@ class Vehicle
 
 	bool setpoint_publish_flag_;
 	/* yaw direction when arming */
-	double arming_roll,arming_pitch,arming_yaw;
-	double roll,pitch,yaw;
+	double arming_roll_, arming_pitch_, arming_yaw_;
+	double turned_yaw_;
+	double roll_, pitch_, yaw_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -120,6 +122,8 @@ class Vehicle
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
 	void obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &);
+	void turnCB(const std_msgs::Bool::ConstPtr &);
+	
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);
 	void multiSetMode(const std_msgs::String::ConstPtr &);
@@ -174,7 +178,7 @@ class Vehicle
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
 
-	double getArmingYaw(){return arming_yaw;}
+	double getArmingYaw(){return arming_yaw_;}
 
 	bool isPublish() const;
 };

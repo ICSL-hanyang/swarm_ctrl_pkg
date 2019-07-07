@@ -45,11 +45,6 @@ bool Mission::checkReached()
     else
         return false;
 }
-<<<<<<< HEAD
-
-
-
-=======
  
 void Mission::findYaw(){
     if(initial_yaw_ == 0)
@@ -85,4 +80,3 @@ void Mission::run()
             ROS_INFO("Can not call next setpoint!");
     }
 }
->>>>>>> c321e10c6e39b09be34ebe8c9fb9810ba8cb27f3

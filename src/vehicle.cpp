@@ -87,6 +87,7 @@ void Vehicle::vehicleInit()
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
 	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
+	turn_yaw = nh_.subscribe("/turn",10, &Vehicle::turnCB,this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
@@ -204,6 +205,13 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 	}
 }
 
+
+void Vehicle::turnCB(const std_msgs::Bool::ConstPtr &msg)
+{
+	//this->turn_flag_ = msg->data;
+	turned_yaw_ -= M_PI_2l;
+}
+
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
 {
 	if (arming(msg->data))
@@ -276,9 +284,9 @@ bool Vehicle::arming(const bool &arm_state)
 		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 m(q);
-	m.getRPY( arming_roll, arming_pitch, arming_yaw );
+	m.getRPY( arming_roll_, arming_pitch_, arming_yaw_ );
 
-	std::cout << "set arming yaw: "<<arming_yaw<<std::endl;
+	std::cout << "set arming yaw: "<<arming_yaw_<<std::endl;
 
 	if (arming_client_.call(msg) && msg.response.success)
 		ROS_INFO_STREAM(msg.response.result);
@@ -396,13 +404,13 @@ void Vehicle::gotoLocal()
 		cur_local_.pose.orientation.w
 	);
 	tf::Matrix3x3 cur_m(cur_q);
-	cur_m.getRPY( roll, pitch, yaw );
+	cur_m.getRPY( roll_, pitch_, yaw_ );
 	
 	//yaw값만 arming걸때 값으로 돌려주면 됨.
 	tf::Matrix3x3 tar_m;
-	tar_m.setEulerYPR( arming_yaw, pitch, roll );
-	// std::cout << "arming yaw: "<<arming_yaw*180/M_PI<<std::endl;
-	// std::cout << "cur yaw: "<<yaw*180/M_PI<<std::endl;
+	tar_m.setEulerYPR( arming_yaw_ + turned_yaw_, pitch_, roll_ );
+	//  std::cout << "arming yaw: "<<arming_yaw_*180/M_PI<<std::endl;
+	//  std::cout << "cur yaw: "<<yaw_*180/M_PI<<std::endl;
 	tf::Quaternion tar_q;
 	tar_m.getRotation(tar_q);
 	tar_local_.pose.orientation.w = tar_q.getW();
@@ -419,20 +427,30 @@ void Vehicle::gotoVel()
 	nh_global_.getParam("pid/kp", kp);
 	geometry_msgs::Twist vel;
 
-	// tf::Quaternion q(
-	// 	cur_local_.pose.orientation.w,
-	// 	cur_local_.pose.orientation.x,
-	// 	cur_local_.pose.orientation.y,
-	// 	cur_local_.pose.orientation.z
-	// );
-	// tf::Matrix3x3 m(q);
-	// m.getRPY( roll, pitch, yaw );
+	//현재 로컬포지션값의 쿼터니언을 받아와서 RPY로 변환
+	tf::Quaternion cur_q(
+		cur_local_.pose.orientation.x,
+		cur_local_.pose.orientation.y,
+		cur_local_.pose.orientation.z,
+		cur_local_.pose.orientation.w
+	);
+	tf::Matrix3x3 cur_m(cur_q);
+	cur_m.getRPY( roll_, pitch_, yaw_ );
 	
-	//vel.angular.z = arming_yaw;
-	vel.linear.x = (setpoint_pos_.getX() - cur_local_.pose.position.x) * kp;
-	vel.linear.y = (setpoint_pos_.getY() - cur_local_.pose.position.y) * kp;
-	vel.linear.z = (setpoint_pos_.getZ() - cur_local_.pose.position.z) * kp;
-	
+	//yaw값만 arming걸때 값으로 돌려주면 됨.
+	tf::Matrix3x3 tar_m;
+	tar_m.setEulerYPR( arming_yaw_ + turned_yaw_, pitch_, roll_ );
+	//  std::cout << "arming yaw: "<<arming_yaw_*180/M_PI<<std::endl;
+	//  std::cout << "cur yaw: "<<yaw_*180/M_PI<<std::endl;
+	tf::Quaternion tar_q;
+	tar_m.getRotation(tar_q);
+	tar_local_.pose.orientation.w = tar_q.getW();
+	tar_local_.pose.orientation.x = tar_q.getX();
+	tar_local_.pose.orientation.y = tar_q.getY();
+	tar_local_.pose.orientation.z = tar_q.getZ();
+
+	setpoint_local_pub_.publish(tar_local_);
+
 	setpoint_vel_pub_.publish(vel);
 }
 
@@ -1645,7 +1663,8 @@ void SwarmVehicle::triggerCB(const std_msgs::Empty::ConstPtr &trigger)
 	trigger_mode_ = nh_.advertise<std_msgs::String>("/multi/set_mode", 10);
 
 	arm.data = true;
-	mode.data = "auto.takeoff";
+	// mode.data = "auto.takeoff";
+	mode.data = "offboard";
 
 	trigger_arm_.publish(arm);
 	trigger_mode_.publish(mode);
