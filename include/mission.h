@@ -7,12 +7,7 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf2/LinearMath/Quaternion.h>
-<<<<<<< HEAD
-#include <std_msgs/Empty.h>
-#include <vehicle.h>
-=======
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
->>>>>>> c321e10c6e39b09be34ebe8c9fb9810ba8cb27f3
 
 class Mission
 {
