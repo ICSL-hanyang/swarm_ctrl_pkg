@@ -1,5 +1,6 @@
 #include <mission.h>
 
+#include <vehicle.h>
 Mission::Mission()
 {
 }
@@ -25,3 +26,6 @@ bool Mission::checkReached() const
     else
         return false;
 }
+
+
+

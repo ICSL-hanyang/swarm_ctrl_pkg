@@ -93,7 +93,6 @@ void Vehicle::vehicleInit()
 	set_home_client_ = nh_.serviceClient<mavros_msgs::CommandHome>("mavros/cmd/set_home");
 	takeoff_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/takeoff");
 	land_client_ = nh_.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/land");
-
 	multi_arming_sub_ = nh_mul_.subscribe("arming", 10, &Vehicle::multiArming, this);
 	multi_set_mode_sub_ = nh_mul_.subscribe("set_mode", 10, &Vehicle::multiSetMode, this);
 	multi_set_home_sub_ = nh_mul_.subscribe("set_home", 10, &Vehicle::multiSetHome, this);
@@ -648,6 +647,8 @@ void SwarmVehicle::swarmServiceInit()
 	multi_setpoint_local_server_ = nh_.advertiseService("multi_setpoint_local", &SwarmVehicle::multiSetpointLocal, this);
 	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server_ = nh_.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
+	trigger_sub_ = nh_.subscribe("/trigger", 10, &SwarmVehicle::triggerCB, this);
+
 }
 
 void SwarmVehicle::release()
@@ -1634,6 +1635,24 @@ bool SwarmVehicle::isPublish()
 	return multi_setpoint_publish_flag_;
 }
 
+
+void SwarmVehicle::triggerCB(const std_msgs::Empty::ConstPtr &trigger)
+{
+	std_msgs::Bool arm;
+	std_msgs::String mode;
+
+	trigger_arm_ = nh_.advertise<std_msgs::Bool>("/multi/arming", 10);
+	trigger_mode_ = nh_.advertise<std_msgs::String>("/multi/set_mode", 10);
+
+	arm.data = true;
+	mode.data = "auto.takeoff";
+
+	trigger_arm_.publish(arm);
+	trigger_mode_.publish(mode);
+
+}
+
+
 void SwarmVehicle::setSwarmInfo(const std::string &swarm_name, const int &num_of_vehicle)
 {
 	swarm_name_ = swarm_name;
@@ -1703,6 +1722,7 @@ void SwarmVehicle::run()
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
 		nh_global_.getParamCached("setpoint/final_speed_limit", final_speed_limit);
 		nh_global_.getParamCached("setpoint/separate", sp);
+		
 		getVehiclePos();
 		for (auto &vehicle : camila_)
 		{

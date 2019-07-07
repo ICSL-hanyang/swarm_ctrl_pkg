@@ -7,6 +7,8 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <std_msgs/Empty.h>
+#include <vehicle.h>
 
 class Mission
 {
@@ -16,7 +18,7 @@ private:
     tf2::Vector3 cur_waypoint_;
 	geometry_msgs::PoseStamped cur_local_;
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
-
+    
 public:
     Mission();
     ~Mission();

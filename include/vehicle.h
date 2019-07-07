@@ -36,7 +36,6 @@
 #define CONSTANTS_RADIUS_OF_EARTH 6371000 /* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
 #define M_RAD_TO_DEG (180.0 / M_PI)
-
 typedef struct vehicle_info
 {
 	int vehicle_id_;
@@ -56,6 +55,8 @@ class Vehicle
 	ros::NodeHandle nh_;
 	ros::NodeHandle &nh_mul_;
 	ros::NodeHandle &nh_global_;
+
+	ros::NodeHandle nh_trigger_;
 
 	/*drone state*/
 	mavros_msgs::State cur_state_;
@@ -119,7 +120,6 @@ class Vehicle
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
 	void obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &);
-
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);
 	void multiSetMode(const std_msgs::String::ConstPtr &);
@@ -194,6 +194,11 @@ class SwarmVehicle
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
 	ros::NodeHandle &nh_global_;
+
+	ros::Subscriber trigger_sub_;
+	ros::Publisher trigger_arm_;
+	ros::Publisher trigger_mode_;
+
 	ros::ServiceServer multi_setpoint_local_server_;
 	ros::ServiceServer multi_setpoint_global_server_;
 	ros::ServiceServer goto_vehicle_server_;
@@ -241,6 +246,8 @@ class SwarmVehicle
 	static geographic_msgs::GeoPoint convertENUToGeo(const geometry_msgs::PoseStamped &,
 													 const sensor_msgs::NavSatFix &);
 	bool isPublish();
+	
+	void triggerCB(const std_msgs::Empty::ConstPtr &);
 
   public:
 	SwarmVehicle(ros::NodeHandle &, const std::string &swarm_name = "camila", const int &num_of_vehicle = 1);
