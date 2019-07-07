@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <vehicle.h>
 #include <vector>
+#include <mission.h>
 
 int main(int argc, char **argv)
 {
@@ -8,15 +9,28 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh("~");
 	ros::Rate rate(5);
 
-    std::vector<tf2::Vector3> waypoints;
+    Mission mission;
+	mission.pushWaypoint(tf2::Vector3(0, 0, 1.5));
+	mission.pushWaypoint(tf2::Vector3(6, -4, 1.5));
+	mission.pushWaypoint(tf2::Vector3(11, 4, 1.5));
+	mission.pushWaypoint(tf2::Vector3(19, -4, 1.5));
+	mission.pushWaypoint(tf2::Vector3(28., 4, 1.5));
+	mission.pushWaypoint(tf2::Vector3(28., -14, 1.5));
+	mission.pushWaypoint(tf2::Vector3(21., -5, 1.5));
+	mission.pushWaypoint(tf2::Vector3(15, -14, 1.5));
+	mission.pushWaypoint(tf2::Vector3(9, -5, 1.5));
+	mission.pushWaypoint(tf2::Vector3(0, -10, 1.5));
+	mission.pushWaypoint(tf2::Vector3(0, -10, -5));
 
-    waypoints.push_back(tf2::Vector3(0, 0, 2));
-    waypoints.push_back(tf2::Vector3(2, 0, 2));
-    waypoints.push_back(tf2::Vector3(2, 2, 2));
-    waypoints.push_back(tf2::Vector3(2, -2, 2));
+	ros::Time now = ros::Time::now();
+	while (ros::Time::now() < now + ros::Duration(20)){
+		ros::spinOnce();
+		rate.sleep();	
+	}
 
 	while (ros::ok())
 	{
+		mission.run();
 		ros::spinOnce();
 		rate.sleep();
 	}
