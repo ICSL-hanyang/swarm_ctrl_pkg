@@ -13,7 +13,8 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	  err_(tf2::Vector3(0, 0, 0)),
 	  setpoint_pos_(tf2::Vector3(0, 0, 0)),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(false)
+	  setpoint_publish_flag_(false),
+	  turned_yaw_(0)
 {
 	vehicleInit();
 }
@@ -28,7 +29,8 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global, const Vehi
 	  err_(tf2::Vector3(0, 0, 0)),
 	  setpoint_pos_(tf2::Vector3(0, 0, 0)),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(false)
+	  setpoint_publish_flag_(false),
+	  turned_yaw_(0)
 {
 	vehicleInit();
 }
@@ -43,7 +45,8 @@ Vehicle::Vehicle(const Vehicle &rhs)
 	  err_(rhs.err_),
 	  setpoint_pos_(rhs.setpoint_pos_),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(rhs.setpoint_publish_flag_)
+	  setpoint_publish_flag_(rhs.setpoint_publish_flag_),
+	  turned_yaw_(rhs.turned_yaw_)
 {
 	vehicleInit();
 	*this = rhs;
@@ -87,6 +90,7 @@ void Vehicle::vehicleInit()
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
 	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
+	turn_yaw = nh_.subscribe("/turn",10, &Vehicle::turnCB,this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
@@ -201,6 +205,12 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		sum.setZero();
 		setSumOfSp(sum);
 	}
+}
+
+void Vehicle::turnCB(const std_msgs::Bool::ConstPtr &msg)
+{
+	//this->turn_flag_ = msg->data;
+	turned_yaw_ -= M_PI_2l;
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
@@ -399,9 +409,9 @@ void Vehicle::gotoLocal()
 	
 	//yaw값만 arming걸때 값으로 돌려주면 됨.
 	tf::Matrix3x3 tar_m;
-	tar_m.setEulerYPR( arming_yaw_, pitch_, roll_ );
-	// std::cout << "arming yaw: "<<arming_yaw*180/M_PI<<std::endl;
-	// std::cout << "cur yaw: "<<yaw*180/M_PI<<std::endl;
+	tar_m.setEulerYPR( arming_yaw_ + turned_yaw_, pitch_, roll_ );
+	//  std::cout << "arming yaw: "<<arming_yaw_*180/M_PI<<std::endl;
+	//  std::cout << "cur yaw: "<<yaw_*180/M_PI<<std::endl;
 	tf::Quaternion tar_q;
 	tar_m.getRotation(tar_q);
 	tar_local_.pose.orientation.w = tar_q.getW();
@@ -436,6 +446,30 @@ void Vehicle::gotoVel()
 	vel.linear.y = control_value.getY();
 	vel.linear.z = control_value.getZ();
 	
+	//현재 로컬포지션값의 쿼터니언을 받아와서 RPY로 변환
+	tf::Quaternion cur_q(
+		cur_local_.pose.orientation.x,
+		cur_local_.pose.orientation.y,
+		cur_local_.pose.orientation.z,
+		cur_local_.pose.orientation.w
+	);
+	tf::Matrix3x3 cur_m(cur_q);
+	cur_m.getRPY( roll_, pitch_, yaw_ );
+	
+	//yaw값만 arming걸때 값으로 돌려주면 됨.
+	tf::Matrix3x3 tar_m;
+	tar_m.setEulerYPR( arming_yaw_ + turned_yaw_, pitch_, roll_ );
+	//  std::cout << "arming yaw: "<<arming_yaw_*180/M_PI<<std::endl;
+	//  std::cout << "cur yaw: "<<yaw_*180/M_PI<<std::endl;
+	tf::Quaternion tar_q;
+	tar_m.getRotation(tar_q);
+	tar_local_.pose.orientation.w = tar_q.getW();
+	tar_local_.pose.orientation.x = tar_q.getX();
+	tar_local_.pose.orientation.y = tar_q.getY();
+	tar_local_.pose.orientation.z = tar_q.getZ();
+
+	setpoint_local_pub_.publish(tar_local_);
+
 	setpoint_vel_pub_.publish(vel);
 }
 
