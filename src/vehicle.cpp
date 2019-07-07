@@ -727,7 +727,7 @@ void SwarmVehicle::separate(Vehicle &vehicle)
 	if (cnt > 0)
 	{
 		sum /= cnt;
-		limit(sum, vector_speed_limit_);
+		limit(sum, vector_speed_limit_+1);
 		vehicle.setSumOfSp(sum);
 	}
 	else
