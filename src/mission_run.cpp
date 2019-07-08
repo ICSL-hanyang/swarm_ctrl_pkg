@@ -11,16 +11,18 @@ int main(int argc, char **argv)
 
     Mission mission;
 	mission.pushWaypoint(tf2::Vector3(0, 0, 1.5));
-	mission.pushWaypoint(tf2::Vector3(6, -4, 1.5));
-	mission.pushWaypoint(tf2::Vector3(11, 4, 1.5));
-	mission.pushWaypoint(tf2::Vector3(19, -4, 1.5));
-	mission.pushWaypoint(tf2::Vector3(28., 4, 1.5));
-	mission.pushWaypoint(tf2::Vector3(28., -14, 1.5));
-	mission.pushWaypoint(tf2::Vector3(21., -5, 1.5));
-	mission.pushWaypoint(tf2::Vector3(15, -14, 1.5));
-	mission.pushWaypoint(tf2::Vector3(9, -5, 1.5));
-	mission.pushWaypoint(tf2::Vector3(0, -10, 1.5));
-	mission.pushWaypoint(tf2::Vector3(0, -10, -5));
+	mission.pushWaypoint(tf2::Vector3(4.5, 3.1, 1.5));
+	mission.pushWaypoint(tf2::Vector3(9, -3.1, 1.5));
+	mission.pushWaypoint(tf2::Vector3(15, 3.1, 1.5));
+	mission.pushWaypoint(tf2::Vector3(21, -3.1, 1.5));
+	mission.pushWaypoint(tf2::Vector3(27, 3.1, 1.5));
+	mission.pushWaypoint(tf2::Vector3(27, -13, 1.5));
+	mission.pushWaypoint(tf2::Vector3(21, -6.5, 1.5));
+	mission.pushWaypoint(tf2::Vector3(15.5, -13, 1.5));
+	mission.pushWaypoint(tf2::Vector3(10, -6.5, 1.5));
+	mission.pushWaypoint(tf2::Vector3(5, -9.5, 1.5));
+	mission.pushWaypoint(tf2::Vector3(0, -9.5, 1.5));
+	mission.pushWaypoint(tf2::Vector3(0, -9.5, -5));
 
 	ros::Time now = ros::Time::now();
 	while (ros::Time::now() < now + ros::Duration(20)){
