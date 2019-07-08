@@ -201,8 +201,8 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 	}
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > vector_speed_limit)
-			sum = sum.normalize() * vector_speed_limit; 
+		if(sum.length() > vector_speed_limit+1.7)
+			sum = sum.normalize() * vector_speed_limit+1.7; 
 		setSumOfSp(sum);
 	}
 	else{
