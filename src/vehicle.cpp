@@ -195,7 +195,7 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		tf2::Vector3 obs(0, 0, 0);
 		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
 		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
-		obs *= (-separation_range / obs_pos.distance); 
+		obs *= -pow((separation_range / obs_pos.distance),2); 
 		sum += obs;
 		cnt++;
 	}
