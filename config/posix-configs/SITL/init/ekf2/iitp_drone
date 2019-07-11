@@ -51,6 +51,8 @@ param set EKF2_RNG_AID 1
 param set EKF2_AID_MASK 1
 param set MPC_ALT_MODE 2
 param set SENS_EN_SF0X 2
+param set MPC_HOLD_MAX_XY 0.8
+param set LNDMC_XY_VEL_MAX 0.8
 
 replay tryapplyparams
 simulator start -s
