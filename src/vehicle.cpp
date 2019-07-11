@@ -1741,6 +1741,7 @@ void SwarmVehicle::run()
 		nh_global_.getParamCached("setpoint/kp_seek", kp_seek_);
 		nh_global_.getParamCached("setpoint/kp_sp", kp_sp_);
 		nh_global_.getParamCached("setpoint/range_sp", range_sp_);
+		nh_global_.getParamCached("setpoint/vector_speed_limit", vector_speed_limit_);
 		nh_global_.getParamCached("setpoint/final_speed_limit", final_speed_limit);
 		nh_global_.getParamCached("setpoint/separate", sp);
 		getVehiclePos();
