@@ -22,7 +22,10 @@ scen: '987'
 setpoint:
   kp_seek: 2
   kp_sp: 4
-  range_sp: 1
+  range_sp: 1.5
   separate: true
   vector_speed_limit: 1.5
   final_speed_limit: 0.8
+
+mission:
+  wait_duration: 5.0

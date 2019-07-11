@@ -89,7 +89,7 @@ void Vehicle::vehicleInit()
 	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &Vehicle::homeCB, this);
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
-	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
+	obstacle_pos_sub_ = nh_.subscribe("/obstacle_detect_node/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
 	turn_yaw = nh_.subscribe("/turn",10, &Vehicle::turnCB,this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");

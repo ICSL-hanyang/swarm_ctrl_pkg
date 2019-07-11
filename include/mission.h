@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <mavros_msgs/State.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 
 class Mission
@@ -17,6 +18,7 @@ private:
     ros::ServiceClient setpoint_client_;
     std::vector<tf2::Vector3> waypoints_;
     ros::Time prev_waypoint_start_;
+    ros::Time wait_time_;
     int wp_index_;
     double initial_yaw_;
     tf2::Vector3 cur_waypoint_;

@@ -2,6 +2,8 @@
 
 Mission::Mission() : 
     nh_(ros::NodeHandle("")),
+    prev_waypoint_start_(ros::Time::now()),
+    wait_time_(ros::Time::now()),
     wp_index_(-1),
     initial_yaw_(0),
     cur_waypoint_(tf2::Vector3(0,0,0))
@@ -20,7 +22,6 @@ void Mission::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg){
     cur_local_ = *msg;
 }
 
-
 void Mission::clear(){
     waypoints_.clear();
 }
@@ -38,17 +39,23 @@ bool Mission::checkReached()
     c_z = cur_waypoint_.getZ();
     rotated_x = c_x * cos(initial_yaw_) - c_y*sin(initial_yaw_);
     rotated_y = c_x * sin(initial_yaw_) + c_y*cos(initial_yaw_);
-    if( (abs(rotated_x - cur_local_.pose.position.x) < 0.7) && 
-        (abs(rotated_y - cur_local_.pose.position.y) < 0.7) &&
-        (abs(c_z - cur_local_.pose.position.z) < 0.7) )
+    if( (abs(rotated_x - cur_local_.pose.position.x) < 0.5) && 
+        (abs(rotated_y - cur_local_.pose.position.y) < 0.5) &&
+        (abs(c_z - cur_local_.pose.position.z) < 0.5) )
+    {
+        wait_time_ = ros::Time::now();
         return true;
+    }
     else
         return false;
 }
 
 bool Mission::checkTimeOut(){
     if((ros::Time::now() > prev_waypoint_start_ + ros::Duration(60)))
+    {
+        ROS_INFO("Waypoint time out...");
         return true;
+    }
     else
         return false;
 }
@@ -71,8 +78,14 @@ void Mission::findYaw(){
 
 void Mission::run()
 {
-    if(checkReached() || checkTimeOut())
+    double wait_duration = 0;
+    nh_.getParam("/swarm_node/mission/wait_duration", wait_duration);
+    if( checkReached() || checkTimeOut() )
     {
+        // ROS_INFO("test");
+        if(ros::Time::now() < wait_time_ + ros::Duration(wait_duration)){
+            ros::Duration(wait_duration).sleep();            
+        }
         ROS_INFO_STREAM(cur_waypoint_.getX() <<" "<<  cur_waypoint_.getY()<<" " << cur_waypoint_.getZ());
         wp_index_++;
         if(waypoints_.size() > wp_index_){
