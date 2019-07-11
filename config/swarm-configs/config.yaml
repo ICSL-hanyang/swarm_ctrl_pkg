@@ -1,7 +1,7 @@
 # set velocity control
 use_vel: true
 
-takeoff_alt: 3.0
+takeoff_alt: 1.5
 
 # set velocity control PID gain
 pid:
@@ -20,9 +20,9 @@ scen: '987'
 
 # setpoint control params
 setpoint:
-  kp_seek: 2
-  kp_sp: 3.2
-  range_sp: 1.1
+  kp_seek: 1.5
+  kp_sp: 2
+  range_sp: 1.5
   separate: true
   vector_speed_limit: 1.5
-  final_speed_limit: 0.8
+  final_speed_limit: 0.75

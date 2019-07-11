@@ -45,7 +45,6 @@ param set SENS_BOARD_ROT 0
 param set SENS_BOARD_X_OFF 0.000001
 param set SITL_UDP_PRT 13001
 param set SYS_AUTOSTART 4010
-param set SYS_MC_EST_GROUP 2
 param set SYS_RESTART_TYPE 2
 param set EKF2_HGT_MODE 2
 param set EKF2_RNG_AID 1

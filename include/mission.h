@@ -22,7 +22,7 @@ private:
     tf2::Vector3 cur_waypoint_;
 	geometry_msgs::PoseStamped cur_local_;
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
-
+    
 public:
     Mission();
     ~Mission();
