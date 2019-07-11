@@ -1,5 +1,5 @@
 # set velocity control
-use_vel: true
+use_vel: false
 
 takeoff_alt: 1.5
 
@@ -25,7 +25,7 @@ setpoint:
   range_sp: 1.5
   separate: true
   vector_speed_limit: 1.5
-  final_speed_limit: 0.75
+  final_speed_limit: 0.9
 
 mission:
   wait_duration: 5.0

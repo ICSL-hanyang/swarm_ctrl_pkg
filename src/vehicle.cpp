@@ -201,8 +201,8 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 	}
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > vector_speed_limit) 
-			sum = sum.normalize() * vector_speed_limit; 
+		if(sum.length() > vector_speed_limit/*  + 200.0 */) 
+			sum = sum.normalize() * (vector_speed_limit /* + 200.0 */); 
 		setSumOfSp(sum);
 	}
 	else{
@@ -418,6 +418,9 @@ void Vehicle::gotoLocal()
 	//  std::cout << "cur yaw: "<<yaw_*180/M_PI<<std::endl;
 	tf::Quaternion tar_q;
 	tar_m.getRotation(tar_q);
+	tar_local_.pose.position.x = setpoint_pos_.getX();
+	tar_local_.pose.position.y = setpoint_pos_.getY();
+	tar_local_.pose.position.z = setpoint_pos_.getZ();
 	tar_local_.pose.orientation.w = tar_q.getW();
 	tar_local_.pose.orientation.x = tar_q.getX();
 	tar_local_.pose.orientation.y = tar_q.getY();

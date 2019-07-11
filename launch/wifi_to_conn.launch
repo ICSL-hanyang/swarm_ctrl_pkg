@@ -45,7 +45,7 @@
 	</group>
 
 	<arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
-	<node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
+	<node machine="$(arg multi_user_hostname)" name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
 	</node>
@@ -62,7 +62,7 @@
         <rosparam command="load" file="$(arg obstacle_detect_config_yaml)"/>
 		<param name="detecting_range" value="$(arg detecting_range)"/>
     </node>
-	<!-- <node name="mission_node" pkg="swarm_ctrl_pkg" type="mission_node" output="screen" respawn="true">
-	</node> -->
+	<node machine="$(arg multi_user_hostname)" name="mission_node" pkg="swarm_ctrl_pkg" type="mission_node" output="screen" respawn="true">
+	</node>
 
 </launch>
