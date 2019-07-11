@@ -111,11 +111,8 @@ class Vehicle
 	double arming_roll_, arming_pitch_, arming_yaw_;
 	double turned_yaw_;
 	double roll_, pitch_, yaw_;
-<<<<<<< HEAD
 
 	PIDController<tf2::Vector3> pid_velocity_;
-=======
->>>>>>> b3d025d... turn, trigger
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
@@ -128,11 +125,6 @@ class Vehicle
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
 	void obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &);
 	void turnCB(const std_msgs::Bool::ConstPtr &);
-<<<<<<< HEAD
-
-=======
-	
->>>>>>> b3d025d... turn, trigger
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);
 	void multiSetMode(const std_msgs::String::ConstPtr &);
