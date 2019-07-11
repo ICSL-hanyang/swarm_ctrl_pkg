@@ -125,10 +125,7 @@ class Vehicle
 	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
 	void obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &);
-<<<<<<< HEAD
 	void turnCB(const std_msgs::Bool::ConstPtr &);
-=======
->>>>>>> 2d28d49... trigger
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);
 	void multiSetMode(const std_msgs::String::ConstPtr &);

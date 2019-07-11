@@ -7,12 +7,7 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf2/LinearMath/Quaternion.h>
-<<<<<<< HEAD
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
-=======
-#include <std_msgs/Empty.h>
-#include <vehicle.h>
->>>>>>> 2d28d49... trigger
 
 class Mission
 {

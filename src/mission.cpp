@@ -1,15 +1,10 @@
 #include <mission.h>
 
-<<<<<<< HEAD
 Mission::Mission() : 
     nh_(ros::NodeHandle("")),
     wp_index_(-1),
     initial_yaw_(0),
     cur_waypoint_(tf2::Vector3(0,0,0))
-=======
-#include <vehicle.h>
-Mission::Mission()
->>>>>>> 2d28d49... trigger
 {
 	local_pos_sub_ = nh_.subscribe("/camila1/mavros/local_position/pose", 5, &Mission::localPositionCB, this);
 	setpoint_client_ = nh_.serviceClient<swarm_ctrl_pkg::srvMultiSetpointLocal>("/multi_setpoint_local");
@@ -50,7 +45,6 @@ bool Mission::checkReached()
     else
         return false;
 }
-<<<<<<< HEAD
  
 void Mission::findYaw(){
     if(initial_yaw_ == 0)
@@ -86,8 +80,3 @@ void Mission::run()
             ROS_INFO("Can not call next setpoint!");
     }
 }
-=======
-
-
-
->>>>>>> 2d28d49... trigger
