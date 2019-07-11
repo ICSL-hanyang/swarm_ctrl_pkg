@@ -40,7 +40,7 @@ bool Mission::checkReached()
     rotated_y = c_x * sin(initial_yaw_) + c_y*cos(initial_yaw_);
     if( (abs(rotated_x - cur_local_.pose.position.x) < 0.7) && 
         (abs(rotated_y - cur_local_.pose.position.y) < 0.7) &&
-        (abs(c_z - cur_local_.pose.position.z) < 0.7) )
+        (abs(c_z - cur_local_.pose.position.z) < 0.3) )
         return true;
     else
         return false;
@@ -73,7 +73,7 @@ void Mission::run()
 {
     if(checkReached() || checkTimeOut())
     {
-        ROS_INFO_STREAM(cur_waypoint_.getX() <<" "<<  cur_waypoint_.getY()<<" " << cur_waypoint_.getZ());
+        // ROS_INFO_STREAM(cur_waypoint_.getX() <<" "<<  cur_waypoint_.getY()<<" " << cur_waypoint_.getZ());
         wp_index_++;
         if(waypoints_.size() > wp_index_){
             cur_waypoint_ = waypoints_.at(wp_index_);
