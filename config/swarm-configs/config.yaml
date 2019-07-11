@@ -1,5 +1,5 @@
 # set velocity control
-use_vel: false
+use_vel: true
 
 takeoff_alt: 1.5
 
