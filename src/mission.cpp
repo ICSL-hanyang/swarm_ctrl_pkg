@@ -47,7 +47,7 @@ bool Mission::checkReached()
 }
 
 bool Mission::checkTimeOut(){
-    if((ros::Time::now() + ros::Duration(60)) > prev_waypoint_start_)
+    if((ros::Time::now() > prev_waypoint_start_ + ros::Duration(60)))
         return true;
     else
         return false;
@@ -73,6 +73,7 @@ void Mission::run()
 {
     if(checkReached() || checkTimeOut())
     {
+        ROS_INFO_STREAM(cur_waypoint_.getX() <<" "<<  cur_waypoint_.getY()<<" " << cur_waypoint_.getZ());
         wp_index_++;
         if(waypoints_.size() > wp_index_){
             cur_waypoint_ = waypoints_.at(wp_index_);

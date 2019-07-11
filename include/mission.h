@@ -20,6 +20,7 @@ private:
     int wp_index_;
     double initial_yaw_;
     tf2::Vector3 cur_waypoint_;
+    tf2::Vector3 body_frame_pos_;
 	geometry_msgs::PoseStamped cur_local_;
 	void localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &);
     

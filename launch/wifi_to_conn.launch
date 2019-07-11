@@ -1,21 +1,21 @@
 <launch>
     <!-- setpoint ctrl -->
     <arg name="num_drone" default="1"/>
-	<arg name="detecting_range" default="2"/>
-<!-- 
+	<arg name="detecting_range" default="1.5"/>
+
 	<arg name="user_hostname" default="brontes"/>
 	<arg name="user_ip" default="192.168.0.7"/>
 	<arg name="user_name" default="heromin"/>
 	<arg name="user_password" default="eh2xhtm!88"/>
-	<arg name="user_envloader" default="~/catkin_ws/devel/env.sh"/> -->
-	<arg name="user_hostname" default="command"/>
+	<arg name="user_envloader" default="~/catkin_ws/devel/env.sh"/>
+	<!-- <arg name="user_hostname" default="command"/>
 	<arg name="user_ip" default="192.168.0.8"/>
 	<arg name="user_name" default="kdh"/>
 	<arg name="user_password" default="wkfk"/>
-	<arg name="user_envloader" default="~/catkin_ws/devel/env.sh"/>
+	<arg name="user_envloader" default="~/catkin_ws/devel/env.sh"/> -->
 
-	<arg name="multi_user_hostname" default="banshee2"/>
-	<arg name="multi_user_ip" default="192.168.0.32"/>
+	<arg name="multi_user_hostname" default="banshee3"/>
+	<arg name="multi_user_ip" default="192.168.0.33"/>
 	<arg name="multi_user_name" default="odroid"/>
 	<arg name="multi_user_password" default="icsl5293"/>
 	<arg name="multi_user_envloader" default="~/catkin_ws/devel/env.sh"/>
