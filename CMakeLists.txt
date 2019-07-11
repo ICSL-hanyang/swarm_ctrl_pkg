@@ -50,3 +50,6 @@ include_directories(
 add_executable(swarm_node src/main.cpp src/vehicle.cpp)
 ##add_dependencies(swarm_node ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(swarm_node ${catkin_LIBRARIES})
+add_executable(mission_node src/mission_run.cpp src/mission.cpp)
+##add_dependencies(mission_node ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(mission_node ${catkin_LIBRARIES})

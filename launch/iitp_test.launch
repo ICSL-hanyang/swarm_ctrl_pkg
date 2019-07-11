@@ -7,7 +7,11 @@
     <arg name="vehicle" default="iitp_drone"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/> -->
     <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v5.world"/>
+<<<<<<< HEAD
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty_world.world"/> -->
+=======
+    <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
+>>>>>>> 44cbd187c88f35aeab1653f301138fc0d8421fb7
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>
@@ -18,7 +22,7 @@
 	<arg name="num_drone" default="1"/>
 	
     <!-- Gazebo sim -->
-    \
+    
     <param name="/use_sim_time" value="true"/>
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -51,8 +55,9 @@
             <arg name="ID" value="$(arg ID)"/>
         </include> -->
         <include file="$(find swarm_ctrl_pkg)/launch/iitp_drone.launch">
-            <arg name="x" value="-12.792"/>
-            <arg name="y" value="5.25"/>
+            <!-- <arg name="x" value="-12.792"/> -->
+            <arg name="x" value="-12.2927"/>
+            <arg name="y" value="5.1"/>
             <arg name="z" value="0.08869"/>
             <!-- <arg name="x" value="0"/>
             <arg name="y" value="0"/>
@@ -87,8 +92,10 @@
             <param name="target_component_id" value="1" />
 			<param name="fcu_protocol" value="v2.0" />
 			<!-- load blacklist, config -->
-			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
-			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" />
+			<!-- <rosparam command="load" file="$(find mavros)/launch/px4_pluginlists.yaml"/>
+			<rosparam command="load" file="$(find mavros)/launch/px4_config.yaml" /> -->
+            <rosparam command="load" file="$(find swarm_ctrl_pkg)/launch/px4_pluginlists_iitp.yaml"/>
+			<rosparam command="load" file="$(find swarm_ctrl_pkg)/launch/px4_config_iitp.yaml" />
 		</node>
 	</group>
     <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
@@ -96,6 +103,8 @@
 		<rosparam command="load" file="$(arg swarm_config_yaml)"/>
 		<param name="num_drone" value="$(arg num_drone)"/>
 	</node>
+    <node name="mission_node" pkg="swarm_ctrl_pkg" type="mission_node" output="screen" respawn="true">
+    </node>
     <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/> -->
     
 </launch>
