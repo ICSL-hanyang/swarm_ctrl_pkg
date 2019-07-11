@@ -197,7 +197,7 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		// if (separation_range > obs_pos.distance)
 		// {
 			// obs *= (-separation_range / obs_pos.distance);
-			obs *= -pow((separation_range / obs_pos.distance),3);
+			obs *= -pow((separation_range / obs_pos.distance),2);
 			sum += obs;
 			cnt++;
 		// }
@@ -1691,6 +1691,26 @@ void SwarmVehicle::triggerCB(const std_msgs::Empty::ConstPtr &trigger)
 
 	arm.data = true;
 	// mode.data = "auto.takeoff";
+		// while((camila_[0].getState().mode != "auto.loiter" || camila_[0].getState().mode != "auto.takeoff") 
+	// 	&& camila_[0].getState().armed != 1 
+	// 	&& camila_[0].getState().mode != "offboard" )
+	// {
+	// 	ros::Time term = ros::Time::now();
+	// 	if(camila_[0].getState().mode != "auto.takeoff" || camila_[0].getState().mode != "auto.loiter")
+	// 	{
+	// 		mode.data = "auto.takeoff";
+	// 		trigger_mode_.publish(mode);
+	// 	}
+	// 	if(camila_[0].getState().armed != 1)
+	// 	{
+	// 		arm.data = true;
+	// 		trigger_arm_.publish(arm);
+	// 	}
+	// 	if((term.sec - now.sec > 3) && camila_[0].getState().mode != "offboard")
+	// 	{
+	// 		mode.data = "offboard";
+	// 		trigger_mode_.publish(mode);
+	// 	}
 	mode.data = "offboard";
 
 	trigger_arm_.publish(arm);
