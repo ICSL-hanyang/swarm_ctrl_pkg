@@ -16,6 +16,7 @@ private:
 	ros::Subscriber local_pos_sub_;
     ros::ServiceClient setpoint_client_;
     std::vector<tf2::Vector3> waypoints_;
+    ros::Time prev_waypoint_start_;
     int wp_index_;
     double initial_yaw_;
     tf2::Vector3 cur_waypoint_;
@@ -28,6 +29,7 @@ public:
     void clear();
     void pushWaypoint(const tf2::Vector3 &);
     bool checkReached();
+    bool checkTimeOut();
     void findYaw();
     void run();
 };
