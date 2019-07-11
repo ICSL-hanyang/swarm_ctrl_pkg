@@ -7,11 +7,7 @@
     <arg name="vehicle" default="iitp_drone"/>
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp.world"/> -->
     <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/iitp_noceiling_v5.world"/>
-<<<<<<< HEAD
-    <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty_world.world"/> -->
-=======
     <!-- <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/> -->
->>>>>>> 44cbd187c88f35aeab1653f301138fc0d8421fb7
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>
