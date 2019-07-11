@@ -45,6 +45,13 @@ bool Mission::checkReached()
     else
         return false;
 }
+
+bool Mission::checkTimeOut(){
+    if((ros::Time::now() + ros::Duration(60)) > prev_waypoint_start_)
+        return true;
+    else
+        return false;
+}
  
 void Mission::findYaw(){
     if(initial_yaw_ == 0)
@@ -64,11 +71,13 @@ void Mission::findYaw(){
 
 void Mission::run()
 {
-    if(checkReached())
+    if(checkReached() || checkTimeOut())
     {
         wp_index_++;
-        if(waypoints_.size() > wp_index_)
+        if(waypoints_.size() > wp_index_){
             cur_waypoint_ = waypoints_.at(wp_index_);
+            prev_waypoint_start_ = ros::Time::now();
+        }
         swarm_ctrl_pkg::srvMultiSetpointLocal msg;
         msg.request.formation = "POINT";
         msg.request.x = cur_waypoint_.getX();
