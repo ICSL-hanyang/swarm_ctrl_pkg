@@ -195,14 +195,19 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		tf2::Vector3 obs(0, 0, 0);
 		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
 		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
-		obs *= (-separation_range / obs_pos.distance); 
-		sum += obs;
-		cnt++;
+		// if (separation_range > obs_pos.distance)
+		// {
+			// obs *= (-separation_range / obs_pos.distance);
+			obs *= -pow((separation_range / obs_pos.distance),3);
+			sum += obs;
+			cnt++;
+		// }
 	}
+
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > vector_speed_limit+1.7)
-			sum = sum.normalize() * vector_speed_limit+1.7; 
+		if(sum.length() > vector_speed_limit+200.0)
+			sum = sum.normalize() * (vector_speed_limit+200.0); 
 		setSumOfSp(sum);
 	}
 	else{
