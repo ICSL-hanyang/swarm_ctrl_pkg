@@ -89,7 +89,7 @@ void Vehicle::vehicleInit()
 	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &Vehicle::homeCB, this);
 	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
-	obstacle_pos_sub_ = nh_.subscribe("/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
+	obstacle_pos_sub_ = nh_.subscribe("/obstacle_detect_node/vector_pair", 10, &Vehicle::obstaclePositionCB, this);
 	turn_yaw = nh_.subscribe("/turn",10, &Vehicle::turnCB,this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
@@ -195,14 +195,14 @@ void Vehicle::obstaclePositionCB(const obstacle_detect::VectorPair::ConstPtr &ms
 		tf2::Vector3 obs(0, 0, 0);
 		obs.setX(cos((obs_pos.angle + 90) * M_DEG_TO_RAD));
 		obs.setY(sin((obs_pos.angle + 90) * M_DEG_TO_RAD));
-		obs *= (-separation_range / obs_pos.distance); 
+		obs *= -pow((separation_range / obs_pos.distance),2); 
 		sum += obs;
 		cnt++;
 	}
 	if(cnt > 0){
 		sum /= cnt;
-		if(sum.length() > vector_speed_limit) 
-			sum = sum.normalize() * vector_speed_limit; 
+		if(sum.length() > vector_speed_limit/*  + 200.0 */) 
+			sum = sum.normalize() * (vector_speed_limit /* + 200.0 */); 
 		setSumOfSp(sum);
 	}
 	else{
@@ -418,6 +418,9 @@ void Vehicle::gotoLocal()
 	//  std::cout << "cur yaw: "<<yaw_*180/M_PI<<std::endl;
 	tf::Quaternion tar_q;
 	tar_m.getRotation(tar_q);
+	tar_local_.pose.position.x = setpoint_pos_.getX();
+	tar_local_.pose.position.y = setpoint_pos_.getY();
+	tar_local_.pose.position.z = setpoint_pos_.getZ();
 	tar_local_.pose.orientation.w = tar_q.getW();
 	tar_local_.pose.orientation.x = tar_q.getX();
 	tar_local_.pose.orientation.y = tar_q.getY();

@@ -50,7 +50,7 @@
 		<param name="num_drone" value="$(arg num_drone)"/>
 	</node>
 
-    <!-- <node machine="$(arg multi_user_hostname)" name="rplidarNode" pkg="rplidar_ros" type="rplidarNode" output="screen">
+    <node machine="$(arg multi_user_hostname)" name="rplidarNode" pkg="rplidar_ros" type="rplidarNode" output="screen">
         <param name="serial_port" type="string" value="/dev/ttyUSB0"/>
         <param name="serial_baudrate" type="int" value="115200"/>
         <param name="frame_id" type="string" value="laser"/>
@@ -63,6 +63,6 @@
 		<param name="detecting_range" value="$(arg detecting_range)"/>
     </node>
 	<node machine="$(arg multi_user_hostname)" name="mission_node" pkg="swarm_ctrl_pkg" type="mission_node" output="screen" respawn="true">
-	</node> -->
+	</node>
 
 </launch>
