@@ -689,7 +689,6 @@ void SwarmVehicle::swarmServiceInit()
 	multi_setpoint_global_server_ = nh_.advertiseService("multi_setpoint_global", &SwarmVehicle::multiSetpointGlobal, this);
 	goto_vehicle_server_ = nh_.advertiseService("goto_vehicle", &SwarmVehicle::gotoVehicle, this);
 	trigger_sub_ = nh_.subscribe("/trigger", 10, &SwarmVehicle::triggerCB, this);
-
 }
 
 void SwarmVehicle::release()

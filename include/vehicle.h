@@ -256,6 +256,7 @@ class SwarmVehicle
 	void triggerCB(const std_msgs::Empty::ConstPtr &);
 
   public:
+	SwarmVehicle() = delete;
 	SwarmVehicle(ros::NodeHandle &, const std::string &swarm_name = "camila", const int &num_of_vehicle = 1);
 	SwarmVehicle(const SwarmVehicle &);
 	const SwarmVehicle &operator=(const SwarmVehicle &);
