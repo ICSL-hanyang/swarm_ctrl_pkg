@@ -13,6 +13,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <geographic_msgs/GeoPoint.h>
+#include <geographic_msgs/GeoPoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -25,7 +26,6 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
-#include <mavros_msgs/GlobalPositionTarget.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
 #include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>

@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Posix SITL environment launch script -->
+    <!-- launches PX4 SITL, Gazebo environment, and spawns vehicle -->
+    <!-- vehicle model and world -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="iris"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+    <!-- gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="swarm_config_yaml" default="$(find swarm_ctrl_pkg)/config/swarm-configs/config.yaml" />
+
+    <!-- setpoint ctrl -->
+	<arg name="num_drone" default="1"/>
+	<arg name="kp" default="0.5"/>
+	<arg name="kp_sp" default="5"/>
+	<arg name="range_sp" default="5"/>
+	<arg name="max_speed" default="3"/>
+
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="world_name" value="$(arg world)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+    </include>
+    <!-- UAV1 -->
+    <group ns="camila1">
+        <!-- MAVROS and vehicle configs -->        
+        <arg name="ID" value="0"/>
+        <arg name="fcu_url" default="udp://:14840@localhost:14580"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="$(arg ID)"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <!-- <arg name="est" value="$(arg est)"/> -->
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="mavlink_udp_port" value="14760"/>
+            <arg name="mavlink_tcp_port" value="4760"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
+        <!-- MAVROS -->
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+    </group>
+
+    <node name="swarm_node" pkg="swarm_ctrl_pkg" type="swarm_node" output="screen" respawn="true">
+		<param name="num_drone" value="$(arg num_drone)"/>
+        <rosparam command="load" file="$(arg swarm_config_yaml)"/>
+    </node>
+
+</launch>

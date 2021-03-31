@@ -77,7 +77,7 @@ Vehicle::~Vehicle()
 
 void Vehicle::vehicleInit()
 {
-	setpoint_global_pub_ = nh_.advertise<mavros_msgs::GlobalPositionTarget>("mavros/setpoint_position/global", 10);
+	setpoint_global_pub_ = nh_.advertise<geographic_msgs::GeoPoseStamped>("mavros/setpoint_position/global", 10);
 	setpoint_local_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
 	setpoint_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
 
@@ -314,22 +314,13 @@ void Vehicle::gotoGlobal(const sensor_msgs::NavSatFix &tar_global)
 	tar_global_.header.stamp = ros::Time::now();
 	tar_global_.header.frame_id = vehicle_info_.vehicle_name_;
 
-	mavros_msgs::GlobalPositionTarget msg;
-	msg.latitude = tar_global_.latitude;
-	msg.longitude = tar_global_.longitude;
-	msg.altitude = tar_global_.altitude;
+	geographic_msgs::GeoPoseStamped msg;
+	msg.pose.position.latitude = tar_global_.latitude;
+	msg.pose.position.longitude = tar_global_.longitude;
+	msg.pose.position.altitude = tar_global_.altitude;
 	msg.header.seq += 1;
 	msg.header.stamp = ros::Time::now();
 	msg.header.frame_id = vehicle_info_.vehicle_name_;
-	msg.coordinate_frame = mavros_msgs::GlobalPositionTarget::FRAME_GLOBAL_INT;
-	msg.type_mask = mavros_msgs::GlobalPositionTarget::IGNORE_AFX |
-					mavros_msgs::GlobalPositionTarget::IGNORE_AFY |
-					mavros_msgs::GlobalPositionTarget::IGNORE_AFZ |
-					mavros_msgs::GlobalPositionTarget::IGNORE_VX |
-					mavros_msgs::GlobalPositionTarget::IGNORE_VY |
-					mavros_msgs::GlobalPositionTarget::IGNORE_VZ |
-					mavros_msgs::GlobalPositionTarget::IGNORE_YAW |
-					mavros_msgs::GlobalPositionTarget::IGNORE_YAW_RATE;
 
 	setpoint_global_pub_.publish(msg);
 }
