@@ -9,6 +9,7 @@ pid:
 
 # distance between drones
 spacing: 3.0
+radius: 8.0
 distance_x: 3.0
 distance_y: 3.0
 scen6: false

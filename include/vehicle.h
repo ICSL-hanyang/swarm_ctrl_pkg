@@ -1,6 +1,7 @@
 #ifndef VEHICLE_H
 #define VEHICLE_H
 
+/* cpp header */
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
@@ -8,6 +9,7 @@
 #include <string>
 #include <vector>
 
+/* ros header */
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
@@ -27,8 +29,6 @@
 #include <mavros_msgs/CommandHome.h>
 #include <mavros_msgs/HomePosition.h>
 #include <swarm_ctrl_pkg/srvGoToVehicle.h>
-#include <swarm_ctrl_pkg/srvMultiSetpointLocal.h>
-#include <swarm_ctrl_pkg/srvMultiSetpointGlobal.h>
 
 #define CONSTANTS_RADIUS_OF_EARTH 6371000 /* meters (m)		*/
 #define M_DEG_TO_RAD (M_PI / 180.0)
@@ -152,7 +152,7 @@ class Vehicle
 	void setSetpointPos(const tf2::Vector3 &);
 	tf2::Vector3 getSetpointPos() const;
 	void setScenPos(const std::pair<int, int> &);
-	std::pair<int,int> getScenPos() const;
+	std::pair<int, int> getScenPos() const;
 
 	//global position
 	bool setHomeGlobal();
@@ -179,50 +179,26 @@ class SwarmVehicle
 	std::vector<Vehicle> camila_;
 	std::vector<Vehicle>::iterator iter_;
 	std::vector<tf2::Vector3> offset_;
-	std::vector<uint8_t> scen_hex_;
 
 	ros::NodeHandle nh_;
 	ros::NodeHandle nh_mul_;
 	ros::NodeHandle &nh_global_;
-	ros::ServiceServer multi_setpoint_local_server_;
-	ros::ServiceServer multi_setpoint_global_server_;
 	ros::ServiceServer goto_vehicle_server_;
 
-	tf2::Vector3 swarm_target_local_;
-
-	std::string formation_;
 	bool multi_setpoint_publish_flag_;
-	bool target_changed_flag_;
-	double angle_;
-	ros::Time prev_;
 
 	static double kp_seek_;
 	static double kp_sp_;
 	static double range_sp_;
 	static double max_speed_;
-	static int scen_num_;
-	static std::string scen_str_;
 
-	void swarmServiceInit();
 	void release();
-	void updateOffset();
 
 	void limit(tf2::Vector3 &, const double &);
 	void getVehiclePos();
 	void separate(Vehicle &);
 	void seek(Vehicle &);
-	void formationGenerator();
-	void scenario2();
-	void scenario3();
-	void scenario4();
-	void scenario5();
-	void scenario6();
-	void hexToCoord(std::vector<std::pair<int,int>> &, const uint8_t &, const int &, const bool &);
 
-	bool multiSetpointLocal(swarm_ctrl_pkg::srvMultiSetpointLocal::Request &req,
-							swarm_ctrl_pkg::srvMultiSetpointLocal::Response &res);
-	bool multiSetpointGlobal(swarm_ctrl_pkg::srvMultiSetpointGlobal::Request &req,
-							 swarm_ctrl_pkg::srvMultiSetpointGlobal::Response &res);
 	bool gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 					 swarm_ctrl_pkg::srvGoToVehicle::Response &res);
 
@@ -240,10 +216,14 @@ class SwarmVehicle
 
 	void setSwarmInfo(const std::string &, const int &);
 	std::string getSwarmInfo() const;
+	const std::vector<Vehicle> *getSwarmVehicle() const;
+	const std::vector<tf2::Vector3> *getSwarmOffset() const;
 
 	void addVehicle(const VehicleInfo &);
 	void deleteVehicle(const VehicleInfo &);
 	void showVehicleList() const;
+	void updateOffset();
+	void setScenario(const tf2::Vector3 &, const std::vector<tf2::Vector3> &);
 
 	void run();
 };
