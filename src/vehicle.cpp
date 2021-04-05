@@ -160,6 +160,7 @@ PFLocalPlanner::PFLocalPlanner(ros::NodeHandle &nh_global) : LocalPlanner(nh_glo
 
 tf2::Vector3 PFLocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
+	nh_global_.getParamCached("local_plan/kp_repulsive", kp_repulsive_);
 	local_plan_ = sum_repulsive_ * kp_repulsive_ + err_ * kp_attractive_;
 }
 
@@ -194,7 +195,7 @@ Vehicle::Vehicle(const Vehicle &rhs)
 	controllers_.reserve(3);
 	local_planners_.reserve(2);
 	std::vector<PoseController*>::const_iterator it_cont;
-	std::vector<LocalPlanner>::const_iterator it_planner;
+	std::vector<LocalPlanner*>::const_iterator it_planner;
 	for(it_cont = rhs.controllers_.begin(); it_cont !=rhs.controllers_.end(); it_cont++)
 		controllers_.push_back(*it_cont);
 	
@@ -220,7 +221,7 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 	controllers_.reserve(3);
 	local_planners_.reserve(2);
 	std::vector<PoseController*>::const_iterator it_cont;
-	std::vector<LocalPlanner>::const_iterator it_planner;
+	std::vector<LocalPlanner*>::const_iterator it_planner;
 	for(it_cont = rhs.controllers_.begin(); it_cont !=rhs.controllers_.end(); it_cont++)
 		controllers_.push_back(*it_cont);
 	
@@ -259,9 +260,9 @@ void Vehicle::vehicleInit()
 	controller_ptr_ = controllers_[1];
 
 	local_planners_.reserve(2);
-	local_planners_.push_back(LocalPlanner(nh_global_));
-	local_planners_.push_back(PFLocalPlanner(nh_global_));
-	lp_ptr_ = &local_planners_[1];
+	local_planners_.push_back(new LocalPlanner(nh_global_));
+	local_planners_.push_back(new PFLocalPlanner(nh_global_));
+	lp_ptr_ = local_planners_[1];
 
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
 }
@@ -470,12 +471,12 @@ geographic_msgs::GeoPoseStamped Vehicle::getHome(){
 
 void Vehicle::setGlobalPose(const tf2::Vector3 &global_pose){
 	for(auto lp : local_planners_)
-		lp.setGlobalPose(global_pose);
+		lp->setGlobalPose(global_pose);
 }
 
 void Vehicle::setErr(const tf2::Vector3 &err){
 	for(auto lp : local_planners_)
-		lp.setErr(err);
+		lp->setErr(err);
 }
 
 void Vehicle::setSumOfRepulsive(const tf2::Vector3 &sum_of_repulsive){

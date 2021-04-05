@@ -205,7 +205,7 @@ class Vehicle
 
 	std::vector<PoseController*> controllers_;
 	PoseController *controller_ptr_;
-	std::vector<LocalPlanner> local_planners_;
+	std::vector<LocalPlanner*> local_planners_;
 	LocalPlanner* lp_ptr_;
 
   public:
@@ -235,7 +235,7 @@ class Vehicle
 	PoseController* getController() const {return controller_ptr_;};
 	geographic_msgs::GeoPoseStamped getHome();
 
-	void setLocalPlanner(const LocalPlanners &planner){lp_ptr_= &local_planners_[planner];};
+	void setLocalPlanner(const LocalPlanners &planner){lp_ptr_= local_planners_[planner];};
 	void setGlobalPose(const tf2::Vector3 &);
 	tf2::Vector3 getGlobalPose(){return lp_ptr_->getGlobalPose();};
 	void setErr(const tf2::Vector3 &);
