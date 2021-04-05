@@ -194,10 +194,7 @@ class Vehicle
 	void setGlobalPose(const tf2::Vector3 &);
 	tf2::Vector3 getGlobalPose(){return lp_ptr_->getGlobalPose();};
 	void setErr(const tf2::Vector3 &);
-	tf2::Vector3 getErr(){return lp_ptr_->getErr();};
 	void setSumOfRepulsive(const tf2::Vector3 &);
-	tf2::Vector3 getSumOfRepulsive();
-	void setSetpointPos(const tf2::Vector3 &);
 
 	bool isPublish() const;
 };
@@ -229,9 +226,7 @@ class SwarmVehicle
 	double angle_;
 	ros::Time prev_;
 
-	static double kp_attractive_;
-	static double kp_repulsive_;
-	static double range_sp_;
+	static double repulsive_range_;
 	static double max_speed_;
 	static int scen_num_;
 	static std::string scen_str_;

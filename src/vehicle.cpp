@@ -12,6 +12,7 @@ LocalPlanner::LocalPlanner(ros::NodeHandle &nh_global) : nh_global_(nh_global)
 tf2::Vector3 LocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
 	local_plan_ = err_ * kp_attractive_;
+	return local_plan_;
 }
 
 PFLocalPlanner::PFLocalPlanner(ros::NodeHandle &nh_global) : LocalPlanner(nh_global)
@@ -21,6 +22,7 @@ tf2::Vector3 PFLocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
 	nh_global_.getParamCached("local_plan/kp_repulsive", kp_repulsive_);
 	local_plan_ = sum_repulsive_ * kp_repulsive_ + err_ * kp_attractive_;
+	return local_plan_;
 }
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
@@ -348,15 +350,24 @@ void Vehicle::setLocalTarget(const geometry_msgs::PoseStamped &tar_local)
 
 void Vehicle::gotoLocal()
 {
+	tf2::Vector3 local_plan = lp_ptr_->generate();
 	tar_local_.header.seq += 1;
 	tar_local_.header.stamp = ros::Time::now();
 	tar_local_.header.frame_id = vehicle_info_.vehicle_name_;
+	tar_local_.pose.position.x = cur_local_.pose.position.x + local_plan.getX();
+	tar_local_.pose.position.y = cur_local_.pose.position.y + local_plan.getY();
+	tar_local_.pose.position.z = cur_local_.pose.position.z + local_plan.getZ();
 
 	setpoint_local_pub_.publish(tar_local_);
 }
 
 void Vehicle::gotoVel()
 {
+	tf2::Vector3 local_plan = lp_ptr_->generate();
+	tar_local_.pose.position.x = cur_local_.pose.position.x + local_plan.getX();
+	tar_local_.pose.position.y = cur_local_.pose.position.y + local_plan.getY();
+	tar_local_.pose.position.z = cur_local_.pose.position.z + local_plan.getZ();
+	
 	double kp;
 	nh_global_.getParam("pid/kp", kp);
 	geometry_msgs::Twist vel;
@@ -366,13 +377,6 @@ void Vehicle::gotoVel()
 	vel.linear.z = (tar_local_.pose.position.z - cur_local_.pose.position.z) * kp;
 
 	setpoint_vel_pub_.publish(vel);
-}
-
-void Vehicle::setSetpointPos(const tf2::Vector3 &setpoint)
-{
-	tar_local_.pose.position.x = cur_local_.pose.position.x + setpoint.getX();
-	tar_local_.pose.position.y = cur_local_.pose.position.y + setpoint.getY();
-	tar_local_.pose.position.z = cur_local_.pose.position.z + setpoint.getZ();
 }
 
 void Vehicle::setScenPos(const std::pair<int, int> &scen_pos)
@@ -463,21 +467,12 @@ void Vehicle::setSumOfRepulsive(const tf2::Vector3 &sum_of_repulsive){
 	planner->setSumOfRepulsive(sum_of_repulsive);
 }
 
-tf2::Vector3 Vehicle::getSumOfRepulsive(){
-	setLocalPlanner(LocalPlanners::PF_LOCAL_PLANNER);
-	PFLocalPlanner* planner = dynamic_cast<PFLocalPlanner*>(lp_ptr_);
-	return planner->getSumOfRepulsive();
-}
-
-
 bool Vehicle::isPublish() const
 {
 	return setpoint_publish_flag_;
 }
 
-double SwarmVehicle::kp_attractive_;
-double SwarmVehicle::kp_repulsive_;
-double SwarmVehicle::range_sp_;
+double SwarmVehicle::repulsive_range_;
 double SwarmVehicle::max_speed_;
 int SwarmVehicle::scen_num_;
 std::string SwarmVehicle::scen_str_ = "";
@@ -631,11 +626,11 @@ void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 		{
 			tf2::Vector3 diff = vehicle.getGlobalPose() - another_vehicle.getGlobalPose();
 			double dist = diff.length();
-			if (dist < range_sp_)
+			if (dist < repulsive_range_)
 			{
 				if (diff.length() != 0)
 					diff = diff.normalize();
-				diff *= (range_sp_ / dist);
+				diff *= (repulsive_range_ / dist);
 				sum += diff;
 				cnt++;
 			}
@@ -1707,11 +1702,9 @@ void SwarmVehicle::run()
 	if (isPublish())
 	{
 		bool use_velocity_controller, use_repulsive_force;
-		nh_global_.getParamCached("use_vel", use_velocity_controller);
-		nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
-		nh_global_.getParamCached("local_plan/kp_repulsive", kp_repulsive_);
-		nh_global_.getParamCached("local_plan/range_sp", range_sp_);
+		nh_global_.getParamCached("use_velocity_controller", use_velocity_controller);
 		nh_global_.getParamCached("local_plan/max_speed", max_speed_);
+		nh_global_.getParamCached("local_plan/repulsive_range", repulsive_range_);
 		nh_global_.getParamCached("local_plan/use_repulsive_force", use_repulsive_force);
 		setVehicleGlobalPose();
 		for (auto &vehicle : camila_)
@@ -1720,12 +1713,11 @@ void SwarmVehicle::run()
 			calAttractive(vehicle);
 			if (use_repulsive_force)
 			{
+				vehicle.setLocalPlanner(LocalPlanners::PF_LOCAL_PLANNER);
 				calRepulsive(vehicle);
-				setpoint = vehicle.getSumOfRepulsive() * kp_repulsive_ + vehicle.getErr() * kp_attractive_;
 			}
 			else
-				setpoint = vehicle.getErr() * kp_attractive_;
-			vehicle.setSetpointPos(setpoint);
+				vehicle.setLocalPlanner(LocalPlanners::LOCAL_PLANNER);
 			if (use_velocity_controller)
 				vehicle.gotoVel();
 			else
