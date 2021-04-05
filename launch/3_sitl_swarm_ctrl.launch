@@ -15,10 +15,6 @@
 
     <!-- setpoint ctrl -->
 	<arg name="num_drone" default="3"/>
-	<arg name="kp" default="0.5"/>
-	<arg name="kp_sp" default="5"/>
-	<arg name="range_sp" default="5"/>
-	<arg name="max_speed" default="3"/>
 
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">

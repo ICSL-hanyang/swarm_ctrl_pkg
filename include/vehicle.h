@@ -45,6 +45,40 @@ typedef struct vehicle_info
 	AUTO.TAKEOFF, AUTO.LAND, AUTO.MISSION, AUTO.LOITER,	AUTO.RTL,
 	AUTO.RTGS, AUTO.READY,*/
 
+enum LocalPlanners{
+	LOCAL_PLANNER,
+	PF_LOCAL_PLANNER
+};
+
+class LocalPlanner
+{
+private:
+	tf2::Vector3 cur_global_pose_;
+protected:
+	ros::NodeHandle &nh_global_;
+	tf2::Vector3 err_;
+	tf2::Vector3 local_plan_;
+	static double kp_attractive_;
+	static double kp_repulsive_;
+public:
+	LocalPlanner(ros::NodeHandle &);
+	virtual tf2::Vector3 generate();
+	void setGlobalPose(const tf2::Vector3 &pose){cur_global_pose_ = pose;};
+	tf2::Vector3 getGlobalPose(){return cur_global_pose_;};
+	void setErr(const tf2::Vector3 &err){err_ = err;};
+	tf2::Vector3 getErr(){return err_;};
+};
+
+class PFLocalPlanner : public LocalPlanner
+{
+private:
+	tf2::Vector3 sum_repulsive_;
+public:
+	PFLocalPlanner(ros::NodeHandle &);
+	tf2::Vector3 generate() override;
+	void setSumOfRepulsive(const tf2::Vector3 &sum_repulsive){sum_repulsive_=sum_repulsive;};
+	tf2::Vector3 getSumOfRepulsive(){return sum_repulsive_;};
+};
 class Vehicle
 {
   private:
@@ -94,10 +128,6 @@ class Vehicle
 	sensor_msgs::NavSatFix cur_global_;
 	sensor_msgs::NavSatFix tar_global_;
 
-	tf2::Vector3 pos_;
-	tf2::Vector3 sum_sp_;
-	tf2::Vector3 err_;
-	tf2::Vector3 setpoint_pos_;
 	std::pair<int, int> scen_pos_;
 
 	bool setpoint_publish_flag_;
@@ -118,6 +148,9 @@ class Vehicle
 	void multiSetHome(const std_msgs::Empty::ConstPtr &);
 	void multiTakeoff(const std_msgs::Empty::ConstPtr &);
 	void multiLand(const std_msgs::Empty::ConstPtr &);
+
+	std::vector<LocalPlanner*> local_planners_;
+	LocalPlanner* lp_ptr_;
 
   public:
 	Vehicle() = delete;
@@ -142,15 +175,6 @@ class Vehicle
 	void gotoLocal();
 	void gotoVel();
 
-	/* setpoint control method */
-	void setPos(const tf2::Vector3 &);
-	tf2::Vector3 getPos() const;
-	void setSumOfSp(const tf2::Vector3 &);
-	tf2::Vector3 getSumOfSp() const;
-	void setErr(const tf2::Vector3 &);
-	tf2::Vector3 getErr() const;
-	void setSetpointPos(const tf2::Vector3 &);
-	tf2::Vector3 getSetpointPos() const;
 	void setScenPos(const std::pair<int, int> &);
 	std::pair<int,int> getScenPos() const;
 
@@ -165,6 +189,15 @@ class Vehicle
 	geometry_msgs::PoseStamped getHomeLocal() const;
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
+
+	void setLocalPlanner(const LocalPlanners &planner){lp_ptr_= local_planners_[planner];};
+	void setGlobalPose(const tf2::Vector3 &);
+	tf2::Vector3 getGlobalPose(){return lp_ptr_->getGlobalPose();};
+	void setErr(const tf2::Vector3 &);
+	tf2::Vector3 getErr(){return lp_ptr_->getErr();};
+	void setSumOfRepulsive(const tf2::Vector3 &);
+	tf2::Vector3 getSumOfRepulsive();
+	void setSetpointPos(const tf2::Vector3 &);
 
 	bool isPublish() const;
 };
@@ -196,8 +229,8 @@ class SwarmVehicle
 	double angle_;
 	ros::Time prev_;
 
-	static double kp_seek_;
-	static double kp_sp_;
+	static double kp_attractive_;
+	static double kp_repulsive_;
 	static double range_sp_;
 	static double max_speed_;
 	static int scen_num_;
@@ -208,9 +241,9 @@ class SwarmVehicle
 	void updateOffset();
 
 	void limit(tf2::Vector3 &, const double &);
-	void getVehiclePos();
-	void separate(Vehicle &);
-	void seek(Vehicle &);
+	void setVehicleGlobalPose();
+	void calRepulsive(Vehicle &);
+	void calAttractive(Vehicle &);
 	void formationGenerator();
 	void scenario2();
 	void scenario3();

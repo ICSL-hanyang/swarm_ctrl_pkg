@@ -1,5 +1,5 @@
 # set velocity control
-use_vel: true
+use_velocity_controller: true
 
 takeoff_alt: 3.0
 
@@ -17,9 +17,9 @@ scen_num: 57 # scenario 숫자 9
 scen: '987'
 
 # setpoint control params
-setpoint:
-  kp_seek: 1.0
-  kp_sp: 1.5
+local_plan:
+  kp_attractive: 1.0
+  kp_repulsive: 1.5
   range_sp: 2.5
   max_speed: 3.0
-  separate: true
+  use_repulsive_force: true
