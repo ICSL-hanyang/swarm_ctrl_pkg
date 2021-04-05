@@ -153,6 +153,7 @@ LocalPlanner::LocalPlanner(ros::NodeHandle &nh_global) : nh_global_(nh_global)
 tf2::Vector3 LocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
 	local_plan_ = err_ * kp_attractive_;
+	return local_plan_;
 }
 
 PFLocalPlanner::PFLocalPlanner(ros::NodeHandle &nh_global) : LocalPlanner(nh_global)
@@ -162,6 +163,7 @@ tf2::Vector3 PFLocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
 	nh_global_.getParamCached("local_plan/kp_repulsive", kp_repulsive_);
 	local_plan_ = sum_repulsive_ * kp_repulsive_ + err_ * kp_attractive_;
+	return local_plan_;
 }
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
@@ -493,25 +495,26 @@ tf2::Vector3 Vehicle::getSumOfRepulsive(){
 
 void Vehicle::goTo(const Controllers &controller){
 	tf2::Vector3 local_plan = lp_ptr_->generate();
+	geometry_msgs::PoseStamped target;
 
 	setController(controller);
 	if (controller==Controllers::LOCAL_POSE_CONTROLLER){
 		LocalPoseController* lp_controller_ptr = dynamic_cast<LocalPoseController*>(controller_ptr_);
 		auto cur_pose = lp_controller_ptr->getCurPose();
-		geometry_msgs::PoseStamped target;
 		target.pose.position.x = cur_pose.pose.position.x + local_plan.getX();
 		target.pose.position.y = cur_pose.pose.position.y + local_plan.getY();
 		target.pose.position.z = cur_pose.pose.position.z + local_plan.getZ();
 		lp_controller_ptr->setTatget(target);
+		lp_controller_ptr->goTo();
 	}
 	else if(controller == Controllers::LOCAL_VELOCITY_CONTROLLER){
 		LocalVelocityController* lv_controller_ptr = dynamic_cast<LocalVelocityController*>(controller_ptr_);
 		auto cur_pose = lv_controller_ptr->getCurPose();
-		geometry_msgs::PoseStamped target;
 		target.pose.position.x = cur_pose.pose.position.x + local_plan.getX();
 		target.pose.position.y = cur_pose.pose.position.y + local_plan.getY();
 		target.pose.position.z = cur_pose.pose.position.z + local_plan.getZ();
 		lv_controller_ptr->setTatget(target);
+		lv_controller_ptr->goTo();
 	}
 }
 
