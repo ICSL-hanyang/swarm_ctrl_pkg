@@ -108,8 +108,13 @@ void Scenario::makeCircle(double radius)
 	double angle;
 	for (int i = 0; i < num_of_vehicle_; i++)
 	{
-		angle = i * angle_;
-		scens_.push_back(tf2::Vector3(radius * cos(angle + x), radius * sin(angle + x), 0));
+		if(i != 0)
+		{
+			angle = i * angle_;
+			scens_.push_back(tf2::Vector3(radius * cos(angle + x), radius * sin(angle + x), 0));
+		}
+		else
+			scens_.push_back(tf2::Vector3(0,  0, 0));
 	}
 	swarm_.setScenario(swarm_target_local_, scens_);
 }
@@ -120,7 +125,7 @@ void Scenario::makeEllipse(double radius)
 	double m_sec = ros::Time::now().toNSec() / 1000000;
 	double x = 0.00006 * m_sec; // 0.06 rad/s
 	double angle;
-	for (int i = 0; i < num_of_vehicle_; i++)
+	for (int i = 1; i < num_of_vehicle_; i++)
 	{
 		angle = i * angle_;
 		scens_.push_back(tf2::Vector3(radius * cos(angle + x), radius * sin(angle + x), radius * cos(angle + x) * x));

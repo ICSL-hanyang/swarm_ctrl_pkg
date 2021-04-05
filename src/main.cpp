@@ -76,8 +76,8 @@ int main(int argc, char **argv)
 
 	while (ros::ok())
 	{
-		camila->run();
 		scen.formationGenerator();
+		camila->run();
 
 		ros::spinOnce();
 		rate.sleep();
