@@ -6,8 +6,56 @@
 PoseController::PoseController(ros::NodeHandle &nh, ros::NodeHandle &nh_global,VehicleInfo &vehicle_info) : nh_(nh), nh_global_(nh_global), vehicle_info_(vehicle_info), setpoint_publish_flag_(false)
 {}
 
+PoseController::PoseController(const PoseController &rhs) :
+	vehicle_info_(rhs.vehicle_info_),
+	nh_(rhs.nh_),
+	nh_global_(rhs.nh_global_),
+	setpoint_publish_flag_(rhs.setpoint_publish_flag_)
+{
+	*this = rhs;
+}
+
+const PoseController &PoseController::operator=(const PoseController &rhs)
+{
+	if (this == &rhs)
+		return *this;
+
+	vehicle_info_ = rhs.vehicle_info_;
+	nh_ = rhs.nh_;
+	nh_global_ = rhs.nh_global_;
+	setpoint_publish_flag_ = rhs.setpoint_publish_flag_;
+	
+	return *this;
+}
+
 GeoPoseController::GeoPoseController(ros::NodeHandle &nh, ros::NodeHandle &nh_global, VehicleInfo &vehicle_info) : PoseController(nh, nh_global, vehicle_info)
 {
+	init();
+}
+
+GeoPoseController::GeoPoseController(const GeoPoseController &rhs) :
+	PoseController(rhs),
+	home_(rhs.home_),
+	cur_pose_(rhs.cur_pose_),
+	target_(rhs.target_)
+{
+	init();
+	*this = rhs;
+}
+
+const GeoPoseController &GeoPoseController::operator=(const GeoPoseController &rhs)
+{
+	if (this == &rhs)
+		return *this;
+	home_ = rhs.home_;
+	cur_pose_= rhs.cur_pose_;
+	target_ = rhs.target_;
+
+	init();
+	return *this;
+}
+
+void GeoPoseController::init(){
 	setpoint_geo_pub_ = nh_.advertise<geographic_msgs::GeoPoseStamped>("mavros/setpoint_position/global", 10);
 	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &GeoPoseController::homeCB, this);
 	cur_pose_sub_ = nh_.subscribe("mavros/global_position/global", 10, &GeoPoseController::curPoseCB, this);
@@ -85,6 +133,30 @@ void GeoPoseController::goTo(){
 
 LocalPoseController::LocalPoseController(ros::NodeHandle &nh, ros::NodeHandle &nh_global, VehicleInfo &vehicle_info) : PoseController(nh, nh_global, vehicle_info)
 {
+	init();
+}
+
+LocalPoseController::LocalPoseController(const LocalPoseController &rhs) :
+	PoseController(rhs),
+	cur_pose_(rhs.cur_pose_),
+	target_(rhs.target_)
+{
+	init();
+	*this = rhs;
+}
+
+const LocalPoseController &LocalPoseController::operator=(const LocalPoseController &rhs)
+{
+	if (this == &rhs)
+		return *this;
+	cur_pose_= rhs.cur_pose_;
+	target_ = rhs.target_;
+
+	init();
+	return *this;
+}
+
+void LocalPoseController::init(){
 	setpoint_local_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
 	cur_pose_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &LocalPoseController::curPoseCB, this);
 }
@@ -114,6 +186,30 @@ void LocalPoseController::goTo(){
 
 LocalVelocityController::LocalVelocityController(ros::NodeHandle &nh, ros::NodeHandle &nh_global, VehicleInfo &vehicle_info) : PoseController(nh, nh_global, vehicle_info)
 {
+	init();
+}
+
+LocalVelocityController::LocalVelocityController(const LocalVelocityController &rhs) :
+	PoseController(rhs),
+	cur_pose_(rhs.cur_pose_),
+	target_(rhs.target_)
+{
+	init();
+	*this = rhs;
+}
+
+const LocalVelocityController &LocalVelocityController::operator=(const LocalVelocityController &rhs)
+{
+	if (this == &rhs)
+		return *this;
+	cur_pose_= rhs.cur_pose_;
+	target_ = rhs.target_;
+
+	init();
+	return *this;
+}
+
+void LocalVelocityController::init(){
 	setpoint_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
 	cur_pose_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &LocalVelocityController::curPoseCB, this);
 }
@@ -190,7 +286,7 @@ const PFLocalPlanner &PFLocalPlanner::operator=(const PFLocalPlanner &rhs)
 {
 	if (this == &rhs)
 		return *this;
-	LocalPlanner(dynamic_cast<const LocalPlanner &>(rhs));
+	sum_repulsive_ = rhs.sum_repulsive_;
 	return *this;
 }
 

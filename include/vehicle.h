@@ -65,6 +65,8 @@ protected:
 	bool setpoint_publish_flag_;
 public:
 	PoseController(ros::NodeHandle &nh, ros::NodeHandle &nh_global, VehicleInfo &vehicle_info);
+	PoseController(const PoseController &);
+	const PoseController &operator=(const PoseController &);
 	virtual void goTo() {};
 	std::string getName() const {return vehicle_info_.vehicle_name_;};
 	bool isPublished() const {return setpoint_publish_flag_;};
@@ -80,9 +82,12 @@ private:
 	ros::Subscriber home_sub_;
 	ros::Subscriber cur_pose_sub_;
 	ros::ServiceClient set_home_client_;
+	void init();
 
 public:
 	GeoPoseController(ros::NodeHandle &, ros::NodeHandle &, VehicleInfo &);
+	GeoPoseController(const GeoPoseController &);
+	const GeoPoseController &operator=(const GeoPoseController &);
 	~GeoPoseController();
 	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
 	void curPoseCB(const sensor_msgs::NavSatFix::ConstPtr &);
@@ -101,8 +106,11 @@ private:
 	geometry_msgs::PoseStamped target_;	
 	ros::Publisher setpoint_local_pub_;
 	ros::Subscriber cur_pose_sub_;
+	void init();
 public:
 	LocalPoseController(ros::NodeHandle &, ros::NodeHandle &, VehicleInfo &);
+	LocalPoseController(const LocalPoseController &);
+	const LocalPoseController &operator=(const LocalPoseController &);
 	~LocalPoseController();
 	void curPoseCB(const geometry_msgs::PoseStamped::ConstPtr &msg){cur_pose_ = *msg;};
 	virtual void goTo() override;
@@ -118,8 +126,11 @@ private:
 	geometry_msgs::PoseStamped target_;	
 	ros::Publisher setpoint_vel_pub_;
 	ros::Subscriber cur_pose_sub_;
+	void init();
 public:
 	LocalVelocityController(ros::NodeHandle &, ros::NodeHandle &, VehicleInfo &);
+	LocalVelocityController(const LocalVelocityController &);
+	const LocalVelocityController &operator=(const LocalVelocityController &);
 	~LocalVelocityController();
 	void curPoseCB(const geometry_msgs::PoseStamped::ConstPtr &msg){cur_pose_=*msg;};
 	virtual void goTo() override;
@@ -130,7 +141,7 @@ public:
 class LocalPlanner
 {
 private:
-	tf2::Vector3 global_cur_pose_;
+	tf2::Vector3 cur_global_pose_;
 protected:
 	ros::NodeHandle &nh_global_;
 	tf2::Vector3 err_;
@@ -142,8 +153,8 @@ public:
 	LocalPlanner(const LocalPlanner &);
 	const LocalPlanner &operator=(const LocalPlanner &);
 	virtual tf2::Vector3 generate();
-	void setGlobalPose(const tf2::Vector3 &pose){global_cur_pose_ = pose;};
-	tf2::Vector3 getGlobalPose(){return global_cur_pose_;};
+	void setGlobalPose(const tf2::Vector3 &pose){cur_global_pose_ = pose;};
+	tf2::Vector3 getGlobalPose(){return cur_global_pose_;};
 	void setErr(const tf2::Vector3 &err){err_ = err;};
 	tf2::Vector3 getErr(){return err_;};
 };
