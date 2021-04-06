@@ -3,16 +3,33 @@
 #include <scenario.h>
 #include <scenario2.h>
 
-double LocalPlanner::kp_attractive_;
-double LocalPlanner::kp_repulsive_;
+AttractiveOnly* AttractiveOnly::instance_ = nullptr;
+PotentialField* PotentialField::instance_ = nullptr;
 
-LocalPlanner::LocalPlanner(ros::NodeHandle &nh_global) : nh_global_(nh_global)
-{}
+AttractiveOnly::AttractiveOnly(){};
+PotentialField::PotentialField(){};
+
+tf2::Vector3 AttractiveOnly::generate(LocalPlanner &lp){
+	tf2::Vector3 local_plan = lp.getErr() * lp.getKpAtt();
+	return local_plan;
+}
+
+tf2::Vector3 PotentialField::generate(LocalPlanner &lp){
+	tf2::Vector3 local_plan = lp.getErr() * lp.getKpAtt() + lp.getSumOfRepulsive() * lp.getKpRep();
+	return local_plan;
+}
+
+LocalPlanner::LocalPlanner()
+{
+	plan_ = PotentialField::getInstance();
+}
 
 LocalPlanner::LocalPlanner(const LocalPlanner &rhs) :
 	cur_global_pose_(rhs.cur_global_pose_),
-	nh_global_(rhs.nh_global_),
+	kp_attractive_(rhs.kp_attractive_),
+	kp_repulsive_(rhs.kp_repulsive_),
 	err_(rhs.err_),
+	sum_repulsive_(rhs.sum_repulsive_),
 	local_plan_(rhs.local_plan_)
 {
 	*this = rhs;
@@ -22,42 +39,17 @@ const LocalPlanner &LocalPlanner::operator=(const LocalPlanner &rhs)
 {
 	if (this == &rhs)
 		return *this;
-	nh_global_ = rhs.nh_global_;
 	cur_global_pose_ = rhs.cur_global_pose_;
+	kp_attractive_ = rhs.kp_attractive_;
+	kp_repulsive_ = rhs.kp_repulsive_;
 	err_ = rhs.err_;
+	sum_repulsive_ = rhs.sum_repulsive_;
 	local_plan_ = rhs.local_plan_;
 	return *this;
 }
 
 tf2::Vector3 LocalPlanner::generate(){
-	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
-	local_plan_ = err_ * kp_attractive_;
-	return local_plan_;
-}
-
-PFLocalPlanner::PFLocalPlanner(ros::NodeHandle &nh_global) : LocalPlanner(nh_global)
-{}
-
-PFLocalPlanner::PFLocalPlanner(const PFLocalPlanner &rhs) :
-	LocalPlanner(rhs),
-	sum_repulsive_(rhs.sum_repulsive_)
-{
-	*this = rhs;
-}
-
-const PFLocalPlanner &PFLocalPlanner::operator=(const PFLocalPlanner &rhs)
-{
-	if (this == &rhs)
-		return *this;
-	LocalPlanner(dynamic_cast<const LocalPlanner &>(rhs));
-	return *this;
-}
-
-tf2::Vector3 PFLocalPlanner::generate(){
-	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
-	nh_global_.getParamCached("local_plan/kp_repulsive", kp_repulsive_);
-	local_plan_ = sum_repulsive_ * kp_repulsive_ + err_ * kp_attractive_;
-	return local_plan_;
+	return plan_->generate(*this);
 }
 
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
@@ -88,7 +80,8 @@ Vehicle::Vehicle(const Vehicle &rhs)
 	  nh_mul_(rhs.nh_mul_),
 	  nh_global_(rhs.nh_global_),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(rhs.setpoint_publish_flag_)
+	  setpoint_publish_flag_(rhs.setpoint_publish_flag_),
+	  local_planner_(rhs.local_planner_)
 {
 	vehicleInit();
 	*this = rhs;
@@ -106,6 +99,7 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 	nh_mul_ = rhs.nh_mul_;
 	nh_global_ = rhs.nh_global_;
 	scen_pos_ = rhs.scen_pos_;
+	local_planner_ = rhs.local_planner_;
 
 	vehicleInit();
 	return *this;
@@ -140,11 +134,6 @@ void Vehicle::vehicleInit()
 	multi_takeoff_sub_ = nh_mul_.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
 
-	local_planners_.reserve(2);
-	local_planners_.push_back(new LocalPlanner(nh_global_));
-	local_planners_.push_back(new PFLocalPlanner(nh_global_));
-	lp_ptr_ = local_planners_[1];
-
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
 }
 
@@ -171,8 +160,6 @@ void Vehicle::release()
 	multi_set_home_sub_.shutdown();
 	multi_takeoff_sub_.shutdown();
 	multi_land_sub_.shutdown();
-
-	std::vector<LocalPlanner*>().swap(local_planners_);
 }
 
 void Vehicle::stateCB(const mavros_msgs::State::ConstPtr &msg)
@@ -385,7 +372,12 @@ void Vehicle::setLocalTarget(const geometry_msgs::PoseStamped &tar_local)
 
 void Vehicle::gotoLocal()
 {
-	tf2::Vector3 local_plan = lp_ptr_->generate();
+	double kp_att, kp_rep;
+	nh_global_.getParamCached("local_plan/kp_attractive", kp_att);
+	nh_global_.getParamCached("local_plan/kp_attractive", kp_rep);
+	local_planner_.setKpAtt(kp_att);
+	local_planner_.setKpRep(kp_rep);
+	tf2::Vector3 local_plan = local_planner_.generate();
 	tar_local_.header.seq += 1;
 	tar_local_.header.stamp = ros::Time::now();
 	tar_local_.header.frame_id = vehicle_info_.vehicle_name_;
@@ -398,7 +390,12 @@ void Vehicle::gotoLocal()
 
 void Vehicle::gotoVel()
 {
-	tf2::Vector3 local_plan = lp_ptr_->generate();
+	double kp_att, kp_rep;
+	nh_global_.getParamCached("local_plan/kp_attractive", kp_att);
+	nh_global_.getParamCached("local_plan/kp_attractive", kp_rep);
+	local_planner_.setKpAtt(kp_att);
+	local_planner_.setKpRep(kp_rep);
+	tf2::Vector3 local_plan = local_planner_.generate();
 	tar_local_.pose.position.x = cur_local_.pose.position.x + local_plan.getX();
 	tar_local_.pose.position.y = cur_local_.pose.position.y + local_plan.getY();
 	tar_local_.pose.position.z = cur_local_.pose.position.z + local_plan.getZ();
@@ -486,20 +483,20 @@ geometry_msgs::PoseStamped Vehicle::getTargetLocal() const
 	return tar_local_;
 }
 
+void Vehicle::setLocalPlanner(Plans *plan){
+	local_planner_.setPlanner(plan);
+}
+
 void Vehicle::setGlobalPose(const tf2::Vector3 &global_pose){
-	for(auto lp : local_planners_)
-		lp->setGlobalPose(global_pose);
+	local_planner_.setGlobalPose(global_pose);
 }
 
 void Vehicle::setErr(const tf2::Vector3 &err){
-	for(auto lp : local_planners_)
-		lp->setErr(err);
+	local_planner_.setErr(err);
 }
 
 void Vehicle::setSumOfRepulsive(const tf2::Vector3 &sum_of_repulsive){
-	setLocalPlanner(LocalPlanners::PF_LOCAL_PLANNER);
-	PFLocalPlanner* planner = dynamic_cast<PFLocalPlanner*>(lp_ptr_);
-	planner->setSumOfRepulsive(sum_of_repulsive);
+	local_planner_.setSumOfRepulsive(sum_of_repulsive);
 }
 
 bool Vehicle::isPublish() const
@@ -1748,11 +1745,11 @@ void SwarmVehicle::run()
 			calAttractive(vehicle);
 			if (use_repulsive_force)
 			{
-				vehicle.setLocalPlanner(LocalPlanners::PF_LOCAL_PLANNER);
+				vehicle.setLocalPlanner(PotentialField::getInstance());
 				calRepulsive(vehicle);
 			}
 			else
-				vehicle.setLocalPlanner(LocalPlanners::LOCAL_PLANNER);
+				vehicle.setLocalPlanner(AttractiveOnly::getInstance());
 			if (use_velocity_controller)
 				vehicle.gotoVel();
 			else

@@ -50,39 +50,71 @@ enum LocalPlanners{
 	PF_LOCAL_PLANNER
 };
 
+class LocalPlanner;
+
+class Plans
+{
+public:
+	virtual tf2::Vector3 generate(LocalPlanner &){};
+};
+
+class AttractiveOnly : public Plans
+{
+private:
+	static AttractiveOnly* instance_;
+	AttractiveOnly();
+public:
+	static AttractiveOnly* getInstance(){
+		if(instance_ == nullptr)
+			instance_ = new AttractiveOnly();
+		return instance_;
+	}
+	virtual tf2::Vector3 generate(LocalPlanner &);
+};
+
+class PotentialField : public Plans
+{
+private:
+	static PotentialField* instance_;
+	PotentialField();
+public:
+	static PotentialField* getInstance(){
+		if(instance_ == nullptr)
+			instance_ = new PotentialField();
+		return instance_;
+	}
+	virtual tf2::Vector3 generate(LocalPlanner &);
+};
+
 class LocalPlanner
 {
 private:
+	Plans* plan_;
 	tf2::Vector3 cur_global_pose_;
 protected:
-	ros::NodeHandle &nh_global_;
+	double kp_attractive_;
+	double kp_repulsive_;
 	tf2::Vector3 err_;
+	tf2::Vector3 sum_repulsive_;
 	tf2::Vector3 local_plan_;
-	static double kp_attractive_;
-	static double kp_repulsive_;
 public:
-	LocalPlanner(ros::NodeHandle &);
+	LocalPlanner();
 	LocalPlanner(const LocalPlanner &);
 	const LocalPlanner &operator=(const LocalPlanner &);
-	virtual tf2::Vector3 generate();
+	void setKpAtt(double &kp_a){kp_attractive_=kp_a;};
+	double getKpAtt(){return kp_attractive_;};
+	void setKpRep(double &kp_r){kp_repulsive_=kp_r;};
+	double getKpRep(){return kp_repulsive_;};
+	tf2::Vector3 generate();
 	void setGlobalPose(const tf2::Vector3 &pose){cur_global_pose_ = pose;};
 	tf2::Vector3 getGlobalPose(){return cur_global_pose_;};
 	void setErr(const tf2::Vector3 &err){err_ = err;};
 	tf2::Vector3 getErr(){return err_;};
-};
-
-class PFLocalPlanner : public LocalPlanner
-{
-private:
-	tf2::Vector3 sum_repulsive_;
-public:
-	PFLocalPlanner(ros::NodeHandle &);
-	PFLocalPlanner(const PFLocalPlanner &);
-	const PFLocalPlanner &operator=(const PFLocalPlanner &);
-	virtual tf2::Vector3 generate() override;
 	void setSumOfRepulsive(const tf2::Vector3 &sum_repulsive){sum_repulsive_=sum_repulsive;};
 	tf2::Vector3 getSumOfRepulsive(){return sum_repulsive_;};
+	void setPlanner(Plans* plan){plan_ = plan;};
 };
+
 class Vehicle
 {
   private:
@@ -153,8 +185,7 @@ class Vehicle
 	void multiTakeoff(const std_msgs::Empty::ConstPtr &);
 	void multiLand(const std_msgs::Empty::ConstPtr &);
 
-	std::vector<LocalPlanner*> local_planners_;
-	LocalPlanner* lp_ptr_;
+	LocalPlanner local_planner_;
 
   public:
 	Vehicle() = delete;
@@ -194,9 +225,9 @@ class Vehicle
 	geometry_msgs::PoseStamped getLocalPosition() const;
 	geometry_msgs::PoseStamped getTargetLocal() const;
 
-	void setLocalPlanner(const LocalPlanners &planner){lp_ptr_= local_planners_[planner];};
+	void setLocalPlanner(Plans *);
 	void setGlobalPose(const tf2::Vector3 &);
-	tf2::Vector3 getGlobalPose(){return lp_ptr_->getGlobalPose();};
+	tf2::Vector3 getGlobalPose(){return local_planner_.getGlobalPose();};
 	void setErr(const tf2::Vector3 &);
 	void setSumOfRepulsive(const tf2::Vector3 &);
 
