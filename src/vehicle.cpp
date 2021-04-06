@@ -150,6 +150,26 @@ double LocalPlanner::kp_repulsive_;
 LocalPlanner::LocalPlanner(ros::NodeHandle &nh_global) : nh_global_(nh_global)
 {}
 
+LocalPlanner::LocalPlanner(const LocalPlanner &rhs) :
+	cur_global_pose_(rhs.cur_global_pose_),
+	nh_global_(rhs.nh_global_),
+	err_(rhs.err_),
+	local_plan_(rhs.local_plan_)
+{
+	*this = rhs;
+}
+
+const LocalPlanner &LocalPlanner::operator=(const LocalPlanner &rhs)
+{
+	if (this == &rhs)
+		return *this;
+	nh_global_ = rhs.nh_global_;
+	cur_global_pose_ = rhs.cur_global_pose_;
+	err_ = rhs.err_;
+	local_plan_ = rhs.local_plan_;
+	return *this;
+}
+
 tf2::Vector3 LocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
 	local_plan_ = err_ * kp_attractive_;
@@ -158,6 +178,21 @@ tf2::Vector3 LocalPlanner::generate(){
 
 PFLocalPlanner::PFLocalPlanner(ros::NodeHandle &nh_global) : LocalPlanner(nh_global)
 {}
+
+PFLocalPlanner::PFLocalPlanner(const PFLocalPlanner &rhs) :
+	LocalPlanner(rhs),
+	sum_repulsive_(rhs.sum_repulsive_)
+{
+	*this = rhs;
+}
+
+const PFLocalPlanner &PFLocalPlanner::operator=(const PFLocalPlanner &rhs)
+{
+	if (this == &rhs)
+		return *this;
+	LocalPlanner(dynamic_cast<const LocalPlanner &>(rhs));
+	return *this;
+}
 
 tf2::Vector3 PFLocalPlanner::generate(){
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_attractive_);
