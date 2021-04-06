@@ -62,6 +62,8 @@ protected:
 	static double kp_repulsive_;
 public:
 	LocalPlanner(ros::NodeHandle &);
+	LocalPlanner(const LocalPlanner &);
+	const LocalPlanner &operator=(const LocalPlanner &);
 	virtual tf2::Vector3 generate();
 	void setGlobalPose(const tf2::Vector3 &pose){cur_global_pose_ = pose;};
 	tf2::Vector3 getGlobalPose(){return cur_global_pose_;};
@@ -75,7 +77,9 @@ private:
 	tf2::Vector3 sum_repulsive_;
 public:
 	PFLocalPlanner(ros::NodeHandle &);
-	tf2::Vector3 generate() override;
+	PFLocalPlanner(const PFLocalPlanner &);
+	const PFLocalPlanner &operator=(const PFLocalPlanner &);
+	virtual tf2::Vector3 generate() override;
 	void setSumOfRepulsive(const tf2::Vector3 &sum_repulsive){sum_repulsive_=sum_repulsive;};
 	tf2::Vector3 getSumOfRepulsive(){return sum_repulsive_;};
 };
