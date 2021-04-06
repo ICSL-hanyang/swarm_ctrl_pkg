@@ -6,8 +6,8 @@
 AttractiveOnly* AttractiveOnly::instance_ = nullptr;
 PotentialField* PotentialField::instance_ = nullptr;
 
-AttractiveOnly::AttractiveOnly(){};
-PotentialField::PotentialField(){};
+AttractiveOnly::AttractiveOnly(){}
+PotentialField::PotentialField(){}
 
 tf2::Vector3 AttractiveOnly::generate(LocalPlanner &lp){
 	tf2::Vector3 local_plan = lp.getErr() * lp.getKpAtt();
@@ -52,13 +52,62 @@ tf2::Vector3 LocalPlanner::generate(){
 	return plan_->generate(*this);
 }
 
+template <typename T>
+PoseController<T>::PoseController(ros::NodeHandle &nh, ros::NodeHandle &nh_global, std::string &vehicle_name) :
+	nh_(nh),
+	nh_global_(nh_global),
+	vehicle_name_(vehicle_name)
+{}
+
+LocalPoseController::LocalPoseController(ros::NodeHandle &nh, ros::NodeHandle &nh_global, std::string &vehicle_name) : 	
+	PoseController(nh, nh_global, vehicle_name)
+{
+	setpoint_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+	setpoint_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
+	cur_pose_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &LocalPoseController::curPoseCB, this);
+}
+
+LocalPoseController::~LocalPoseController(){
+	setpoint_pub_.shutdown();
+	setpoint_vel_pub_.shutdown();
+	cur_pose_sub_.shutdown();
+}
+
+void LocalPoseController::goTo(){
+	target_.header.seq += 1;
+	target_.header.stamp = ros::Time::now();
+	target_.header.frame_id = getName();
+
+	setpoint_pub_.publish(target_);
+}
+
+void LocalPoseController::goToVel(){
+	double kp;
+	geometry_msgs::Twist vel;
+	nh_global_.getParamCached("pid/kp", kp);
+	vel.linear.x = (target_.pose.position.x - cur_pose_.pose.position.x) * kp;
+	vel.linear.y = (target_.pose.position.y - cur_pose_.pose.position.y) * kp;
+	vel.linear.z = (target_.pose.position.z - cur_pose_.pose.position.z) * kp;
+
+	setpoint_vel_pub_.publish(vel);
+}
+
+void LocalPoseController::setTarget(const geometry_msgs::PoseStamped &target){
+	setpoint_publish_flag_ = true;
+
+	if ((target_.pose.position.x != target.pose.position.x) ||
+		(target_.pose.position.y != target.pose.position.y) ||
+		(target_.pose.position.z != target.pose.position.z))
+		target_ = target;
+}
+
 Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global)
 	: vehicle_info_({1, "mavros"}),
 	  nh_(ros::NodeHandle(vehicle_info_.vehicle_name_)),
 	  nh_mul_(nh_mul),
 	  nh_global_(nh_global),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(false)
+	  lp_controller_(nh_, nh_global, vehicle_info_.vehicle_name_)
 {
 	vehicleInit();
 }
@@ -69,7 +118,7 @@ Vehicle::Vehicle(ros::NodeHandle &nh_mul, ros::NodeHandle &nh_global, const Vehi
 	  nh_mul_(nh_mul),
 	  nh_global_(nh_global),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(false)
+	  lp_controller_(nh_, nh_global, vehicle_info_.vehicle_name_)
 {
 	vehicleInit();
 }
@@ -80,8 +129,7 @@ Vehicle::Vehicle(const Vehicle &rhs)
 	  nh_mul_(rhs.nh_mul_),
 	  nh_global_(rhs.nh_global_),
 	  scen_pos_(std::pair<int, int>(0, 0)),
-	  setpoint_publish_flag_(rhs.setpoint_publish_flag_),
-	  local_planner_(rhs.local_planner_)
+	  lp_controller_(nh_, rhs.nh_global_, vehicle_info_.vehicle_name_)
 {
 	vehicleInit();
 	*this = rhs;
@@ -93,13 +141,11 @@ const Vehicle &Vehicle::operator=(const Vehicle &rhs)
 		return *this;
 
 	vehicle_info_ = rhs.vehicle_info_;
-	setpoint_publish_flag_ = rhs.setpoint_publish_flag_;
 
 	nh_ = ros::NodeHandle(vehicle_info_.vehicle_name_);
 	nh_mul_ = rhs.nh_mul_;
 	nh_global_ = rhs.nh_global_;
 	scen_pos_ = rhs.scen_pos_;
-	local_planner_ = rhs.local_planner_;
 
 	vehicleInit();
 	return *this;
@@ -113,13 +159,10 @@ Vehicle::~Vehicle()
 void Vehicle::vehicleInit()
 {
 	setpoint_global_pub_ = nh_.advertise<geographic_msgs::GeoPoseStamped>("mavros/setpoint_position/global", 10);
-	setpoint_local_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
-	setpoint_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
 
 	state_sub_ = nh_.subscribe("mavros/state", 10, &Vehicle::stateCB, this);
 	battery_sub_ = nh_.subscribe("mavros/battery", 10, &Vehicle::batteryCB, this);
 	home_sub_ = nh_.subscribe("mavros/home_position/home", 10, &Vehicle::homeCB, this);
-	local_pos_sub_ = nh_.subscribe("mavros/local_position/pose", 10, &Vehicle::localPositionCB, this);
 	global_pos_sub_ = nh_.subscribe("mavros/global_position/global", 10, &Vehicle::globalPositionCB, this);
 
 	arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
@@ -140,13 +183,10 @@ void Vehicle::vehicleInit()
 void Vehicle::release()
 {
 	setpoint_global_pub_.shutdown();
-	setpoint_local_pub_.shutdown();
-	setpoint_vel_pub_.shutdown();
-
+	
 	state_sub_.shutdown();
 	battery_sub_.shutdown();
 	home_sub_.shutdown();
-	local_pos_sub_.shutdown();
 	global_pos_sub_.shutdown();
 
 	arming_client_.shutdown();
@@ -195,19 +235,11 @@ void Vehicle::homeCB(const mavros_msgs::HomePosition::ConstPtr &msg)
 	home_global_.latitude = msg->geo.latitude;
 	home_global_.longitude = msg->geo.longitude;
 	home_global_.altitude = msg->geo.altitude;
-	home_local_.pose.position.x = msg->position.x;
-	home_local_.pose.position.y = msg->position.y;
-	home_local_.pose.position.z = msg->position.z;
 }
 
 void Vehicle::globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &msg)
 {
 	cur_global_ = *msg;
-}
-
-void Vehicle::localPositionCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
-{
-	cur_local_ = *msg;
 }
 
 void Vehicle::multiArming(const std_msgs::Bool::ConstPtr &msg)
@@ -228,8 +260,7 @@ void Vehicle::multiSetMode(const std_msgs::String::ConstPtr &msg)
 
 void Vehicle::multiSetHome(const std_msgs::Empty::ConstPtr &trigger)
 {
-	if (setHomeGlobal())
-		setHomeLocal();
+	setHomeGlobal();
 }
 
 void Vehicle::multiTakeoff(const std_msgs::Empty::ConstPtr &trigger)
@@ -287,7 +318,7 @@ bool Vehicle::setMode(const std::string &current_mode)
 {
 	mavros_msgs::SetMode mode;
 	mode.request.custom_mode = current_mode;
-	if (((current_mode == "offboard") || (current_mode == "OFFBOARD")) && (!setpoint_publish_flag_))
+	if (((current_mode == "offboard") || (current_mode == "OFFBOARD")) && (!lp_controller_.isPublished()))
 	{
 		ROS_WARN("Please publish setpoint first");
 		return false;
@@ -336,7 +367,7 @@ bool Vehicle::land()
 
 void Vehicle::gotoGlobal(const sensor_msgs::NavSatFix &tar_global)
 {
-	setpoint_publish_flag_ = true;
+	// setpoint_publish_flag_ = true;
 
 	if ((tar_global_.latitude != tar_global.latitude) ||
 		(tar_global_.longitude != tar_global.longitude) ||
@@ -362,53 +393,32 @@ void Vehicle::gotoGlobal(const sensor_msgs::NavSatFix &tar_global)
 
 void Vehicle::setLocalTarget(const geometry_msgs::PoseStamped &tar_local)
 {
-	setpoint_publish_flag_ = true;
-
-	if ((tar_local_.pose.position.x != tar_local.pose.position.x) ||
-		(tar_local_.pose.position.y != tar_local.pose.position.y) ||
-		(tar_local_.pose.position.z != tar_local.pose.position.z))
-		tar_local_ = tar_local;
+	lp_controller_.setTarget(tar_local);
 }
 
-void Vehicle::gotoLocal()
-{
-	double kp_att, kp_rep;
+void Vehicle::goTo(){
+	bool use_velocity_controller;
+	double kp_att, kp_rep, kp;
+	nh_global_.getParamCached("use_velocity_controller", use_velocity_controller);
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_att);
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_rep);
 	local_planner_.setKpAtt(kp_att);
 	local_planner_.setKpRep(kp_rep);
-	tf2::Vector3 local_plan = local_planner_.generate();
-	tar_local_.header.seq += 1;
-	tar_local_.header.stamp = ros::Time::now();
-	tar_local_.header.frame_id = vehicle_info_.vehicle_name_;
-	tar_local_.pose.position.x = cur_local_.pose.position.x + local_plan.getX();
-	tar_local_.pose.position.y = cur_local_.pose.position.y + local_plan.getY();
-	tar_local_.pose.position.z = cur_local_.pose.position.z + local_plan.getZ();
 
-	setpoint_local_pub_.publish(tar_local_);
-}
-
-void Vehicle::gotoVel()
-{
-	double kp_att, kp_rep;
-	nh_global_.getParamCached("local_plan/kp_attractive", kp_att);
-	nh_global_.getParamCached("local_plan/kp_attractive", kp_rep);
-	local_planner_.setKpAtt(kp_att);
-	local_planner_.setKpRep(kp_rep);
 	tf2::Vector3 local_plan = local_planner_.generate();
-	tar_local_.pose.position.x = cur_local_.pose.position.x + local_plan.getX();
-	tar_local_.pose.position.y = cur_local_.pose.position.y + local_plan.getY();
-	tar_local_.pose.position.z = cur_local_.pose.position.z + local_plan.getZ();
+	geometry_msgs::PoseStamped target;
+	geometry_msgs::PoseStamped cur_pose = lp_controller_.getCuPose();
+	target.pose.position.x = cur_pose.pose.position.x + local_plan.getX();
+	target.pose.position.y = cur_pose.pose.position.y + local_plan.getY();
+	target.pose.position.z = cur_pose.pose.position.z + local_plan.getZ();
+	lp_controller_.setTarget(target);
 	
-	double kp;
-	nh_global_.getParam("pid/kp", kp);
-	geometry_msgs::Twist vel;
-
-	vel.linear.x = (tar_local_.pose.position.x - cur_local_.pose.position.x) * kp;
-	vel.linear.y = (tar_local_.pose.position.y - cur_local_.pose.position.y) * kp;
-	vel.linear.z = (tar_local_.pose.position.z - cur_local_.pose.position.z) * kp;
-
-	setpoint_vel_pub_.publish(vel);
+	if(isPublish()){
+		if (use_velocity_controller)
+			lp_controller_.goToVel();
+		else
+			lp_controller_.goTo();
+	}
 }
 
 void Vehicle::setScenPos(const std::pair<int, int> &scen_pos)
@@ -459,30 +469,6 @@ sensor_msgs::NavSatFix Vehicle::getTargetGlobal() const
 	return tar_global_;
 }
 
-void Vehicle::setHomeLocal()
-{
-	home_local_ = cur_local_;
-
-	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " Local home position is set.");
-	ROS_INFO("%s new local home is (x : %lf, y : %lf, z : %lf)", vehicle_info_.vehicle_name_.c_str(),
-			 home_local_.pose.position.x, home_local_.pose.position.y, home_local_.pose.position.z);
-}
-
-geometry_msgs::PoseStamped Vehicle::getHomeLocal() const
-{
-	return home_local_;
-}
-
-geometry_msgs::PoseStamped Vehicle::getLocalPosition() const
-{
-	return cur_local_;
-}
-
-geometry_msgs::PoseStamped Vehicle::getTargetLocal() const
-{
-	return tar_local_;
-}
-
 void Vehicle::setLocalPlanner(Plans *plan){
 	local_planner_.setPlanner(plan);
 }
@@ -501,7 +487,7 @@ void Vehicle::setSumOfRepulsive(const tf2::Vector3 &sum_of_repulsive){
 
 bool Vehicle::isPublish() const
 {
-	return setpoint_publish_flag_;
+	return lp_controller_.isPublished();
 }
 
 double SwarmVehicle::repulsive_range_;
@@ -517,7 +503,6 @@ SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_
 	  nh_mul_("multi"),
 	  nh_global_(nh_global),
 	  swarm_target_local_(tf2::Vector3(0, 0, 0)),
-	  multi_setpoint_publish_flag_(false),
 	  target_changed_flag_(false)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
@@ -542,7 +527,6 @@ SwarmVehicle::SwarmVehicle(const SwarmVehicle &rhs)
 	  nh_mul_(rhs.nh_mul_),
 	  nh_global_(rhs.nh_global_),
 	  swarm_target_local_(tf2::Vector3(0, 0, 0)),
-	  multi_setpoint_publish_flag_(rhs.multi_setpoint_publish_flag_),
 	  target_changed_flag_(rhs.target_changed_flag_)
 {
 	VehicleInfo vehicle_info_[num_of_vehicle_];
@@ -685,7 +669,7 @@ void SwarmVehicle::calAttractive(Vehicle &vehicle)
 {
 	tf2::Vector3 err(0, 0, 0);
 	geometry_msgs::PoseStamped target_pos = vehicle.getTargetLocal();
-	geometry_msgs::PoseStamped current_pos = vehicle.getLocalPosition();
+	geometry_msgs::PoseStamped current_pos = vehicle.getLocalPose();
 	err.setX(target_pos.pose.position.x - current_pos.pose.position.x);
 	err.setY(target_pos.pose.position.y - current_pos.pose.position.y);
 	err.setZ(target_pos.pose.position.z - current_pos.pose.position.z);
@@ -1658,20 +1642,6 @@ geographic_msgs::GeoPoint SwarmVehicle::convertENUToGeo(const geometry_msgs::Pos
 	return geo_point;
 }
 
-bool SwarmVehicle::isPublish()
-{
-	multi_setpoint_publish_flag_ = true;
-	for (auto &vehicle : camila_)
-	{
-		if (vehicle.isPublish() != true)
-		{
-			multi_setpoint_publish_flag_ = false;
-			break;
-		}
-	}
-	return multi_setpoint_publish_flag_;
-}
-
 void SwarmVehicle::setSwarmInfo(const std::string &swarm_name, const int &num_of_vehicle)
 {
 	swarm_name_ = swarm_name;
@@ -1731,30 +1701,23 @@ void SwarmVehicle::showVehicleList() const
 
 void SwarmVehicle::run()
 {
-	if (isPublish())
+	bool use_repulsive_force;
+	nh_global_.getParamCached("local_plan/max_speed", max_speed_);
+	nh_global_.getParamCached("local_plan/repulsive_range", repulsive_range_);
+	nh_global_.getParamCached("local_plan/use_repulsive_force", use_repulsive_force);
+	setVehicleGlobalPose();
+	for (auto &vehicle : camila_)
 	{
-		bool use_velocity_controller, use_repulsive_force;
-		nh_global_.getParamCached("use_velocity_controller", use_velocity_controller);
-		nh_global_.getParamCached("local_plan/max_speed", max_speed_);
-		nh_global_.getParamCached("local_plan/repulsive_range", repulsive_range_);
-		nh_global_.getParamCached("local_plan/use_repulsive_force", use_repulsive_force);
-		setVehicleGlobalPose();
-		for (auto &vehicle : camila_)
+		tf2::Vector3 setpoint;
+		calAttractive(vehicle);
+		if (use_repulsive_force)
 		{
-			tf2::Vector3 setpoint;
-			calAttractive(vehicle);
-			if (use_repulsive_force)
-			{
-				vehicle.setLocalPlanner(PotentialField::getInstance());
-				calRepulsive(vehicle);
-			}
-			else
-				vehicle.setLocalPlanner(AttractiveOnly::getInstance());
-			if (use_velocity_controller)
-				vehicle.gotoVel();
-			else
-				vehicle.gotoLocal();
+			vehicle.setLocalPlanner(PotentialField::getInstance());
+			calRepulsive(vehicle);
 		}
+		else
+			vehicle.setLocalPlanner(AttractiveOnly::getInstance());
+		vehicle.goTo();
 	}
 	formationGenerator();
 }
