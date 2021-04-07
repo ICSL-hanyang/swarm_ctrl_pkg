@@ -118,6 +118,7 @@ protected:
 	ros::NodeHandle &nh_;
 	ros::NodeHandle &nh_global_;
 	T cur_pose_;
+	T local_path_;
 	T target_;
 	ros::Publisher setpoint_pub_;
 	ros::Publisher setpoint_vel_pub_;
@@ -129,15 +130,17 @@ public:
 	virtual void goToVel(){;};
 	std::string getName() const {return vehicle_name_;};
 	T getCuPose() const {return cur_pose_;};
+	void setLocalPath(const T &local_path){local_path_ = local_path;};
+	T getLocalPath() const {return local_path_;};
 	virtual void setTarget(const T &target){target_ = target;};
 	T getTarget() const {return target_;};
 	bool isPublished() const {return setpoint_publish_flag_;};
 };
 
-class GeoPoseController : public PoseController<geographic_msgs::GeoPoseStamped>
+class GeoPoseController : public PoseController<sensor_msgs::NavSatFix>
 {
 private:
-	geographic_msgs::GeoPoseStamped home_;
+	sensor_msgs::NavSatFix home_;
 	ros::Subscriber home_sub_;
 	ros::ServiceClient set_home_client_;
 
@@ -146,10 +149,11 @@ public:
 	~GeoPoseController();
 	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
 	void curPoseCB(const sensor_msgs::NavSatFix::ConstPtr &);
+	bool setHome();
+	sensor_msgs::NavSatFix getHome() const {return home_;};
 	virtual void goTo();
 	virtual void goToVel();
-	bool setHome();
-	geographic_msgs::GeoPoseStamped getHome() const {return home_;};
+	virtual void setTarget(const sensor_msgs::NavSatFix &);
 };
 
 class LocalPoseController : public PoseController<geometry_msgs::PoseStamped>
@@ -179,11 +183,6 @@ class Vehicle
 	/* ros subscriber*/
 	ros::Subscriber state_sub_;
 	ros::Subscriber battery_sub_;
-	ros::Subscriber home_sub_;
-	ros::Subscriber global_pos_sub_;
-
-	/* ros publisher*/
-	ros::Publisher setpoint_global_pub_;
 
 	/* ros service client*/
 	ros::ServiceClient arming_client_;
@@ -198,11 +197,6 @@ class Vehicle
 	ros::Subscriber multi_set_home_sub_;
 	ros::Subscriber multi_takeoff_sub_;
 	ros::Subscriber multi_land_sub_;
-
-	/* global coordinate*/
-	sensor_msgs::NavSatFix home_global_;
-	sensor_msgs::NavSatFix cur_global_;
-	sensor_msgs::NavSatFix tar_global_;
 
 	std::pair<int, int> scen_pos_;
 
@@ -223,6 +217,7 @@ class Vehicle
 	void multiLand(const std_msgs::Empty::ConstPtr &);
 
 	LocalPlanner local_planner_;
+	GeoPoseController gp_controller_;
 	LocalPoseController lp_controller_;
 
   public:
@@ -243,7 +238,7 @@ class Vehicle
 	bool setMode(const std::string &);
 	bool takeoff(const double &);
 	bool land();
-	void gotoGlobal(const sensor_msgs::NavSatFix &);
+	void setGeoTarget(const sensor_msgs::NavSatFix &);
 	void setLocalTarget(const geometry_msgs::PoseStamped &);
 	void goTo();
 	void goToVel();
@@ -253,9 +248,9 @@ class Vehicle
 
 	//global position
 	bool setHomeGlobal();
-	sensor_msgs::NavSatFix getHomeGlobal() const;
-	sensor_msgs::NavSatFix getGlobalPosition() const;
-	sensor_msgs::NavSatFix getTargetGlobal() const;
+	sensor_msgs::NavSatFix getHomeGeo() const {return gp_controller_.getHome();};
+	sensor_msgs::NavSatFix getGeoPose() const {return gp_controller_.getCuPose();};
+	sensor_msgs::NavSatFix getTargetGeo() const {return gp_controller_.getTarget();};
 
 	geometry_msgs::PoseStamped getTargetLocal() const {return lp_controller_.getTarget();};
 	geometry_msgs::PoseStamped getLocalPose() const {return lp_controller_.getCuPose();};
