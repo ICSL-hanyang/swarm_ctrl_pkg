@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh("~");
 	// ros::NodeHandle nh_mul("multi");
 	// ros::NodeHandle nh_global("");
-	ros::Rate rate(10);
+	ros::Rate rate(15);
 
 	// ros::Publisher multi_arming = nh_mul.advertise<std_msgs::Bool>("arming", 10);
 	// ros::Publisher multi_mode = nh_mul.advertise<std_msgs::String>("set_mode", 10);

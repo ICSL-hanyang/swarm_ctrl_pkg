@@ -15,6 +15,7 @@
 #include <geographic_msgs/GeoPoint.h>
 #include <geographic_msgs/GeoPoseStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -57,7 +58,7 @@ class AttractiveOnly : public Plans
 {
 private:
 	static AttractiveOnly* instance_;
-	AttractiveOnly();
+	AttractiveOnly(){};
 public:
 	static AttractiveOnly* getInstance(){
 		if(instance_ == nullptr)
@@ -71,11 +72,25 @@ class PotentialField : public Plans
 {
 private:
 	static PotentialField* instance_;
-	PotentialField();
+	PotentialField(){};
 public:
 	static PotentialField* getInstance(){
 		if(instance_ == nullptr)
 			instance_ = new PotentialField();
+		return instance_;
+	}
+	virtual tf2::Vector3 generate(LocalPlanner &);
+};
+
+class AdaptivePotentialField : public Plans
+{
+private:
+	static AdaptivePotentialField* instance_;
+	AdaptivePotentialField(){};
+public:
+	static AdaptivePotentialField* getInstance(){
+		if(instance_ == nullptr)
+			instance_ = new AdaptivePotentialField();
 		return instance_;
 	}
 	virtual tf2::Vector3 generate(LocalPlanner &);
@@ -89,24 +104,30 @@ private:
 protected:
 	double kp_attractive_;
 	double kp_repulsive_;
+	double kp_repulsive_vel_;
 	tf2::Vector3 err_;
 	tf2::Vector3 sum_repulsive_;
+	tf2::Vector3 sum_repulsive_vel_;
 	tf2::Vector3 local_plan_;
 public:
-	LocalPlanner();
+	LocalPlanner(){plan_ = PotentialField::getInstance();};
 	LocalPlanner(const LocalPlanner &);
 	const LocalPlanner &operator=(const LocalPlanner &);
 	void setKpAtt(double &kp_a){kp_attractive_=kp_a;};
 	double getKpAtt(){return kp_attractive_;};
 	void setKpRep(double &kp_r){kp_repulsive_=kp_r;};
 	double getKpRep(){return kp_repulsive_;};
-	tf2::Vector3 generate();
+	void setKpRepVel(double &kp_rep_vel){kp_repulsive_vel_=kp_rep_vel;};
+	double getKpRepVel(){return kp_repulsive_vel_;};
+	tf2::Vector3 generate(){return plan_->generate(*this);};
 	void setGlobalPose(const tf2::Vector3 &pose){cur_global_pose_ = pose;};
 	tf2::Vector3 getGlobalPose(){return cur_global_pose_;};
 	void setErr(const tf2::Vector3 &err){err_ = err;};
 	tf2::Vector3 getErr(){return err_;};
 	void setSumOfRepulsive(const tf2::Vector3 &sum_repulsive){sum_repulsive_=sum_repulsive;};
+	void setSumOfRepulsiveVel(const tf2::Vector3 &sum_repulsive_vel){sum_repulsive_vel_=sum_repulsive_vel;};
 	tf2::Vector3 getSumOfRepulsive(){return sum_repulsive_;};
+	tf2::Vector3 getSumOfRepulsiveVel(){return sum_repulsive_vel_;};
 	void setPlanner(Plans* plan){plan_ = plan;};
 };
 
@@ -117,19 +138,22 @@ protected:
 	std::string &vehicle_name_;
 	ros::NodeHandle &nh_;
 	ros::NodeHandle &nh_global_;
-	T cur_pose_;
+	T pose_;
 	T local_path_;
 	T target_;
+	tf2::Vector3 vel_;
 	ros::Publisher setpoint_pub_;
 	ros::Publisher setpoint_vel_pub_;
-	ros::Subscriber cur_pose_sub_;
+	ros::Subscriber pose_sub_;
+	ros::Subscriber vel_sub_;
 	bool setpoint_publish_flag_;
 public:
 	PoseController(ros::NodeHandle &, ros::NodeHandle &, std::string &);
 	virtual void goTo(){;};
 	virtual void goToVel(){;};
 	std::string getName() const {return vehicle_name_;};
-	T getCuPose() const {return cur_pose_;};
+	T getPose() const {return pose_;};
+	tf2::Vector3 getVel() const {return vel_;};
 	void setLocalPath(const T &local_path){local_path_ = local_path;};
 	T getLocalPath() const {return local_path_;};
 	virtual void setTarget(const T &target){target_ = target;};
@@ -148,7 +172,7 @@ public:
 	GeoPoseController(ros::NodeHandle &, ros::NodeHandle &, std::string &);
 	~GeoPoseController();
 	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
-	void curPoseCB(const sensor_msgs::NavSatFix::ConstPtr &);
+	void poseCB(const sensor_msgs::NavSatFix::ConstPtr &msg){pose_ = *msg;};
 	bool setHome();
 	sensor_msgs::NavSatFix getHome() const {return home_;};
 	virtual void goTo();
@@ -161,7 +185,8 @@ class LocalPoseController : public PoseController<geometry_msgs::PoseStamped>
 public:
 	LocalPoseController(ros::NodeHandle &, ros::NodeHandle &, std::string &);
 	~LocalPoseController();
-	void curPoseCB(const geometry_msgs::PoseStamped::ConstPtr &msg){cur_pose_ = *msg;};
+	void poseCB(const geometry_msgs::PoseStamped::ConstPtr &msg){pose_ = *msg;};
+	void velCB(const geometry_msgs::TwistStamped::ConstPtr &msg);
 	virtual void goTo();
 	virtual void goToVel();
 	virtual void setTarget(const geometry_msgs::PoseStamped &);
@@ -177,7 +202,7 @@ class Vehicle
 	ros::NodeHandle &nh_global_;
 
 	/*drone state*/
-	mavros_msgs::State cur_state_;
+	mavros_msgs::State state_;
 	sensor_msgs::BatteryState cur_battery_;
 
 	/* ros subscriber*/
@@ -198,16 +223,16 @@ class Vehicle
 	ros::Subscriber multi_takeoff_sub_;
 	ros::Subscriber multi_land_sub_;
 
-	std::pair<int, int> scen_pos_;
+	std::pair<int, int> scen_pose_;
+	static double max_speed_;
 
 	/*fermware version=> diagnositic_msgs/DiagnosticStatus*/
 
 	void vehicleInit();
 	void release();
+	void limit(tf2::Vector3 &, const double &);
 	void stateCB(const mavros_msgs::State::ConstPtr &);
-	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &);
-	void homeCB(const mavros_msgs::HomePosition::ConstPtr &);
-	void globalPositionCB(const sensor_msgs::NavSatFix::ConstPtr &);
+	void batteryCB(const sensor_msgs::BatteryState::ConstPtr &msg){cur_battery_ = *msg;};
 
 	/* multi callback functions */
 	void multiArming(const std_msgs::Bool::ConstPtr &);
@@ -229,39 +254,40 @@ class Vehicle
 	~Vehicle();
 
 	void setVehicleInfo(const VehicleInfo &);
-	VehicleInfo getInfo() const;
-	mavros_msgs::State getState() const;
-	sensor_msgs::BatteryState getBattery() const;
+	VehicleInfo getInfo() const {return vehicle_info_;};
+	mavros_msgs::State getState() const {return state_;};
+	sensor_msgs::BatteryState getBattery() const {return cur_battery_;};
 
 	/*main drone function*/
 	bool arming(const bool &);
 	bool setMode(const std::string &);
 	bool takeoff(const double &);
 	bool land();
-	void setGeoTarget(const sensor_msgs::NavSatFix &);
-	void setLocalTarget(const geometry_msgs::PoseStamped &);
+	void setGeoTarget(const sensor_msgs::NavSatFix &target){gp_controller_.setTarget(target);};
+	void setLocalTarget(const geometry_msgs::PoseStamped &target){lp_controller_.setTarget(target);};
 	void goTo();
-	void goToVel();
 
-	void setScenPos(const std::pair<int, int> &);
-	std::pair<int,int> getScenPos() const;
+	void setScenPose(const std::pair<int, int> &scen_pose){scen_pose_ = scen_pose;};
+	std::pair<int,int> getScenPose() const {return scen_pose_;};
 
 	//global position
-	bool setHomeGlobal();
+	bool setHomeGlobal(){gp_controller_.setHome();};
 	sensor_msgs::NavSatFix getHomeGeo() const {return gp_controller_.getHome();};
-	sensor_msgs::NavSatFix getGeoPose() const {return gp_controller_.getCuPose();};
+	sensor_msgs::NavSatFix getGeoPose() const {return gp_controller_.getPose();};
 	sensor_msgs::NavSatFix getTargetGeo() const {return gp_controller_.getTarget();};
 
 	geometry_msgs::PoseStamped getTargetLocal() const {return lp_controller_.getTarget();};
-	geometry_msgs::PoseStamped getLocalPose() const {return lp_controller_.getCuPose();};
+	geometry_msgs::PoseStamped getLocalPose() const {return lp_controller_.getPose();};
 
-	void setLocalPlanner(Plans *);
-	void setGlobalPose(const tf2::Vector3 &);
+	void setLocalPlanner(Plans *plan){local_planner_.setPlanner(plan);};
+	void setGlobalPose(const tf2::Vector3 &global_pose){local_planner_.setGlobalPose(global_pose);};
 	tf2::Vector3 getGlobalPose(){return local_planner_.getGlobalPose();};
-	void setErr(const tf2::Vector3 &);
-	void setSumOfRepulsive(const tf2::Vector3 &);
+	tf2::Vector3 getVel() const {return lp_controller_.getVel();};
+	void setErr(const tf2::Vector3 &err){local_planner_.setErr(err);};
+	void setSumOfRepulsive(const tf2::Vector3 &sum_of_repulsive){local_planner_.setSumOfRepulsive(sum_of_repulsive);};
+	void setSumOfRepulsiveVel(const tf2::Vector3 &sum_of_repulsive_vel){local_planner_.setSumOfRepulsive(sum_of_repulsive_vel);};
 
-	bool isPublish() const;
+	bool isPublish() const {return lp_controller_.isPublished();};
 };
 
 class SwarmVehicle
@@ -291,7 +317,6 @@ class SwarmVehicle
 	ros::Time prev_;
 
 	static double repulsive_range_;
-	static double max_speed_;
 	static int scen_num_;
 	static std::string scen_str_;
 
@@ -299,7 +324,6 @@ class SwarmVehicle
 	void release();
 	void updateOffset();
 
-	void limit(tf2::Vector3 &, const double &);
 	void setVehicleGlobalPose();
 	void calRepulsive(Vehicle &);
 	void calAttractive(Vehicle &);
@@ -322,7 +346,6 @@ class SwarmVehicle
 										const sensor_msgs::NavSatFix &);
 	static geographic_msgs::GeoPoint convertENUToGeo(const geometry_msgs::PoseStamped &,
 													 const sensor_msgs::NavSatFix &);
-	bool isPublish();
 
   public:
 	SwarmVehicle(ros::NodeHandle &, const std::string &swarm_name = "camila", const int &num_of_vehicle = 1);
