@@ -19,8 +19,7 @@ tf2::Vector3 PotentialField::generate(LocalPlanner &lp){
 }
 
 tf2::Vector3 AdaptivePotentialField::generate(LocalPlanner &lp){
-	// tf2::Vector3 local_plan = lp.getAttOut() + lp.getRepOut() + lp.getRepVelOut();
-	tf2::Vector3 local_plan = lp.getAttOut();
+	tf2::Vector3 local_plan = lp.getAttOut() + lp.getRepOut() + lp.getRepVelOut();
 	return local_plan;
 }
 
