@@ -20,8 +20,10 @@ scen: '987'
 local_plan:
   kp_attractive: 1.0
   kp_repulsive: 1.0
-  kp_repulsive_vel: 0.1
-  repulsive_range: 5.0
+  ki_repulsive: 0.1
+  kd_repulsive: 0.4
+  kp_repulsive_vel: 0.2
+  repulsive_range: 7.0
   max_speed: 3.0
   use_repulsive_force: true
-  use_adaptive: false
+  use_adaptive: true

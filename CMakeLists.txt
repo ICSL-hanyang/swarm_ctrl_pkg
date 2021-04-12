@@ -6,12 +6,13 @@ add_definitions(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  tf2_msgs
   mavros
   mavros_msgs
   mavros_extras
+  sensor_msgs
   geometry_msgs
   geographic_msgs
-  sensor_msgs
   message_generation
 )
 
@@ -28,10 +29,11 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
+   std_msgs
+   tf2_msgs
    mavros_msgs
    geometry_msgs  
    geographic_msgs
-   std_msgs
 )
 
 catkin_package(

@@ -8,28 +8,47 @@ PotentialField* PotentialField::instance_ = nullptr;
 AdaptivePotentialField* AdaptivePotentialField::instance_ = nullptr;
 
 tf2::Vector3 AttractiveOnly::generate(LocalPlanner &lp){
-	tf2::Vector3 local_plan = lp.getErr() * lp.getKpAtt();
+	tf2::Vector3 local_plan = lp.getAttOut();
 	return local_plan;
 }
 
 tf2::Vector3 PotentialField::generate(LocalPlanner &lp){
-	tf2::Vector3 local_plan = lp.getErr() * lp.getKpAtt() + lp.getSumOfRepulsive() * lp.getKpRep();
+
+	tf2::Vector3 local_plan = lp.getAttOut() + lp.getRepOut();
 	return local_plan;
 }
 
 tf2::Vector3 AdaptivePotentialField::generate(LocalPlanner &lp){
-	tf2::Vector3 local_plan = lp.getErr() * lp.getKpAtt() + lp.getSumOfRepulsive() * lp.getKpRep() + lp.getSumOfRepulsiveVel() * lp.getKpRepVel();
+	// tf2::Vector3 local_plan = lp.getAttOut() + lp.getRepOut() + lp.getRepVelOut();
+	tf2::Vector3 local_plan = lp.getAttOut();
 	return local_plan;
 }
 
+LocalPlanner::LocalPlanner() : 
+	err_(tf2::Vector3(0, 0, 0)),
+	pre_repulsive_(tf2::Vector3(0, 0, 0)),
+	repulsive_(tf2::Vector3(0, 0, 0)),
+	repulsive_integral_(tf2::Vector3(0, 0, 0)),
+	repulsive_vel_(tf2::Vector3(0, 0, 0)),
+	local_plan_(tf2::Vector3(0, 0, 0))
+{
+	plan_ = PotentialField::getInstance();
+}
+
+
 LocalPlanner::LocalPlanner(const LocalPlanner &rhs) :
-	cur_global_pose_(rhs.cur_global_pose_),
+	global_pose_(rhs.global_pose_),
 	kp_attractive_(rhs.kp_attractive_),
 	kp_repulsive_(rhs.kp_repulsive_),
+	ki_repulsive_(rhs.ki_repulsive_),
+	kd_repulsive_(rhs.kd_repulsive_),
 	err_(rhs.err_),
-	sum_repulsive_(rhs.sum_repulsive_),
+	pre_repulsive_(rhs.pre_repulsive_),
+	repulsive_(rhs.repulsive_),
+	repulsive_integral_(rhs.repulsive_integral_),
 	local_plan_(rhs.local_plan_)
 {
+	plan_ = rhs.plan_;
 	*this = rhs;
 }
 
@@ -37,13 +56,33 @@ const LocalPlanner &LocalPlanner::operator=(const LocalPlanner &rhs)
 {
 	if (this == &rhs)
 		return *this;
-	cur_global_pose_ = rhs.cur_global_pose_;
+	global_pose_ = rhs.global_pose_;
 	kp_attractive_ = rhs.kp_attractive_;
 	kp_repulsive_ = rhs.kp_repulsive_;
+	ki_repulsive_ = rhs.ki_repulsive_;
+	kd_repulsive_ = rhs.kd_repulsive_;
 	err_ = rhs.err_;
-	sum_repulsive_ = rhs.sum_repulsive_;
+	pre_repulsive_ = rhs.pre_repulsive_;
+	repulsive_ = rhs.repulsive_;
+	repulsive_integral_ = rhs.repulsive_integral_;
 	local_plan_ = rhs.local_plan_;
+	plan_ = rhs.plan_;
 	return *this;
+}
+
+tf2::Vector3 LocalPlanner::getRepOut(){
+	tf2::Vector3 p_out = repulsive_ * kp_repulsive_;
+	tf2::Vector3 i_out, d_out;
+	if(!isnan(repulsive_.getX())){
+		repulsive_integral_ += repulsive_ / 15;
+		if (repulsive_integral_.length() > 2)
+			repulsive_integral_.setZero();
+		i_out = repulsive_integral_*ki_repulsive_;
+		tf2::Vector3 derivative = (repulsive_ - pre_repulsive_) * 15;
+		d_out = derivative*kd_repulsive_;
+		pre_repulsive_ = repulsive_;
+	} 
+	return p_out + i_out + d_out;
 }
 
 template <typename T>
@@ -83,7 +122,7 @@ void GeoPoseController::setTarget(const sensor_msgs::NavSatFix &target){
 		(target_.altitude != target.altitude))
 	{
 		target_ = target;
-		ROS_INFO("%s set target_global_pos(long : %lf, lati : %lf, alti : %lf)", getName().c_str(),
+		ROS_INFO("%s set target_global_pose(long : %lf, lati : %lf, alti : %lf)", getName().c_str(),
 				 target_.longitude, target_.latitude, target_.altitude);
 	}
 }
@@ -252,6 +291,10 @@ void Vehicle::vehicleInit()
 	multi_takeoff_sub_ = nh_mul_.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
 
+	att_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/attractive", 10);
+	rep_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/repulsive", 10);
+	r_vel_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/repulsive_vel", 10);
+
 	ROS_INFO_STREAM(vehicle_info_.vehicle_name_ << " instance generated");
 }
 
@@ -415,14 +458,18 @@ bool Vehicle::land()
 
 void Vehicle::goTo(){
 	bool use_velocity_controller;
-	double kp_att, kp_rep, kp_rep_vel;
+	double kp_att, kp_rep, ki_rep, kd_rep, kp_rep_vel;
 	nh_global_.getParamCached("use_velocity_controller", use_velocity_controller);
 	nh_global_.getParamCached("local_plan/max_speed", max_speed_);
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_att);
 	nh_global_.getParamCached("local_plan/kp_repulsive", kp_rep);
+	nh_global_.getParamCached("local_plan/ki_repulsive", ki_rep);
+	nh_global_.getParamCached("local_plan/kd_repulsive", kd_rep);
 	nh_global_.getParamCached("local_plan/kp_repulsive_vel", kp_rep_vel);
 	local_planner_.setKpAtt(kp_att);
 	local_planner_.setKpRep(kp_rep);
+	local_planner_.setKiRep(ki_rep);
+	local_planner_.setKdRep(kd_rep);
 	local_planner_.setKpRepVel(kp_rep_vel);
 
 	tf2::Vector3 local_plan = local_planner_.generate();
@@ -586,25 +633,26 @@ void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 		if (&vehicle != &another_vehicle)
 		{
 			tf2::Vector3 diff = vehicle.getGlobalPose() - another_vehicle.getGlobalPose();
-			// tf2::Vector3 diff_vel = another_vehicle.getVel() - vehicle.getVel();
+			tf2::Vector3 diff_vel = another_vehicle.getVel() - vehicle.getVel();
+			
 			double dist = diff.length();
-			// double dist_vel = diff_vel.length();
+			double dist_vel = diff_vel.length();
 			if (dist*2 < repulsive_range_)
 			{
 				diff *= ((repulsive_range_*repulsive_range_) / (4*dist*dist*dist));
-				// diff_vel *= dist_vel;
+				diff_vel *= dist_vel;
 				sum += diff;
-				// sum_vel += diff_vel;
+				sum_vel += diff_vel;
 				cnt++;
 			}
 		}
 	}
 	if (cnt > 0){
 		sum /= cnt;
-		// sum_vel /=cnt;
+		sum_vel /=cnt;
 	}
-	vehicle.setSumOfRepulsive(sum);
-	// vehicle.setSumOfRepulsiveVel(sum_vel);
+	vehicle.setRepulsive(sum);
+	vehicle.setRepulsiveVel(sum_vel);
 }
 
 void SwarmVehicle::calAttractive(Vehicle &vehicle)
@@ -1505,10 +1553,12 @@ bool SwarmVehicle::gotoVehicle(swarm_ctrl_pkg::srvGoToVehicle::Request &req,
 		msg.pose.position.x = req.x + offset_[id].getX();
 		msg.pose.position.y = req.y + offset_[id].getY();
 		msg.pose.position.z = req.z;
+		camila_[id].setLocalTarget(msg);
+		res.success = true;
 	}
+	else
+		res.success = false;
 
-	camila_[id].setLocalTarget(msg);
-	res.success = true;
 	return res.success;
 }
 
@@ -1652,9 +1702,9 @@ void SwarmVehicle::run()
 		calAttractive(vehicle);
 		if (use_repulsive_force){
 			if(use_adaptive)
-				vehicle.setLocalPlanner(PotentialField::getInstance());
-			else
 				vehicle.setLocalPlanner(AdaptivePotentialField::getInstance());
+			else
+				vehicle.setLocalPlanner(PotentialField::getInstance());
 			
 			calRepulsive(vehicle);
 		}

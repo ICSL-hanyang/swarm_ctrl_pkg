@@ -19,6 +19,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/BatteryState.h>
 #include <mavros_msgs/State.h>
@@ -100,35 +101,46 @@ class LocalPlanner
 {
 private:
 	Plans* plan_;
-	tf2::Vector3 cur_global_pose_;
+	tf2::Vector3 global_pose_;
 protected:
 	double kp_attractive_;
 	double kp_repulsive_;
+	double ki_repulsive_;
+	double kd_repulsive_;
 	double kp_repulsive_vel_;
 	tf2::Vector3 err_;
-	tf2::Vector3 sum_repulsive_;
-	tf2::Vector3 sum_repulsive_vel_;
+	tf2::Vector3 pre_repulsive_;
+	tf2::Vector3 repulsive_;
+	tf2::Vector3 repulsive_integral_;
+	tf2::Vector3 repulsive_vel_;
 	tf2::Vector3 local_plan_;
 public:
-	LocalPlanner(){plan_ = PotentialField::getInstance();};
+	LocalPlanner();
 	LocalPlanner(const LocalPlanner &);
 	const LocalPlanner &operator=(const LocalPlanner &);
 	void setKpAtt(double &kp_a){kp_attractive_=kp_a;};
 	double getKpAtt(){return kp_attractive_;};
 	void setKpRep(double &kp_r){kp_repulsive_=kp_r;};
+	void setKiRep(double &ki_r){ki_repulsive_=ki_r;};
+	void setKdRep(double &kd_r){kd_repulsive_=kd_r;};
 	double getKpRep(){return kp_repulsive_;};
+	double getKiRep(){return ki_repulsive_;};
+	double getKdRep(){return kd_repulsive_;};
 	void setKpRepVel(double &kp_rep_vel){kp_repulsive_vel_=kp_rep_vel;};
 	double getKpRepVel(){return kp_repulsive_vel_;};
 	tf2::Vector3 generate(){return plan_->generate(*this);};
-	void setGlobalPose(const tf2::Vector3 &pose){cur_global_pose_ = pose;};
-	tf2::Vector3 getGlobalPose(){return cur_global_pose_;};
+	void setGlobalPose(const tf2::Vector3 &pose){global_pose_ = pose;};
+	tf2::Vector3 getGlobalPose(){return global_pose_;};
 	void setErr(const tf2::Vector3 &err){err_ = err;};
 	tf2::Vector3 getErr(){return err_;};
-	void setSumOfRepulsive(const tf2::Vector3 &sum_repulsive){sum_repulsive_=sum_repulsive;};
-	void setSumOfRepulsiveVel(const tf2::Vector3 &sum_repulsive_vel){sum_repulsive_vel_=sum_repulsive_vel;};
-	tf2::Vector3 getSumOfRepulsive(){return sum_repulsive_;};
-	tf2::Vector3 getSumOfRepulsiveVel(){return sum_repulsive_vel_;};
+	void setRepulsive(const tf2::Vector3 &repulsive){repulsive_=repulsive;};
+	tf2::Vector3 getRepulsive(){return repulsive_;};
+	void setRepulsiveVel(const tf2::Vector3 &repulsive_vel){repulsive_vel_=repulsive_vel;};
+	tf2::Vector3 getRepulsiveVel(){return repulsive_vel_;};
 	void setPlanner(Plans* plan){plan_ = plan;};
+	tf2::Vector3 getAttOut(){return err_*kp_attractive_;};
+	tf2::Vector3 getRepOut();
+	tf2::Vector3 getRepVelOut(){return repulsive_vel_*kp_repulsive_vel_;};
 };
 
 template <typename T>
@@ -223,6 +235,10 @@ class Vehicle
 	ros::Subscriber multi_takeoff_sub_;
 	ros::Subscriber multi_land_sub_;
 
+	ros::Publisher att_pub_;
+	ros::Publisher rep_pub_;
+	ros::Publisher r_vel_pub_;
+
 	std::pair<int, int> scen_pose_;
 	static double max_speed_;
 
@@ -283,9 +299,30 @@ class Vehicle
 	void setGlobalPose(const tf2::Vector3 &global_pose){local_planner_.setGlobalPose(global_pose);};
 	tf2::Vector3 getGlobalPose(){return local_planner_.getGlobalPose();};
 	tf2::Vector3 getVel() const {return lp_controller_.getVel();};
-	void setErr(const tf2::Vector3 &err){local_planner_.setErr(err);};
-	void setSumOfRepulsive(const tf2::Vector3 &sum_of_repulsive){local_planner_.setSumOfRepulsive(sum_of_repulsive);};
-	void setSumOfRepulsiveVel(const tf2::Vector3 &sum_of_repulsive_vel){local_planner_.setSumOfRepulsive(sum_of_repulsive_vel);};
+	void setErr(const tf2::Vector3 &err){
+		geometry_msgs::Vector3 msg;
+		msg.x = err.getX();
+		msg.y = err.getY();
+		msg.z = err.getZ();
+		local_planner_.setErr(err);
+		att_pub_.publish(msg);
+	};
+	void setRepulsive(const tf2::Vector3 &repulsive){
+		geometry_msgs::Vector3 msg;
+		msg.x = repulsive.getX();
+		msg.y = repulsive.getY();
+		msg.z = repulsive.getZ();
+		local_planner_.setRepulsive(repulsive);
+		rep_pub_.publish(msg);
+	};
+	void setRepulsiveVel(const tf2::Vector3 &repulsive_vel){
+		geometry_msgs::Vector3 msg;
+		msg.x = repulsive_vel.getX();
+		msg.y = repulsive_vel.getY();
+		msg.z = repulsive_vel.getZ();
+		local_planner_.setRepulsiveVel(repulsive_vel);
+		r_vel_pub_.publish(msg);
+	};
 
 	bool isPublish() const {return lp_controller_.isPublished();};
 };
