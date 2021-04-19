@@ -19,7 +19,16 @@ tf2::Vector3 PotentialField::generate(LocalPlanner &lp){
 }
 
 tf2::Vector3 AdaptivePotentialField::generate(LocalPlanner &lp){
-	tf2::Vector3 local_plan = lp.getAttOut() + lp.getRepOut() + lp.getRepVelOut();
+	tf2::Vector3 att = lp.getAttOut();
+	tf2::Vector3 rep = lp.getRepOut() + lp.getRepVelOut();
+	tf2::Vector3 local_plan;
+	if (att.length() < 4)
+		local_plan = att + 0.3 * rep;		
+	else
+		local_plan = att + rep;		
+
+	if((att.length() > local_plan.length()) && att.dot(local_plan) < 0)
+		local_plan *= ( att.length() / local_plan.length() );
 	return local_plan;
 }
 
@@ -625,7 +634,6 @@ void SwarmVehicle::setVehicleGlobalPose()
 void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 {
 	tf2::Vector3 sum(0, 0, 0), sum_vel(0, 0, 0);
-	int cnt = 0;
 
 	for (auto &another_vehicle : camila_)
 	{
@@ -642,13 +650,8 @@ void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 				diff_vel *= dist_vel;
 				sum += diff;
 				sum_vel += diff_vel;
-				cnt++;
 			}
 		}
-	}
-	if (cnt > 0){
-		sum /= cnt;
-		sum_vel /=cnt;
 	}
 	vehicle.setRepulsive(sum);
 	vehicle.setRepulsiveVel(sum_vel);
