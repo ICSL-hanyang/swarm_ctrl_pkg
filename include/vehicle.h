@@ -235,6 +235,7 @@ class Vehicle
 	ros::Subscriber multi_takeoff_sub_;
 	ros::Subscriber multi_land_sub_;
 
+	ros::Publisher g_pose_pub_;
 	ros::Publisher att_pub_;
 	ros::Publisher rep_pub_;
 	ros::Publisher r_vel_pub_;
@@ -296,7 +297,14 @@ class Vehicle
 	geometry_msgs::PoseStamped getLocalPose() const {return lp_controller_.getPose();};
 
 	void setLocalPlanner(Plans *plan){local_planner_.setPlanner(plan);};
-	void setGlobalPose(const tf2::Vector3 &global_pose){local_planner_.setGlobalPose(global_pose);};
+	void setGlobalPose(const tf2::Vector3 &global_pose){
+		geometry_msgs::Vector3 msg;
+		msg.x = global_pose.getX();
+		msg.y = global_pose.getY();
+		msg.z = global_pose.getZ();
+		local_planner_.setGlobalPose(global_pose);
+		g_pose_pub_.publish(msg);
+	};
 	tf2::Vector3 getGlobalPose(){return local_planner_.getGlobalPose();};
 	tf2::Vector3 getVel() const {return lp_controller_.getVel();};
 	void setErr(const tf2::Vector3 &err){
@@ -364,6 +372,7 @@ class SwarmVehicle
 	void setVehicleGlobalPose();
 	void calRepulsive(Vehicle &);
 	void calAttractive(Vehicle &);
+	tf2::Vector3 calFv(const tf2::Vector3 &,const tf2::Vector3 &);
 	void formationGenerator();
 	void scenario2();
 	void scenario3();

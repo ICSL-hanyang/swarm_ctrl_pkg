@@ -299,6 +299,7 @@ void Vehicle::vehicleInit()
 	multi_takeoff_sub_ = nh_mul_.subscribe("takeoff", 10, &Vehicle::multiTakeoff, this);
 	multi_land_sub_ = nh_mul_.subscribe("land", 10, &Vehicle::multiLand, this);
 
+	g_pose_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/global_pose", 10);
 	att_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/attractive", 10);
 	rep_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/repulsive", 10);
 	r_vel_pub_ = nh_.advertise<geometry_msgs::Vector3>("local_plan/repulsive_vel", 10);
@@ -646,13 +647,14 @@ void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 			double dist_vel = diff_vel.length();
 			if (dist*2 < repulsive_range_)
 			{
-				diff *= ((repulsive_range_*repulsive_range_) / (4*dist*dist*dist));
+				diff *= ((repulsive_range_*repulsive_range_) / (4*dist*dist*dist-4));
 				diff_vel *= dist_vel;
 				sum += diff;
 				sum_vel += diff_vel;
 			}
 		}
 	}
+	// sum_vel = calFv(sum, sum_vel);
 	vehicle.setRepulsive(sum);
 	vehicle.setRepulsiveVel(sum_vel);
 }
@@ -667,6 +669,19 @@ void SwarmVehicle::calAttractive(Vehicle &vehicle)
 	err.setZ(target_pos.pose.position.z - current_pos.pose.position.z);
 
 	vehicle.setErr(err);
+}
+
+tf2::Vector3 SwarmVehicle::calFv(const tf2::Vector3 &p, const tf2::Vector3 &v)
+{
+	tf2::Vector3 fp = -p.normalized();
+	tf2::Vector3 rel_v = -v.normalized();
+	tf2::Vector3 zero(0,0,0);
+
+	double cos = fp.dot(rel_v);
+	if(cos > 0 && cos < 1)
+		return -fp/cos+rel_v;
+	else
+		return zero;
 }
 
 void SwarmVehicle::formationGenerator()
