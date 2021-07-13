@@ -7,7 +7,6 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include <random>
 
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
@@ -353,9 +352,6 @@ class SwarmVehicle
 	/* swarm_info */
 	std::string swarm_name_;
 	int num_of_vehicle_;
-	std::random_device rd_;
-	std::mt19937 gen_;
-	std::uniform_int_distribution<int> dis_;
 
 	std::vector<Vehicle> camila_;
 	std::vector<Vehicle>::iterator iter_;

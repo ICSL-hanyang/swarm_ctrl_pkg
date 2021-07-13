@@ -527,8 +527,6 @@ std::string SwarmVehicle::scen_str_ = "";
 SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_name, const int &num_of_vehicle)
 	: swarm_name_(swarm_name),
 	  num_of_vehicle_(num_of_vehicle),
-	  gen_(rd_()),
-	  dis_(0, 99),
 	  nh_(ros::NodeHandle()),
 	  nh_mul_("multi"),
 	  nh_global_(nh_global),
@@ -662,7 +660,6 @@ void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 
 	for (auto &another_vehicle : camila_)
 	{
-		// if (&vehicle != &another_vehicle && dis_(gen_) < 67)
 		if (&vehicle != &another_vehicle)
 		{
 			tf2::Vector3 diff_pose = vehicle.getGlobalPose() - another_vehicle.getGlobalPose();
