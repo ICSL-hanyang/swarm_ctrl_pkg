@@ -23,7 +23,8 @@ local_plan:
   ki_repulsive: 0.1
   kd_repulsive: 0.4
   kp_repulsive_vel: 0.2
-  repulsive_range: 7.0
+  sensing_range: 7.0
   max_speed: 3.0
+  t_safety: 1.0
   use_repulsive_force: true
   use_adaptive: true

@@ -32,7 +32,7 @@
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
             <arg name="x" value="0"/>
-            <arg name="y" value="$(arg ID)"/>
+            <arg name="y" value="$(eval 2 * arg('ID'))"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
@@ -58,7 +58,7 @@
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
             <arg name="x" value="0"/>
-            <arg name="y" value="$(arg ID)"/>
+            <arg name="y" value="$(eval 2 * arg('ID'))"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>
@@ -84,7 +84,7 @@
         <!-- PX4 SITL and vehicle spawn -->
         <include file="$(find px4)/launch/single_vehicle_spawn.launch">
             <arg name="x" value="0"/>
-            <arg name="y" value="$(arg ID)"/>
+            <arg name="y" value="$(eval 2 * arg('ID'))"/>
             <arg name="z" value="0"/>
             <arg name="R" value="0"/>
             <arg name="P" value="0"/>

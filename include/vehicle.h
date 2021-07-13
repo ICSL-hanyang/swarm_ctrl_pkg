@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <random>
 
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
@@ -108,12 +109,15 @@ protected:
 	double ki_repulsive_;
 	double kd_repulsive_;
 	double kp_repulsive_vel_;
+	double mag_min_dist_;
+	double t_safety_;
 	tf2::Vector3 err_;
 	tf2::Vector3 pre_repulsive_;
 	tf2::Vector3 repulsive_;
 	tf2::Vector3 repulsive_integral_;
 	tf2::Vector3 repulsive_vel_;
 	tf2::Vector3 local_plan_;
+	tf2::Vector3 min_dist_;
 public:
 	LocalPlanner();
 	LocalPlanner(const LocalPlanner &);
@@ -141,6 +145,12 @@ public:
 	tf2::Vector3 getAttOut(){return err_*kp_attractive_;};
 	tf2::Vector3 getRepOut();
 	tf2::Vector3 getRepVelOut(){return repulsive_vel_*kp_repulsive_vel_;};
+	void setMinDist(const tf2::Vector3 &min_dist){min_dist_ = min_dist;};
+	tf2::Vector3 getMinDist(){return min_dist_;};
+	void setMagMinDist(double &mag_min_dist){mag_min_dist_ = mag_min_dist;};
+	double getMagMinDist(){return mag_min_dist_;};
+	void setTSafety(double &t_safety){t_safety_ = t_safety;};
+	double getTSafety(){return t_safety_;};
 };
 
 template <typename T>
@@ -331,6 +341,8 @@ class Vehicle
 		local_planner_.setRepulsiveVel(repulsive_vel);
 		r_vel_pub_.publish(msg);
 	};
+	void setMinDist(const tf2::Vector3 &min_dist){local_planner_.setMinDist(min_dist);};
+	void setMagMinDist(double &mag_min_dist){local_planner_.setMagMinDist(mag_min_dist);};
 
 	bool isPublish() const {return lp_controller_.isPublished();};
 };
@@ -341,6 +353,9 @@ class SwarmVehicle
 	/* swarm_info */
 	std::string swarm_name_;
 	int num_of_vehicle_;
+	std::random_device rd_;
+	std::mt19937 gen_;
+	std::uniform_int_distribution<int> dis_;
 
 	std::vector<Vehicle> camila_;
 	std::vector<Vehicle>::iterator iter_;
@@ -361,7 +376,7 @@ class SwarmVehicle
 	double angle_;
 	ros::Time prev_;
 
-	static double repulsive_range_;
+	static double sensing_range_;
 	static int scen_num_;
 	static std::string scen_str_;
 

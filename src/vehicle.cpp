@@ -20,25 +20,44 @@ tf2::Vector3 PotentialField::generate(LocalPlanner &lp){
 
 tf2::Vector3 AdaptivePotentialField::generate(LocalPlanner &lp){
 	tf2::Vector3 att = lp.getAttOut();
-	tf2::Vector3 rep = lp.getRepOut() + lp.getRepVelOut();
+	// tf2::Vector3 rep = lp.getRepOut() + lp.getRepVelOut();
+	tf2::Vector3 rep = lp.getRepOut();
 	tf2::Vector3 local_plan;
-	if (att.length() < 4)
-		local_plan = att + 0.3 * rep;		
-	else
-		local_plan = att + rep;		
+	tf2::Vector3 min_dist = lp.getMinDist();
+	double min = lp.getMagMinDist();
+	double t_safety = lp.getTSafety();
+	// if (att.length() < 4)
+	// 	local_plan = att + 0.3 * rep;		
+	// else
+	// 	local_plan = att + rep;		
 
-	if((att.length() > local_plan.length()) && att.dot(local_plan) < 0)
-		local_plan *= ( att.length() / local_plan.length() );
+	// if((att.length() > local_plan.length()) && att.dot(local_plan) < 0)
+	// 	local_plan *= ( att.length() / local_plan.length() );
+	local_plan = att + rep;
+	// double iner = local_plan.dot(min_dist);
+	// double t_collision = (min*min) / iner;
+	// double plan_length = local_plan.length();
+	// tf2::Vector3 plan_horizental = (1/t_collision)*min_dist;
+	// tf2::Vector3 plan_vertical = local_plan - plan_horizental;
+
+	// if((t_collision < t_safety) && rep.length() > 0.1 && min != 10000){
+	// 	double update_horizental_vel = min/t_safety;
+	// 	double update_vertical_vel = sqrt(plan_length*plan_length - update_horizental_vel*update_horizental_vel);
+	// 	local_plan = (update_horizental_vel/plan_horizental.length())*plan_horizental + (update_vertical_vel/plan_vertical.length())*plan_vertical;
+	// }
+	
 	return local_plan;
 }
 
 LocalPlanner::LocalPlanner() : 
+	mag_min_dist_(10000),
 	err_(tf2::Vector3(0, 0, 0)),
 	pre_repulsive_(tf2::Vector3(0, 0, 0)),
 	repulsive_(tf2::Vector3(0, 0, 0)),
 	repulsive_integral_(tf2::Vector3(0, 0, 0)),
 	repulsive_vel_(tf2::Vector3(0, 0, 0)),
-	local_plan_(tf2::Vector3(0, 0, 0))
+	local_plan_(tf2::Vector3(0, 0, 0)),
+	min_dist_(tf2::Vector3(1000, 1000, 1000))
 {
 	plan_ = PotentialField::getInstance();
 }
@@ -467,7 +486,7 @@ bool Vehicle::land()
 
 void Vehicle::goTo(){
 	bool use_velocity_controller;
-	double kp_att, kp_rep, ki_rep, kd_rep, kp_rep_vel;
+	double kp_att, kp_rep, ki_rep, kd_rep, kp_rep_vel, t_safety;
 	nh_global_.getParamCached("use_velocity_controller", use_velocity_controller);
 	nh_global_.getParamCached("local_plan/max_speed", max_speed_);
 	nh_global_.getParamCached("local_plan/kp_attractive", kp_att);
@@ -475,11 +494,13 @@ void Vehicle::goTo(){
 	nh_global_.getParamCached("local_plan/ki_repulsive", ki_rep);
 	nh_global_.getParamCached("local_plan/kd_repulsive", kd_rep);
 	nh_global_.getParamCached("local_plan/kp_repulsive_vel", kp_rep_vel);
+	nh_global_.getParamCached("local_plan/t_safety", t_safety);
 	local_planner_.setKpAtt(kp_att);
 	local_planner_.setKpRep(kp_rep);
 	local_planner_.setKiRep(ki_rep);
 	local_planner_.setKdRep(kd_rep);
 	local_planner_.setKpRepVel(kp_rep_vel);
+	local_planner_.setTSafety(t_safety);
 
 	tf2::Vector3 local_plan = local_planner_.generate();
 	limit(local_plan, max_speed_);
@@ -498,7 +519,7 @@ void Vehicle::goTo(){
 	}
 }
 
-double SwarmVehicle::repulsive_range_;
+double SwarmVehicle::sensing_range_;
 int SwarmVehicle::scen_num_;
 std::string SwarmVehicle::scen_str_ = "";
 
@@ -506,6 +527,8 @@ std::string SwarmVehicle::scen_str_ = "";
 SwarmVehicle::SwarmVehicle(ros::NodeHandle &nh_global, const std::string &swarm_name, const int &num_of_vehicle)
 	: swarm_name_(swarm_name),
 	  num_of_vehicle_(num_of_vehicle),
+	  gen_(rd_()),
+	  dis_(0, 99),
 	  nh_(ros::NodeHandle()),
 	  nh_mul_("multi"),
 	  nh_global_(nh_global),
@@ -634,29 +657,42 @@ void SwarmVehicle::setVehicleGlobalPose()
 
 void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 {
-	tf2::Vector3 sum(0, 0, 0), sum_vel(0, 0, 0);
+	tf2::Vector3 sum(0, 0, 0), sum_vel(0, 0, 0), min_dist(1000, 1000, 1000);
+	double min = 10000;
 
 	for (auto &another_vehicle : camila_)
 	{
+		// if (&vehicle != &another_vehicle && dis_(gen_) < 67)
 		if (&vehicle != &another_vehicle)
 		{
-			tf2::Vector3 diff = vehicle.getGlobalPose() - another_vehicle.getGlobalPose();
+			tf2::Vector3 diff_pose = vehicle.getGlobalPose() - another_vehicle.getGlobalPose();
 			tf2::Vector3 diff_vel = another_vehicle.getVel() - vehicle.getVel();
 			
-			double dist = diff.length();
+			double dist_pose = diff_pose.length();
 			double dist_vel = diff_vel.length();
-			if (dist*2 < repulsive_range_)
+			tf2::Vector3 diff_pose_unit = diff_pose.normalize();
+			if (dist_pose < sensing_range_)
 			{
-				diff *= ((repulsive_range_*repulsive_range_) / (4*dist*dist*dist-4));
+				// diff_pose_unit *= ((sensing_range_*sensing_range_) / (dist_pose*dist_pose));
+				// diff_pose_unit *= ((sensing_range_*sensing_range_) / (dist_pose*dist_pose - 1));
+				// diff_pose_unit *= exp(sensing_range_/(dist_pose));
+				diff_pose_unit /= ((exp(dist_pose) - exp(0.9)));
 				diff_vel *= dist_vel;
-				sum += diff;
+				// diff_vel *= exp(dist_vel/2)/dist_vel;
+				sum += diff_pose;
 				sum_vel += diff_vel;
+			}
+			if (dist_pose < min){
+				min = dist_pose;
+				min_dist = -diff_pose;
 			}
 		}
 	}
-	// sum_vel = calFv(sum, sum_vel);
+	sum_vel = calFv(sum, sum_vel);
 	vehicle.setRepulsive(sum);
-	vehicle.setRepulsiveVel(sum_vel);
+	// vehicle.setRepulsiveVel(sum_vel);
+	vehicle.setMinDist(min_dist);
+	vehicle.setMagMinDist(min);
 }
 
 void SwarmVehicle::calAttractive(Vehicle &vehicle)
@@ -1709,7 +1745,7 @@ void SwarmVehicle::showVehicleList() const
 void SwarmVehicle::run()
 {
 	bool use_repulsive_force, use_adaptive;
-	nh_global_.getParamCached("local_plan/repulsive_range", repulsive_range_);
+	nh_global_.getParamCached("local_plan/sensing_range", sensing_range_);
 	nh_global_.getParamCached("local_plan/use_repulsive_force", use_repulsive_force);
 	nh_global_.getParamCached("local_plan/use_adaptive", use_adaptive);
 	setVehicleGlobalPose();
