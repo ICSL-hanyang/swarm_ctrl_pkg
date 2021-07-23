@@ -8,7 +8,7 @@ pid:
   kp: 0.8
 
 # distance between drones
-spacing: 3.0
+spacing: 8.0
 distance_x: 3.0
 distance_y: 3.0
 scen6: false
@@ -18,13 +18,14 @@ scen: '987'
 
 # setpoint control params
 local_plan:
+  max_speed: 3.0
+  sensing_range: 7.0
+  safety_range: 1.0
+  t_safety: 1.0
   kp_attractive: 1.0
   kp_repulsive: 1.0
   ki_repulsive: 0.1
   kd_repulsive: 0.4
   kp_repulsive_vel: 0.2
-  sensing_range: 7.0
-  max_speed: 3.0
-  t_safety: 1.0
   use_repulsive_force: true
   use_adaptive: true

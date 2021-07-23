@@ -108,7 +108,6 @@ protected:
 	double ki_repulsive_;
 	double kd_repulsive_;
 	double kp_repulsive_vel_;
-	double mag_min_dist_;
 	double t_safety_;
 	tf2::Vector3 err_;
 	tf2::Vector3 pre_repulsive_;
@@ -116,7 +115,7 @@ protected:
 	tf2::Vector3 repulsive_integral_;
 	tf2::Vector3 repulsive_vel_;
 	tf2::Vector3 local_plan_;
-	tf2::Vector3 min_dist_;
+	tf2::Vector3 nearest_obs_;
 public:
 	LocalPlanner();
 	LocalPlanner(const LocalPlanner &);
@@ -144,10 +143,8 @@ public:
 	tf2::Vector3 getAttOut(){return err_*kp_attractive_;};
 	tf2::Vector3 getRepOut();
 	tf2::Vector3 getRepVelOut(){return repulsive_vel_*kp_repulsive_vel_;};
-	void setMinDist(const tf2::Vector3 &min_dist){min_dist_ = min_dist;};
-	tf2::Vector3 getMinDist(){return min_dist_;};
-	void setMagMinDist(double &mag_min_dist){mag_min_dist_ = mag_min_dist;};
-	double getMagMinDist(){return mag_min_dist_;};
+	void setNearestObs(const tf2::Vector3 &nearest_obs){nearest_obs_ = nearest_obs;};
+	tf2::Vector3 getNearestObs(){return nearest_obs_;};
 	void setTSafety(double &t_safety){t_safety_ = t_safety;};
 	double getTSafety(){return t_safety_;};
 };
@@ -340,8 +337,7 @@ class Vehicle
 		local_planner_.setRepulsiveVel(repulsive_vel);
 		r_vel_pub_.publish(msg);
 	};
-	void setMinDist(const tf2::Vector3 &min_dist){local_planner_.setMinDist(min_dist);};
-	void setMagMinDist(double &mag_min_dist){local_planner_.setMagMinDist(mag_min_dist);};
+	void setNearestObs(const tf2::Vector3 &nearest_obs){local_planner_.setNearestObs(nearest_obs);};
 
 	bool isPublish() const {return lp_controller_.isPublished();};
 };

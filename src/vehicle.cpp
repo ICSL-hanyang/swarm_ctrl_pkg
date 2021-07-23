@@ -23,41 +23,39 @@ tf2::Vector3 AdaptivePotentialField::generate(LocalPlanner &lp){
 	// tf2::Vector3 rep = lp.getRepOut() + lp.getRepVelOut();
 	tf2::Vector3 rep = lp.getRepOut();
 	tf2::Vector3 local_plan;
-	tf2::Vector3 min_dist = lp.getMinDist();
-	double min = lp.getMagMinDist();
+	tf2::Vector3 nearest_obs = lp.getNearestObs();
 	double t_safety = lp.getTSafety();
-	// if (att.length() < 4)
-	// 	local_plan = att + 0.3 * rep;		
-	// else
-	// 	local_plan = att + rep;		
+	
+	if (att.length() < 1)
+		local_plan = att;
+	else
+		local_plan = att + rep;
 
-	// if((att.length() > local_plan.length()) && att.dot(local_plan) < 0)
-	// 	local_plan *= ( att.length() / local_plan.length() );
-	local_plan = att + rep;
-	// double iner = local_plan.dot(min_dist);
-	// double t_collision = (min*min) / iner;
-	// double plan_length = local_plan.length();
-	// tf2::Vector3 plan_horizental = (1/t_collision)*min_dist;
-	// tf2::Vector3 plan_vertical = local_plan - plan_horizental;
-
-	// if((t_collision < t_safety) && rep.length() > 0.1 && min != 10000){
-	// 	double update_horizental_vel = min/t_safety;
-	// 	double update_vertical_vel = sqrt(plan_length*plan_length - update_horizental_vel*update_horizental_vel);
-	// 	local_plan = (update_horizental_vel/plan_horizental.length())*plan_horizental + (update_vertical_vel/plan_vertical.length())*plan_vertical;
-	// }
+	double iner = local_plan.dot(nearest_obs);
+	if (iner > 0){
+		double nearest_length = nearest_obs.length();
+		double t_collision = nearest_length*nearest_length / iner;
+		tf2::Vector3 plan_horizental = (1/t_collision)*nearest_obs;
+		tf2::Vector3 plan_vertical = local_plan - plan_horizental;
+		if (t_collision < t_safety){
+			double plan_length = local_plan.length();
+			double update_horizental_vel = nearest_length / t_safety;
+			double update_vertical_vel = sqrt(plan_length*plan_length - update_horizental_vel*update_horizental_vel);
+			local_plan = update_horizental_vel*plan_horizental.normalize() + update_vertical_vel*plan_vertical.normalize();
+		}
+	}
 	
 	return local_plan;
 }
 
 LocalPlanner::LocalPlanner() : 
-	mag_min_dist_(10000),
 	err_(tf2::Vector3(0, 0, 0)),
 	pre_repulsive_(tf2::Vector3(0, 0, 0)),
 	repulsive_(tf2::Vector3(0, 0, 0)),
 	repulsive_integral_(tf2::Vector3(0, 0, 0)),
 	repulsive_vel_(tf2::Vector3(0, 0, 0)),
 	local_plan_(tf2::Vector3(0, 0, 0)),
-	min_dist_(tf2::Vector3(1000, 1000, 1000))
+	nearest_obs_(tf2::Vector3(1000, 1000, 1000))
 {
 	plan_ = PotentialField::getInstance();
 }
@@ -655,8 +653,7 @@ void SwarmVehicle::setVehicleGlobalPose()
 
 void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 {
-	tf2::Vector3 sum(0, 0, 0), sum_vel(0, 0, 0), min_dist(1000, 1000, 1000);
-	double min = 10000;
+	tf2::Vector3 sum(0, 0, 0), sum_vel(0, 0, 0), nearest_obs(1000, 1000, 1000);
 
 	for (auto &another_vehicle : camila_)
 	{
@@ -667,29 +664,30 @@ void SwarmVehicle::calRepulsive(Vehicle &vehicle)
 			
 			double dist_pose = diff_pose.length();
 			double dist_vel = diff_vel.length();
-			tf2::Vector3 diff_pose_unit = diff_pose.normalize();
+			double safety_range;
+			tf2::Vector3 diff_pose_unit = diff_pose.normalized();
+			tf2::Vector3 fp(0, 0, 0);
+			nh_global_.getParamCached("local_plan/safety_range", safety_range);
 			if (dist_pose < sensing_range_)
 			{
-				// diff_pose_unit *= ((sensing_range_*sensing_range_) / (dist_pose*dist_pose));
-				// diff_pose_unit *= ((sensing_range_*sensing_range_) / (dist_pose*dist_pose - 1));
-				// diff_pose_unit *= exp(sensing_range_/(dist_pose));
-				diff_pose_unit /= ((exp(dist_pose) - exp(0.9)));
+				fp = diff_pose_unit * ((sensing_range_*sensing_range_) / (dist_pose*dist_pose));
+				// fp = diff_pose_unit * ((sensing_range_*sensing_range_) / (dist_pose*dist_pose - safety_range*safety_range));
+				// fp = diff_pose_unit * exp(sensing_range_/dist_pose);
+				// fp = diff_pose_unit * (sensing_range_ /(exp(dist_pose - safety_range)));
 				diff_vel *= dist_vel;
 				// diff_vel *= exp(dist_vel/2)/dist_vel;
-				sum += diff_pose;
+				sum += fp;
 				sum_vel += diff_vel;
-			}
-			if (dist_pose < min){
-				min = dist_pose;
-				min_dist = -diff_pose;
+				if (dist_pose < nearest_obs.length()){
+					nearest_obs = -diff_pose;
+				}
 			}
 		}
 	}
-	sum_vel = calFv(sum, sum_vel);
+	// sum_vel = calFv(sum, sum_vel);
 	vehicle.setRepulsive(sum);
 	// vehicle.setRepulsiveVel(sum_vel);
-	vehicle.setMinDist(min_dist);
-	vehicle.setMagMinDist(min);
+	vehicle.setNearestObs(nearest_obs);
 }
 
 void SwarmVehicle::calAttractive(Vehicle &vehicle)
